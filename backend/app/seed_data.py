@@ -112,12 +112,13 @@ DISEASES_SEED_DATA = [
     {
         "name": "Apple leaf",
         "common_name": "Lá táo khỏe mạnh (Healthy Apple Leaf)",
+        "is_healthy": True,
         "description": "Lá táo ở trạng thái phát triển tốt nhất.",
         "symptoms": ["Màu xanh lục đều, bề mặt nhẵn", "Không có vết đốm hay sâu bệnh"],
         "treatments": [
-            {"level": "Mild", "action": "Tiếp tục chăm sóc định kỳ", "product": "Phân hữu cơ vi sinh"},
-            {"level": "Moderate", "action": "Kiểm tra sâu bệnh thường xuyên", "product": "Nước sạch"},
-            {"level": "Severe", "action": "Giữ vững chế độ bón phân", "product": "N/A"}
+            {"level": "Maintenance", "action": "Tiếp tục chăm sóc định kỳ, tưới nước đều đặn", "product": "Phân hữu cơ vi sinh"},
+            {"level": "Maintenance", "action": "Kiểm tra sâu bệnh thường xuyên ở mặt sau lá", "product": "Nước sạch"},
+            {"level": "Maintenance", "action": "Giữ vững chế độ bón phân đa trung vi lượng", "product": "NPK định kỳ"}
         ]
     },
     {
@@ -145,34 +146,37 @@ DISEASES_SEED_DATA = [
     {
         "name": "Bell_pepper leaf",
         "common_name": "Lá ớt chuông khỏe mạnh (Healthy Pepper Leaf)",
+        "is_healthy": True,
         "description": "Cây ớt chuông phát triển ổn định.",
         "symptoms": ["Lá xanh bóng, cứng cáp", "Không có triệu chứng héo hay đốm"],
         "treatments": [
-            {"level": "Mild", "action": "Duy trì độ ẩm đất", "product": "Phân NPK cân đối"},
-            {"level": "Moderate", "action": "Duy trì độ ẩm đất", "product": "Phân NPK cân đối"},
-            {"level": "Severe", "action": "Duy trì độ ẩm đất", "product": "Phân NPK cân đối"}
+            {"level": "Maintenance", "action": "Duy trì độ ẩm đất ổn định", "product": "Nước sạch"},
+            {"level": "Maintenance", "action": "Bổ sung dinh dưỡng tăng sức đề kháng", "product": "Phân NPK cân đối"},
+            {"level": "Maintenance", "action": "Đảm bảo cây nhận đủ ánh sáng mặt trời", "product": "Ánh sáng tự nhiên"}
         ]
     },
     {
         "name": "Blueberry leaf",
         "common_name": "Lá việt quất (Blueberry Leaf)",
-        "description": "Phân tích trạng thái lá cây việt quất.",
+        "is_healthy": True,
+        "description": "Phân tích trạng thái lá cây việt quất khỏe mạnh.",
         "symptoms": ["Nhìn chung xanh tốt, có thể có sẹo nhỏ tự nhiên"],
         "treatments": [
-            {"level": "Mild", "action": "Theo dõi độ pH đất (4.5-5.5)", "product": "Phân bón chuyên dụng cho cây ưa acid"},
-            {"level": "Moderate", "action": "Kiểm tra sâu đục cành", "product": "Dầu Neem"},
-            {"level": "Severe", "action": "Bổ sung sắt nếu lá có dấu hiệu bạc màu", "product": "Chelated Iron"}
+            {"level": "Maintenance", "action": "Theo dõi độ pH đất định kỳ (4.5-5.5)", "product": "Phân bón chuyên dụng cho cây ưa acid"},
+            {"level": "Maintenance", "action": "Kiểm tra sâu đục cành ở các nhánh chính", "product": "Dầu Neem (phòng ngừa)"},
+            {"level": "Maintenance", "action": "Bổ sung sắt định kỳ để giữ màu lá xanh đậm", "product": "Chelated Iron"}
         ]
     },
     {
         "name": "Cherry leaf",
         "common_name": "Lá anh đào (Cherry Leaf)",
+        "is_healthy": True,
         "description": "Lá cây anh đào khỏe mạnh.",
         "symptoms": ["Lá xanh đậm, có răng cưa mép lá đều", "Cành chắc khỏe"],
         "treatments": [
-            {"level": "Mild", "action": "Tưới nước đều đặn vào buổi sáng", "product": "Nước sạch"},
-            {"level": "Moderate", "action": "Bón phân hữu cơ quanh gốc", "product": "Phân chuồng hoai mục"},
-            {"level": "Severe", "action": "Cắt tỉa cành khô, cành vượt", "product": "Kéo cắt cành"}
+            {"level": "Maintenance", "action": "Tưới nước đều đặn vào buổi sáng tránh đọng nước", "product": "Nước sạch"},
+            {"level": "Maintenance", "action": "Bón phân hữu cơ quanh gốc định kỳ", "product": "Phân chuồng hoai mục"},
+            {"level": "Maintenance", "action": "Cắt tỉa nhẹ các cành khuất tán", "product": "Kéo cắt cành"}
         ]
     },
     {
@@ -210,13 +214,14 @@ DISEASES_SEED_DATA = [
     },
     {
         "name": "Peach leaf",
-        "common_name": "Lá đào (Peach Leaf)",
-        "description": "Trạng thái lá đào bình thường.",
+        "common_name": "Lá đào khỏe mạnh (Healthy Peach Leaf)",
+        "is_healthy": True,
+        "description": "Trạng thái lá đào sinh trưởng bình thường.",
         "symptoms": ["Lá thon dài, xanh mượt", "Không bị sần hay xoăn"],
         "treatments": [
-            {"level": "Mild", "action": "Phòng trừ sâu ăn lá", "product": "Chế phẩm Bt"},
-            {"level": "Moderate", "action": "Xới đất quanh gốc cho tơi xốp", "product": "Phân hữu cơ khoáng"},
-            {"level": "Severe", "action": "Phòng bệnh xoăn lá sớm", "product": "Phun Copper Sulfate khi mùa đông kết thúc"}
+            {"level": "Maintenance", "action": "Phòng trừ sâu ăn lá bằng chế phẩm sinh học", "product": "Chế phẩm Bt"},
+            {"level": "Maintenance", "action": "Xới đất quanh gốc để tăng độ thông thoáng", "product": "Phân hữu cơ khoáng"},
+            {"level": "Maintenance", "action": "Phòng bệnh xoăn lá khi thời tiết chuyển mùa", "product": "Phun Copper Sulfate khi mùa đông kết thúc"}
         ]
     },
     {
@@ -244,34 +249,37 @@ DISEASES_SEED_DATA = [
     {
         "name": "Potato leaf",
         "common_name": "Lá khoai tây khỏe mạnh (Healthy Potato Leaf)",
+        "is_healthy": True,
         "description": "Lá khoai tây phát triển bình thường.",
         "symptoms": ["Lá xanh, bóng, không có vết thâm", "Cây mọc khỏe"],
         "treatments": [
-            {"level": "Mild", "action": "Theo dõi sâu vẽ bùa", "product": "Bẫy dán"},
-            {"level": "Moderate", "action": "Vun gốc tăng diện tích củ", "product": "Phân Kali"},
-            {"level": "Severe", "action": "Duy trì quản lý nước tốt", "product": "N/A"}
+            {"level": "Maintenance", "action": "Theo dõi mật độ côn trùng gây hại", "product": "Bẫy dán/Bẫy vàng"},
+            {"level": "Maintenance", "action": "Vun gốc tăng diện tích hình thành củ", "product": "Phân Kali"},
+            {"level": "Maintenance", "action": "Đảm bảo thoát nước tốt tránh thối rễ", "product": "N/A"}
         ]
     },
     {
         "name": "Raspberry leaf",
         "common_name": "Lá mâm xôi (Raspberry Leaf)",
+        "is_healthy": True,
         "description": "Trạng thái lá mâm xôi khỏe mạnh.",
         "symptoms": ["Lá kép lông chim, xanh tươi", "Cành mọc xuôi đều"],
         "treatments": [
-            {"level": "Mild", "action": "Tỉa bỏ các cành già đã cho quả", "product": "Phân bón lá vi lượng"},
-            {"level": "Moderate", "action": "Quản lý độ ẩm gốc", "product": "Mùn cưa phủ gốc"},
-            {"level": "Severe", "action": "Sử dụng thuốc nấm phòng trừ rỉ sắt", "product": "Dung dịch Bordeaux"}
+            {"level": "Maintenance", "action": "Tỉa bỏ các cành già đã cho quả để tập trung dinh dưỡng", "product": "Phân bón lá vi lượng"},
+            {"level": "Maintenance", "action": "Quản lý độ ẩm gốc bằng vật liệu che phủ", "product": "Mùn cưa phủ gốc"},
+            {"level": "Maintenance", "action": "Phòng trừ nấm rỉ sắt khi mưa ẩm", "product": "Dung dịch Bordeaux"}
         ]
     },
     {
         "name": "Soyabean leaf",
         "common_name": "Lá đậu nành (Soybean Leaf)",
-        "description": "Sức khỏe lá cây đậu tương/đậu nành.",
+        "is_healthy": True,
+        "description": "Sức khỏe lá cây đậu tương/đậu nành ổn định.",
         "symptoms": ["Lá xanh đều, không bị thủng do sâu"],
         "treatments": [
-            {"level": "Mild", "action": "Bón lân tăng cường phát triển rễ", "product": "Supe lân"},
-            {"level": "Moderate", "action": "Kiểm tra rệp sáp đầu vụ", "product": "Phun nước áp lực"},
-            {"level": "Severe", "action": "Duy trì thoát nước tốt", "product": "N/A"}
+            {"level": "Maintenance", "action": "Bón lân định kỳ tăng cường phát triển bộ rễ", "product": "Supe lân"},
+            {"level": "Maintenance", "action": "Kiểm tra rệp sáp ở các nách lá", "product": "Phun nước áp lực"},
+            {"level": "Maintenance", "action": "Đảm bảo rãnh thoát nước luốn thông thoáng", "product": "N/A"}
         ]
     },
     {
@@ -298,13 +306,14 @@ DISEASES_SEED_DATA = [
     },
     {
         "name": "Strawberry leaf",
-        "common_name": "Lá dâu tây (Strawberry Leaf)",
+        "common_name": "Lá dâu tây khỏe mạnh (Healthy Strawberry Leaf)",
+        "is_healthy": True,
         "description": "Lá dâu tây trong trạng thái xanh tốt.",
         "symptoms": ["Lá xanh bóng đẹp, mép lá không bị cháy đen"],
         "treatments": [
-            {"level": "Mild", "action": "Vệ sinh cỏ dại quanh gốc", "product": "Nước muối sinh lý loãng"},
-            {"level": "Moderate", "action": "Bổ sung phân bón Kali cho quả", "product": "Kali trắng (K2SO4)"},
-            {"level": "Severe", "action": "Thường xuyên dọn lá già để tránh nấm", "product": "Vôi bột"}
+            {"level": "Maintenance", "action": "Vệ sinh cỏ dại và lá già quanh gốc thường xuyên", "product": "Nước muối sinh lý loãng (xịt nhẹ)"},
+            {"level": "Maintenance", "action": "Bổ sung phân bón Kali khi cây bắt đầu ra hoa", "product": "Kali trắng (K2SO4)"},
+            {"level": "Maintenance", "action": "Lót rơm quanh gốc để quả không chạm đất", "product": "Rơm khô hoặc màng phủ"}
         ]
     },
     {
@@ -376,12 +385,13 @@ DISEASES_SEED_DATA = [
     {
         "name": "Tomato leaf",
         "common_name": "Lá cà chua khỏe mạnh (Healthy Tomato Leaf)",
+        "is_healthy": True,
         "description": "Lá cà chua bình thường, sinh trưởng tốt.",
         "symptoms": ["Cành lá xanh mướt, hoa đậu tốt"],
         "treatments": [
-            {"level": "Mild", "action": "Duy trì bón phân hữu cơ", "product": "Dịch trùn quế"},
-            {"level": "Moderate", "action": "Làm sạch cỏ dại", "product": "Công cụ thủ công"},
-            {"level": "Severe", "action": "Tỉa cành tạo độ thoáng", "product": "Kéo tỉa"}
+            {"level": "Maintenance", "action": "Duy trì bổ sung phân hữu cơ vi sinh định kỳ", "product": "Dịch trùn quế"},
+            {"level": "Maintenance", "action": "Làm sạch cỏ dại cạnh tranh dinh dưỡng", "product": "Công cụ thủ công"},
+            {"level": "Maintenance", "action": "Tỉa cành tạo độ thông thoáng phòng nấm mốc", "product": "Kéo tỉa sạch"}
         ]
     },
     {
@@ -420,12 +430,13 @@ DISEASES_SEED_DATA = [
     {
         "name": "grape leaf",
         "common_name": "Lá nho khỏe mạnh (Healthy Grape Leaf)",
-        "description": "Lá nho ở trạng thái tốt.",
+        "is_healthy": True,
+        "description": "Lá nho ở trạng thái phát triển tốt.",
         "symptoms": ["Lá xanh đậm, mọng nước, không bị rỉ sắt"],
         "treatments": [
-            {"level": "Mild", "action": "Bón phân đa vi lượng định kỳ", "product": "Phân bón NPK 15-15-15"},
-            {"level": "Moderate", "action": "Tưới nước gốc, hạn chế ướt lá", "product": "Hệ thống tưới nhỏ giọt"},
-            {"level": "Severe", "action": "Kiểm tra sâu đục thân sớm", "product": "Thuốc tẩm gốc sinh học"}
+            {"level": "Maintenance", "action": "Bón phân đa vi lượng cân đối", "product": "Phân bón NPK 15-15-15"},
+            {"level": "Maintenance", "action": "Tưới nước trực tiếp vào gốc, hạn chế làm ướt lá", "product": "Hệ thống tưới nhỏ giọt"},
+            {"level": "Maintenance", "action": "Kiểm tra dấu hiệu sâu đục thân định kỳ", "product": "Chế phẩm sinh học"}
         ]
     }
 ]

@@ -22,3 +22,5 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+/backend/app/uploads/
+/backend/results/

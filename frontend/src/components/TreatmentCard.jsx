@@ -11,6 +11,7 @@ const TreatmentCard = ({ treatments = [] }) => {
             case 'mild': return 'Cấp độ: Nhẹ';
             case 'moderate': return 'Cấp độ: Trung Bình';
             case 'severe': return 'Cấp độ: Nặng';
+            case 'maintenance': return 'Gợi ý chăm sóc';
             default: return level;
         }
     };
@@ -20,6 +21,7 @@ const TreatmentCard = ({ treatments = [] }) => {
             case 'mild': return 'bg-green-100 border-green-200 text-green-800';
             case 'moderate': return 'bg-yellow-100 border-yellow-200 text-yellow-800';
             case 'severe': return 'bg-red-100 border-red-200 text-red-800';
+            case 'maintenance': return 'bg-agri-green/10 border-agri-green/20 text-agri-green';
             default: return 'bg-gray-100 border-gray-200 text-gray-800';
         }
     };
@@ -29,6 +31,7 @@ const TreatmentCard = ({ treatments = [] }) => {
             case 'mild': return <CheckCircle2 className="w-5 h-5 text-green-600" />;
             case 'moderate': return <AlertCircle className="w-5 h-5 text-yellow-600" />;
             case 'severe': return <XCircle className="w-5 h-5 text-red-600" />;
+            case 'maintenance': return <CheckCircle2 className="w-5 h-5 text-agri-green" />;
             default: return <AlertCircle className="w-5 h-5 text-gray-600" />;
         }
     }

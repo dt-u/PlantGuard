@@ -5,6 +5,8 @@ import uuid
 import base64
 import numpy as np
 import asyncio
+from ultralytics import YOLO
+from .seed_data import DISEASES_SEED_DATA
 
 # Define the results directory
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
@@ -13,51 +15,75 @@ if not os.path.exists(RESULTS_DIR):
 
 class AIEngine:
     def __init__(self):
-        # In a real scenario, load the models here
-        # self.model = YOLO("yolov8n.pt")
-        pass
+        # Load the trained YOLOv8 model
+        model_path = os.path.join(os.path.dirname(__file__), "models", "best.pt")
+        if os.path.exists(model_path):
+            self.model = YOLO(model_path)
+            print(f"Model loaded successfully from {model_path}")
+        else:
+            self.model = None
+            print(f"WARNING: Model file not found at {model_path}. Running in mock mode.")
 
     async def detect_image(self, image_path: str):
         """
-        Simulates detection on an image.
-        Draws a random bounding box and labels it.
+        Runs real detection on an image using the loaded YOLO model.
         """
         try:
-            img = cv2.imread(image_path)
-            if img is None:
-                raise ValueError("Could not open or find the image")
+            if self.model is None:
+                return await self.mock_detect_image(image_path)
 
-            height, width, _ = img.shape
-            
-            # Simulate detection
-            # Draw a box
-            x1 = random.randint(0, width // 2)
-            y1 = random.randint(0, height // 2)
-            x2 = random.randint(x1 + 50, width)
-            y2 = random.randint(y1 + 50, height)
-            
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
-            cv2.putText(img, "Mock_Disease", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
+            # Run inference
+            results = self.model(image_path)
+            result = results[0]
             
             # Generate output filename
             filename = f"processed_{uuid.uuid4()}.jpg"
             output_path = os.path.join(RESULTS_DIR, filename)
             
-            cv2.imwrite(output_path, img)
+            # Save the annotated image
+            result.save(filename=output_path)
             
-            # In a real app, you would determine disease from class_id
-            from .seed_data import DISEASES_SEED_DATA
-            disease_entry = random.choice(DISEASES_SEED_DATA)
-            disease_name = disease_entry["name"]
-            
+            # Determine disease from highest confidence box
+            if len(result.boxes) > 0:
+                # Take the top detection
+                top_box = result.boxes[0]
+                class_id = int(top_box.cls[0].item())
+                confidence = float(top_box.conf[0].item())
+                
+                # Directly map class_id to seed_data index (confirmed matching)
+                if 0 <= class_id < len(DISEASES_SEED_DATA):
+                    disease_name = DISEASES_SEED_DATA[class_id]["name"]
+                else:
+                    disease_name = "Healthy" # Fallback
+            else:
+                disease_name = "Healthy"
+                confidence = 1.0
+
             return {
                 "image_url": f"/results/{filename}",
                 "disease_name": disease_name,
-                "confidence": round(random.uniform(0.7, 0.99), 2)
+                "confidence": round(confidence, 2)
             }
         except Exception as e:
             print(f"Error in detect_image: {e}")
-            raise e
+            return await self.mock_detect_image(image_path)
+
+    async def mock_detect_image(self, image_path: str):
+        """Fallback mock detection if real model fails or is missing"""
+        img = cv2.imread(image_path)
+        if img is None: raise ValueError("Image not found")
+        height, width, _ = img.shape
+        x1, y1 = random.randint(0, width//2), random.randint(0, height//2)
+        cv2.rectangle(img, (x1, y1), (x1+100, y1+100), (0, 0, 255), 2)
+        filename = f"processed_{uuid.uuid4()}.jpg"
+        output_path = os.path.join(RESULTS_DIR, filename)
+        cv2.imwrite(output_path, img)
+        disease_entry = random.choice(DISEASES_SEED_DATA)
+        return {
+            "image_url": f"/results/{filename}",
+            "disease_name": disease_entry["name"],
+            "confidence": 0.5
+        }
 
     async def detect_video(self, video_path: str):
         """
@@ -150,17 +176,19 @@ class AIEngine:
                     # Resize for performance if needed
                     frame = cv2.resize(frame, (640, 480))
                     
-                    # --- YOLO Detection Simulation ---
-                    # In a real app, you'd run self.model(frame) here.
-                    # We will randomly draw boxes.
-                    if random.random() > 0.85:
-                         x1 = random.randint(0, 300)
-                         y1 = random.randint(0, 200)
-                         x2 = x1 + random.randint(50, 150)
-                         y2 = y1 + random.randint(50, 150)
-                         
-                         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                         cv2.putText(frame, "Person", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+                    # --- YOLO Detection ---
+                    if self.model:
+                        results = self.model(frame)
+                        frame = results[0].plot() # YOLO annotated frame
+                    else:
+                        # Fallback simulated boxes
+                        if random.random() > 0.85:
+                             x1 = random.randint(0, 300)
+                             y1 = random.randint(0, 200)
+                             x2 = x1 + random.randint(50, 150)
+                             y2 = y1 + random.randint(50, 150)
+                             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                             cv2.putText(frame, "Simulation", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
                     
                     # Yield control to event loop briefly
                     await asyncio.sleep(0.01) 

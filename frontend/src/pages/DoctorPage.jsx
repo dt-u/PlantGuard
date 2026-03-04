@@ -86,9 +86,11 @@ const DoctorPage = () => {
                                         </ul>
                                     </div>
 
-                                    <div className="p-3 bg-green-50 rounded-lg border border-green-100 mt-4">
-                                        <p className="text-green-800 text-xs">
-                                            <span className="font-bold">Ghi chú:</span> Đã nhận diện được bệnh. Vui lòng xem các phương pháp điều trị bên dưới tương ứng với tình trạng cây thực tế.
+                                    <div className={`p-3 rounded-lg border mt-4 ${result.disease.is_healthy ? 'bg-agri-green/10 border-agri-green/20' : 'bg-green-50 border-green-100'}`}>
+                                        <p className={`${result.disease.is_healthy ? 'text-agri-green' : 'text-green-800'} text-xs`}>
+                                            <span className="font-bold">Ghi chú:</span> {result.disease.is_healthy
+                                                ? "Cây của bạn đang rất khỏe mạnh! Hãy duy trì các thói quen chăm sóc tốt."
+                                                : "Đã nhận diện được bệnh. Vui lòng xem các phương pháp điều trị bên dưới tương ứng với tình trạng cây thực tế."}
                                         </p>
                                     </div>
 
@@ -102,9 +104,15 @@ const DoctorPage = () => {
                             </div>
                         </div>
 
-                        <div className="glass-panel p-6">
-                            <h3 className="text-xl font-bold text-agri-dark mb-4">Treatment Plan</h3>
-                            <p className="text-gray-600 mb-4">Select the severity level based on your visual inspection:</p>
+                        <div className="glass-panel p-6 border-t-4 border-agri-green">
+                            <h3 className="text-xl font-bold text-agri-dark mb-4">
+                                {result.disease.is_healthy ? "Maintenance Plan" : "Treatment Plan"}
+                            </h3>
+                            <p className="text-gray-600 mb-4">
+                                {result.disease.is_healthy
+                                    ? "Dưới đây là các gợi ý để duy trì sức khỏe cho cây của bạn:"
+                                    : "Select the severity level based on your visual inspection:"}
+                            </p>
                             <TreatmentCard treatments={result.disease.treatments} />
                         </div>
                     </div>
