@@ -8,6 +8,9 @@ class Treatment(BaseModel):
 
 class DiseaseInfo(BaseModel):
     name: str
+    common_name: str
+    description: str
+    symptoms: List[str]
     treatments: List[Treatment]
 
 class DiagnosisResponse(BaseModel):

@@ -69,13 +69,26 @@ const DoctorPage = () => {
                                 </div>
                                 <div className="w-full md:w-1/2 space-y-4">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-agri-dark">{result.disease.name}</h2>
-                                        <p className="text-sm text-gray-500">Confidence: {(result.confidence * 100).toFixed(1)}%</p>
+                                        <h2 className="text-2xl font-bold text-agri-dark">{result.disease.common_name}</h2>
+                                        <p className="text-xs text-gray-400 font-mono mb-2">Internal: {result.disease.name}</p>
+                                        <p className="text-sm text-gray-500 italic">Confidence: {(result.confidence * 100).toFixed(1)}%</p>
                                     </div>
 
-                                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                                        <p className="text-blue-800 text-sm">
-                                            <span className="font-bold">AI Note:</span> Disease detected. Please review the treatment options below.
+                                    <div className="space-y-2">
+                                        <p className="text-sm text-gray-700 font-medium">Mô tả:</p>
+                                        <p className="text-sm text-gray-600">{result.disease.description}</p>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <p className="text-sm text-gray-700 font-medium">Triệu chứng:</p>
+                                        <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                                            {result.disease.symptoms.map((s, i) => <li key={i}>{s}</li>)}
+                                        </ul>
+                                    </div>
+
+                                    <div className="p-3 bg-green-50 rounded-lg border border-green-100 mt-4">
+                                        <p className="text-green-800 text-xs">
+                                            <span className="font-bold">Ghi chú:</span> Đã nhận diện được bệnh. Vui lòng xem các phương pháp điều trị bên dưới tương ứng với tình trạng cây thực tế.
                                         </p>
                                     </div>
 

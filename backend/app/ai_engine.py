@@ -46,7 +46,9 @@ class AIEngine:
             cv2.imwrite(output_path, img)
             
             # In a real app, you would determine disease from class_id
-            disease_name = random.choice(["Tomato Blight", "Corn Rust", "Healthy"])
+            from .seed_data import DISEASES_SEED_DATA
+            disease_entry = random.choice(DISEASES_SEED_DATA)
+            disease_name = disease_entry["name"]
             
             return {
                 "image_url": f"/results/{filename}",

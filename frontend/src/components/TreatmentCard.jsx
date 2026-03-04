@@ -6,6 +6,15 @@ const TreatmentCard = ({ treatments = [] }) => {
 
     if (!treatments || treatments.length === 0) return null;
 
+    const translateLevel = (level) => {
+        switch (level.toLowerCase()) {
+            case 'mild': return 'Cấp độ: Nhẹ';
+            case 'moderate': return 'Cấp độ: Trung Bình';
+            case 'severe': return 'Cấp độ: Nặng';
+            default: return level;
+        }
+    };
+
     const getLevelColor = (level) => {
         switch (level.toLowerCase()) {
             case 'mild': return 'bg-green-100 border-green-200 text-green-800';
@@ -34,19 +43,19 @@ const TreatmentCard = ({ treatments = [] }) => {
                         }`}
                 >
                     <div className={`flex items-center justify-between p-3 rounded-lg mb-2 ${getLevelColor(treatment.level)}`}>
-                        <span className="font-bold uppercase tracking-wide">{treatment.level}</span>
+                        <span className="font-bold uppercase tracking-wide">{translateLevel(treatment.level)}</span>
                         {getIcon(treatment.level)}
                     </div>
 
                     <div className={`space-y-3 overflow-hidden transition-all duration-300 ${expandedId === index ? 'max-h-64 opacity-100 mt-4' : 'max-h-0 opacity-0'
                         }`}>
                         <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold">Recommended Action</p>
-                            <p className="text-gray-800">{treatment.action}</p>
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Biện pháp xử lý</p>
+                            <p className="text-gray-800 text-sm">{treatment.action}</p>
                         </div>
                         <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold">Recommended Product</p>
-                            <p className="text-agri-green font-medium">{treatment.product}</p>
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Sản phẩm khuyên dùng</p>
+                            <p className="text-agri-green font-medium text-sm">{treatment.product}</p>
                         </div>
                     </div>
 
