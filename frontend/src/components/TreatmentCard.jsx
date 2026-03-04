@@ -1,0 +1,62 @@
+import React, { useState } from 'react';
+import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+
+const TreatmentCard = ({ treatments = [] }) => {
+    const [expandedId, setExpandedId] = useState(null);
+
+    if (!treatments || treatments.length === 0) return null;
+
+    const getLevelColor = (level) => {
+        switch (level.toLowerCase()) {
+            case 'mild': return 'bg-green-100 border-green-200 text-green-800';
+            case 'moderate': return 'bg-yellow-100 border-yellow-200 text-yellow-800';
+            case 'severe': return 'bg-red-100 border-red-200 text-red-800';
+            default: return 'bg-gray-100 border-gray-200 text-gray-800';
+        }
+    };
+
+    const getIcon = (level) => {
+        switch (level.toLowerCase()) {
+            case 'mild': return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+            case 'moderate': return <AlertCircle className="w-5 h-5 text-yellow-600" />;
+            case 'severe': return <XCircle className="w-5 h-5 text-red-600" />;
+            default: return <AlertCircle className="w-5 h-5 text-gray-600" />;
+        }
+    }
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+            {treatments.map((treatment, index) => (
+                <div
+                    key={index}
+                    onClick={() => setExpandedId(expandedId === index ? null : index)}
+                    className={`glass-panel p-4 cursor-pointer transition-all duration-300 hover:scale-[1.02] border-2 ${expandedId === index ? 'ring-2 ring-offset-2 ring-agri-green scale-[1.02]' : 'border-transparent'
+                        }`}
+                >
+                    <div className={`flex items-center justify-between p-3 rounded-lg mb-2 ${getLevelColor(treatment.level)}`}>
+                        <span className="font-bold uppercase tracking-wide">{treatment.level}</span>
+                        {getIcon(treatment.level)}
+                    </div>
+
+                    <div className={`space-y-3 overflow-hidden transition-all duration-300 ${expandedId === index ? 'max-h-64 opacity-100 mt-4' : 'max-h-0 opacity-0'
+                        }`}>
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Recommended Action</p>
+                            <p className="text-gray-800">{treatment.action}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Recommended Product</p>
+                            <p className="text-agri-green font-medium">{treatment.product}</p>
+                        </div>
+                    </div>
+
+                    {expandedId !== index && (
+                        <p className="text-center text-sm text-gray-400 mt-2">Click to view details</p>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+};
+
+export default TreatmentCard;
