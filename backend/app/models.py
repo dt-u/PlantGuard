@@ -5,6 +5,7 @@ class Treatment(BaseModel):
     level: str  # Mild, Moderate, Severe
     action: str
     product: str
+    identification_guide: str
 
 class DiseaseInfo(BaseModel):
     name: str

@@ -50,14 +50,21 @@ const TreatmentCard = ({ treatments = [] }) => {
                         {getIcon(treatment.level)}
                     </div>
 
-                    <div className={`space-y-3 overflow-hidden transition-all duration-300 ${expandedId === index ? 'max-h-64 opacity-100 mt-4' : 'max-h-0 opacity-0'
+                    <div className={`space-y-3 overflow-hidden transition-all duration-300 ${expandedId === index ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
                         }`}>
                         <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold">Biện pháp xử lý</p>
+                            <p className="text-xs text-gray-500 uppercase font-semibold flex items-center gap-1 mb-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                                Cách nhận biết
+                            </p>
+                            <p className="text-gray-700 text-sm leading-relaxed italic">"{treatment.identification_guide}"</p>
+                        </div>
+                        <div className="pt-2 border-t border-gray-100">
+                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Biện pháp xử lý</p>
                             <p className="text-gray-800 text-sm">{treatment.action}</p>
                         </div>
                         <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold">Sản phẩm khuyên dùng</p>
+                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Sản phẩm khuyên dùng</p>
                             <p className="text-agri-green font-medium text-sm">{treatment.product}</p>
                         </div>
                     </div>
