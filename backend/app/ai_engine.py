@@ -121,7 +121,7 @@ class AIEngine:
                      y2 = y1 + random.randint(50, 200)
                      
                      cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                     cv2.putText(frame, "Alert", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
+                     cv2.putText(frame, "CANH BAO RUI RO", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                      alert_count += 1
 
                 out.write(frame)

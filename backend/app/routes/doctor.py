@@ -31,16 +31,18 @@ async def diagnose_leaf(file: UploadFile = File(...)):
         disease_info = await diseases_collection.find_one({"name": disease_name})
         
         if not disease_info:
-            # Fallback if DB not seeded or unknown disease
-            disease_info = {
-                "name": disease_name,
-                "treatments": []
-            }
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Mô hình AI nhận diện đây là '{disease_name}', nhưng thông tin chi tiết về loại bệnh này hiện chưa có trong cơ sở dữ liệu."
+            )
             
         return DiagnosisResponse(
             image_url=result["image_url"],
             disease=DiseaseInfo(**disease_info),
             confidence=result["confidence"]
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Diagnosis error: {e}")
+        raise HTTPException(status_code=500, detail="Máy chủ gặp sự cố khi xử lý hình ảnh. Vui lòng thử lại sau.")
