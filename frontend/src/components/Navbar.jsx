@@ -18,15 +18,15 @@ const Navbar = () => {
 
             <div className="flex space-x-4">
                 <Link to="/" className={`px-4 py-2 rounded-lg font-medium transition-colors ${isActive('/')}`}>
-                    Home
+                    Trang chủ
                 </Link>
                 <Link to="/monitor" className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${isActive('/monitor')}`}>
                     <Activity className="w-4 h-4" />
-                    <span>Monitor</span>
+                    <span>Giám sát</span>
                 </Link>
                 <Link to="/doctor" className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${isActive('/doctor')}`}>
                     <Stethoscope className="w-4 h-4" />
-                    <span>Doctor</span>
+                    <span>Bác sĩ</span>
                 </Link>
             </div>
         </nav>

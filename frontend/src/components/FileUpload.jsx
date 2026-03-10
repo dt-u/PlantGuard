@@ -26,11 +26,11 @@ const FileUpload = ({ onFileSelect, accept, label }) => {
                 <UploadCloud className="w-8 h-8 text-agri-green" />
             </div>
             {isDragActive ? (
-                <p className="text-agri-dark font-medium">Drop the {label} here ...</p>
+                <p className="text-agri-dark font-medium">Thả {label} vào đây ...</p>
             ) : (
                 <div className="text-center">
-                    <p className="text-lg font-medium text-agri-dark">Drag & drop {label} here</p>
-                    <p className="text-sm text-gray-500 mt-2">or click to select file</p>
+                    <p className="text-lg font-medium text-agri-dark">Kéo & thả {label} vào đây</p>
+                    <p className="text-sm text-gray-500 mt-2">hoặc click để chọn file</p>
                 </div>
             )}
         </div>

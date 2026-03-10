@@ -142,61 +142,72 @@ class AIEngine:
         """
         Generates frames from a camera stream (URL).
         Yields base64 encoded frames for WebSocket streaming.
-        Supports automatic reconnection/mocking if connection fails.
         """
-        cap = cv2.VideoCapture(camera_url)
+        # Ensure protocol exists
+        if not camera_url.startswith("http://") and not camera_url.startswith("https://"):
+            camera_url = "http://" + camera_url
+            print(f"Added missing protocol: {camera_url}")
+
+        # Auto-fix for DroidCam URLs
+        if "4747" in camera_url and not any(x in camera_url for x in ["/video", "/mjpegfeed", "/video.force"]):
+            if not camera_url.endswith("/"): camera_url += "/"
+            camera_url += "video"
+            print(f"Auto-fixed DroidCam URL to: {camera_url}")
+
+        # Use a thread for the blocking VideoCapture.open() call
+        def open_cap(url):
+            return cv2.VideoCapture(url)
+
+        print(f"Attempting to connect to camera: {camera_url}...")
+        cap = await asyncio.to_thread(open_cap, camera_url)
         
-        # Determine if we are in mock mode (failed connection)
+        # Check if opened, if not wait a bit and try again or use mock
         is_mock = not cap.isOpened()
+        if is_mock:
+            print(f"Failed to open camera: {camera_url}. Switching to Simulation Mode.")
         
         try:
             while True:
                 if is_mock:
-                    # Generate a black frame with text
+                    # Simulation Mode Frame
                     frame = np.zeros((480, 640, 3), dtype=np.uint8)
                     cv2.putText(frame, "Simulation Mode: No Camera", (50, 240), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-                    cv2.putText(frame, f"Connecting to: {camera_url}", (50, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
+                    cv2.putText(frame, f"URL: {camera_url}", (50, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
                     
-                    # Add random detection boxes to simulate AI working
                     if random.random() > 0.8:
                         x1 = random.randint(100, 500)
                         y1 = random.randint(100, 300)
                         cv2.rectangle(frame, (x1, y1), (x1+100, y1+100), (0, 255, 0), 2)
                         cv2.putText(frame, "Mock Object", (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                         
-                    await asyncio.sleep(0.1) # Simulate ~10 FPS
+                    await asyncio.sleep(0.1) 
                 else:
-                    ret, frame = cap.read()
+                    # Read frame in a thread to prevent blocking the event loop
+                    ret, frame = await asyncio.to_thread(cap.read)
                     if not ret:
-                        # End of stream or error, switch to mock or break
-                        print("Stream ended, switching to mock...")
+                        print("Lost connection to camera. Falling back to simulation.")
                         is_mock = True
                         continue
 
-                    # Resize for performance if needed
                     frame = cv2.resize(frame, (640, 480))
                     
-                    # --- YOLO Detection ---
                     if self.model:
-                        results = self.model(frame)
-                        frame = results[0].plot() # YOLO annotated frame
+                        # Run YOLO in a thread as it is CPU/GPU intensive
+                        def run_yolo(f):
+                            return self.model(f)[0].plot()
+                        frame = await asyncio.to_thread(run_yolo, frame)
                     else:
-                        # Fallback simulated boxes
                         if random.random() > 0.85:
                              x1 = random.randint(0, 300)
                              y1 = random.randint(0, 200)
                              x2 = x1 + random.randint(50, 150)
                              y2 = y1 + random.randint(50, 150)
                              cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                             cv2.putText(frame, "Simulation", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
                     
-                    # Yield control to event loop briefly
                     await asyncio.sleep(0.01) 
 
-                # Encode frame to JPEG
                 _, buffer = cv2.imencode('.jpg', frame)
                 frame_bytes = base64.b64encode(buffer).decode('utf-8')
-                
                 yield frame_bytes
 
         except Exception as e:

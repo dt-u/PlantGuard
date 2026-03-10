@@ -18,7 +18,8 @@
 ## 🛠 Tech Stack
 
 -   **Backend**: Python (FastAPI), Uvicorn, Motor (Async MongoDB), OpenCV, WebSocket.
--   **Frontend**: ReactJS (Vite), Tailwind CSS, Lucide-React.
+-   **Frontend (Web)**: ReactJS (Vite), Tailwind CSS, Lucide-React.
+-   **Mobile App**: React Native (Expo), Lucide-React-Native.
 -   **Database**: MongoDB.
 -   **AI/ML**: Mock AI Engine (Simulating YOLOv8 detection behavior).
 
@@ -33,11 +34,17 @@ PlantGuard/
 │   │   └── routes/     # API Endpoints (Monitor/Doctor)
 │   └── results/        # Processed videos/images
 │
-└── frontend/           # React Client
-    ├── src/
-    │   ├── components/ # Reusable UI (LiveCamera, TreatmentCard)
-    │   └── pages/      # Main Pages (Home, Monitor, Doctor)
-    └── tailwind.config.js
+├── frontend/           # React Web Client
+│   ├── src/
+│   │   ├── components/ # Reusable UI (LiveCamera, TreatmentCard)
+│   │   └── pages/      # Main Pages (Home, Monitor, Doctor)
+│   └── tailwind.config.js
+│
+└── mobile/             # React Native Mobile App (Expo)
+    ├── App.js          # Navigation & Entry
+    └── src/
+        ├── screens/    # Mobile Screens
+        └── api/        # Mobile API Config
 ```
 
 ## 🔧 Installation & Setup
@@ -46,6 +53,7 @@ PlantGuard/
 -   **Python 3.8+**
 -   **Node.js 16+**
 -   **MongoDB** (Must be running locally on port `27017`)
+-   **Expo Go** app (Installed on your phone for mobile testing)
 
 ### 1. Backend Setup
 1.  Navigate to the backend folder:
@@ -58,11 +66,11 @@ PlantGuard/
     ```
 3.  Start the server:
     ```bash
-    uvicorn app.main:app --reload
+    uvicorn app.main:app --reload --host 0.0.0.0
     ```
-    *Server runs at: `http://127.0.0.1:8000`*
+    *Note: Use `--host 0.0.0.0` to allow mobile devices to connect.*
 
-### 2. Frontend Setup
+### 2. Frontend (Web) Setup
 1.  Open a new terminal and navigate to the frontend folder:
     ```bash
     cd frontend
@@ -75,7 +83,24 @@ PlantGuard/
     ```bash
     npm run dev
     ```
-    *App runs at: `http://localhost:5173` (typically)*
+
+### 3. Mobile App Setup
+1.  Open a new terminal and navigate to the mobile folder:
+    ```bash
+    cd mobile
+    ```
+2.  Update Backend IP:
+    -   Open `src/api/config.js` and change `LOCAL_IP` to your computer's IP (e.g., `192.168.1.3`).
+3.  Install dependencies:
+    ```bash
+    npm install
+    ```
+4.  Start Expo:
+    ```bash
+    npx expo start
+    ```
+5.  **Scan the QR Code** with the **Expo Go** app on your phone.
+
 
 ## 📖 Usage Guide
 

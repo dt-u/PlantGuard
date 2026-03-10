@@ -1,0 +1,40 @@
+{
+    "expo": {
+        "name": "PlantGuard",
+        "slug": "plantguard-mobile",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "userInterfaceStyle": "light",
+        "assetBundlePatterns": [
+            "**/*"
+        ],
+        "ios": {
+            "supportsImplicitNetworking": true,
+            "bundleIdentifier": "com.plantguard.app"
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/adaptive-icon.png",
+                "backgroundColor": "#ffffff"
+            },
+            "package": "com.plantguard.app"
+        },
+        "web": {
+            "favicon": "./assets/favicon.png"
+        },
+        "plugins": [
+            [
+                "expo-camera",
+                {
+                    "cameraPermission": "Allow PlantGuard to access your camera to diagnose plant diseases."
+                }
+            ],
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "Allow PlantGuard to access your photos to diagnose plant diseases."
+                }
+            ]
+        ]
+    }
+}

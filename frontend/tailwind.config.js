@@ -8,6 +8,7 @@ export default {
     extend: {
       colors: {
         'agri-green': '#10B981',
+        'agri-blue': '#3B82F6', // Standard Blue 500 for a bright "surveillance" look
         'agri-dark': '#064E3B',
       },
     },

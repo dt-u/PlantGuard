@@ -10,6 +10,7 @@ class Treatment(BaseModel):
 class DiseaseInfo(BaseModel):
     name: str
     common_name: str
+    is_healthy: bool = False
     description: str
     symptoms: List[str]
     treatments: List[Treatment]

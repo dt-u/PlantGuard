@@ -46,7 +46,19 @@ const TreatmentCard = ({ treatments = [] }) => {
                         }`}
                 >
                     <div className={`flex items-center justify-between p-3 rounded-lg mb-2 ${getLevelColor(treatment.level)}`}>
-                        <span className="font-bold uppercase tracking-wide">{translateLevel(treatment.level)}</span>
+                        <div className="flex flex-col">
+                            {treatment.level.toLowerCase() === 'maintenance' ? (
+                                <span className="font-bold uppercase tracking-wide text-[14px] whitespace-nowrap">Gợi ý chăm sóc</span>
+                            ) : (
+                                <>
+                                    <span className="text-[12px] opacity-70 font-semibold uppercase">Gợi ý</span>
+                                    <span className="font-bold uppercase tracking-wide text-lg -mt-1">
+                                        {treatment.level.toLowerCase() === 'mild' ? 'Nhẹ' :
+                                            treatment.level.toLowerCase() === 'moderate' ? 'Trung Bình' : 'Nặng'}
+                                    </span>
+                                </>
+                            )}
+                        </div>
                         {getIcon(treatment.level)}
                     </div>
 
@@ -70,7 +82,7 @@ const TreatmentCard = ({ treatments = [] }) => {
                     </div>
 
                     {expandedId !== index && (
-                        <p className="text-center text-sm text-gray-400 mt-2">Click to view details</p>
+                        <p className="text-center text-sm text-gray-400 mt-2">Nhấn để xem chi tiết</p>
                     )}
                 </div>
             ))}

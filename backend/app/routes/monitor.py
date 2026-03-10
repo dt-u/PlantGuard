@@ -4,6 +4,7 @@ from ..models import AnalysisResponse
 import shutil
 import os
 import uuid
+import asyncio
 
 router = APIRouter()
 ai_engine = AIEngine()
@@ -35,16 +36,27 @@ async def analyze_video(file: UploadFile = File(...)):
 @router.websocket("/ws/live")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+    print("WebSocket connection accepted")
     try:
-        # Wait for client to send the camera URL
-        camera_url = await websocket.receive_text()
-        print(f"Client requested stream from: {camera_url}")
-        
+        # Wait for client to send the camera URL with a timeout or safer receive
+        try:
+            camera_url = await asyncio.wait_for(websocket.receive_text(), timeout=5.0)
+            print(f"Client requested stream from: {camera_url}")
+        except asyncio.TimeoutError:
+            print("Timeout waiting for camera URL from client")
+            await websocket.close(code=1000)
+            return
+
         async for frame_base64 in ai_engine.generate_frames(camera_url):
             await websocket.send_text(frame_base64)
+            # Small sleep to prevent overwhelming the socket
+            await asyncio.sleep(0.01)
             
     except WebSocketDisconnect:
-        print("Client disconnected")
+        print("Client disconnected normally")
     except Exception as e:
-        print(f"WebSocket Error: {e}")
-        await websocket.close()
+        print(f"WebSocket Error in endpoint: {e}")
+        try:
+            await websocket.close()
+        except:
+            pass
