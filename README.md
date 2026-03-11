@@ -64,7 +64,13 @@ PlantGuard/
     ```bash
     pip install -r requirements.txt
     ```
-3.  Start the server:
+3.  Configure Environment Variables:
+    -   Copy the provided example environment file:
+        ```bash
+        copy .env.example .env
+        ```
+    -   Update `.env` with your actual configuration if necessary (e.g., custom MongoDB URI).
+4.  Start the server:
     ```bash
     uvicorn app.main:app --reload --host 0.0.0.0
     ```
