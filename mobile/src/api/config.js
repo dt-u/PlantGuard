@@ -3,7 +3,7 @@
  */
 
 // Thay thế bằng IP của máy tính bạn
-export const LOCAL_IP = "10.170.0.178"; 
+export const LOCAL_IP = "192.168.5.104"; 
 
 export const API_BASE_URL = `http://${LOCAL_IP}:8000`;
 export const WS_BASE_URL = `ws://${LOCAL_IP}:8000`;

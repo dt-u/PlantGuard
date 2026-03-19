@@ -16,6 +16,10 @@ const MonitorPage = () => {
         { id: 2, time: '10:46:05', msg: 'Đang quét vùng giám sát Phía Đông', type: 'info' }
     ]);
 
+    const handleLiveLog = (newLog) => {
+        setLogs(prev => [newLog, ...prev].slice(0, 50));
+    };
+
     // Upload State
     const [video, setVideo] = useState(null);
     const [result, setResult] = useState(null);
@@ -149,7 +153,7 @@ const MonitorPage = () => {
                         {/* TAB CONTENT: LIVE CAMERA */}
                         {activeTab === 'live' && (
                             <div className="animate-in fade-in zoom-in-95 duration-300">
-                                <LiveCamera />
+                                <LiveCamera onLogEvent={handleLiveLog} />
                             </div>
                         )}
 

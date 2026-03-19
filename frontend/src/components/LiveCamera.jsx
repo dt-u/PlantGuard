@@ -1,16 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, Unplug, Play, Square, AlertCircle } from 'lucide-react';
+import { Camera, Unplug, Play, Square, AlertCircle, Radio, Maximize, Minimize } from 'lucide-react';
 
-const LiveCamera = () => {
+const LiveCamera = ({ onLogEvent }) => {
     const [cameraUrl, setCameraUrl] = useState("http://192.168.5.100:4747/video");
     const [isStreaming, setIsStreaming] = useState(false);
     const [status, setStatus] = useState("disconnected"); // disconnected, connecting, connected
     const [frame, setFrame] = useState(null);
     const [wsError, setWsError] = useState(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const wsRef = useRef(null);
+    const containerRef = useRef(null);
 
     useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        
         return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
             if (wsRef.current) {
                 wsRef.current.close();
             }
@@ -44,8 +52,26 @@ const LiveCamera = () => {
         };
 
         ws.onmessage = (event) => {
-            // Received base64 frame
-            setFrame(`data:image/jpeg;base64,${event.data}`);
+            try {
+                // Thử parse dữ liệu trả về dưới dạng JSON
+                const data = JSON.parse(event.data);
+                if (data.image) {
+                    setFrame(`data:image/jpeg;base64,${data.image}`);
+                }
+                if (data.detections && data.detections.length > 0 && onLogEvent) {
+                    data.detections.forEach(d => {
+                        onLogEvent({
+                            id: Date.now() + Math.random(),
+                            time: new Date().toLocaleTimeString('vi-VN', { hour12: false }),
+                            msg: `Cảnh báo đối tượng: [${d.label.toUpperCase()}] - Confidence: ${(d.confidence * 100).toFixed(0)}%`,
+                            type: 'alert'
+                        });
+                    });
+                }
+            } catch (e) {
+                // Nếu không phải JSON, mặc định xử lý như luồng ảnh cũ
+                setFrame(`data:image/jpeg;base64,${event.data}`);
+            }
         };
 
         ws.onclose = (e) => {
@@ -73,6 +99,16 @@ const LiveCamera = () => {
         setStatus("disconnected");
         setFrame(null);
         setWsError(null);
+    };
+
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            containerRef.current?.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
     };
 
     return (
@@ -110,7 +146,7 @@ const LiveCamera = () => {
                 </div>
             </div>
 
-            <div className="relative glass-panel p-2 min-h-[450px] flex items-center justify-center bg-agri-dark/95 overflow-hidden border-4 border-agri-dark shadow-2xl">
+            <div ref={containerRef} className={`relative glass-panel p-2 flex items-center justify-center bg-agri-dark/95 overflow-hidden border-4 border-agri-dark shadow-2xl transition-all ${isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'min-h-[450px]'}`}>
                 {/* Surveillance Overlays */}
                 {status === "connected" && (
                     <>
@@ -125,7 +161,7 @@ const LiveCamera = () => {
                 )}
 
                 {status === "connected" && frame ? (
-                    <img src={frame} alt="Luồng trực tiếp" className="w-full h-full object-contain rounded shadow-inner" />
+                    <img src={frame} alt="Luồng trực tiếp" className={`w-full object-contain rounded shadow-inner ${isFullscreen ? 'h-screen' : 'h-full'}`} />
                 ) : (
                     <div className="flex flex-col items-center justify-center text-gray-500">
                         {status === "connecting" ? (
@@ -143,10 +179,19 @@ const LiveCamera = () => {
                     </div>
                 )}
 
-                {/* Status Badge */}
-                <div className="absolute top-6 right-6 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter shadow-md flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white">
-                    <span className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-blue-400 animate-ping' : 'bg-red-500'}`}></span>
-                    {status === 'connected' ? 'Trực tuyến' : status === 'connecting' ? 'Đang kết nối' : 'Ngoại tuyến'}
+                {/* Status Badge & Fullscreen */}
+                <div className="absolute top-6 right-6 flex items-center gap-2 z-20">
+                    <button
+                        onClick={toggleFullscreen}
+                        className="p-1.5 rounded-lg text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-md"
+                        title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                    >
+                        {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                    </button>
+                    <div className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter shadow-md flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white">
+                        <span className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-blue-400 animate-ping' : 'bg-red-500'}`}></span>
+                        {status === 'connected' ? 'Trực tuyến' : status === 'connecting' ? 'Đang kết nối' : 'Ngoại tuyến'}
+                    </div>
                 </div>
             </div>
 
