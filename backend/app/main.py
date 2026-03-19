@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from .database import seed_db
-from .routes import monitor, doctor
+from .routes import monitor, doctor, admin
 import os
 
 app = FastAPI(title="PlantGuard API")
@@ -19,6 +19,7 @@ app.add_middleware(
 # Routes
 app.include_router(monitor.router, prefix="/api/monitor", tags=["Monitor"])
 app.include_router(doctor.router, prefix="/api/doctor", tags=["Doctor"])
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 
 # Static Mounts
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "..", "results")

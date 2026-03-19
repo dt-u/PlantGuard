@@ -85,10 +85,10 @@ class AIEngine:
             "confidence": 0.5
         }
 
-    async def detect_video(self, video_path: str):
+    async def detect_video(self, video_path: str, progress_callback=None):
         """
-        Simulates video processing.
-        Reads frames, draws random boxes, and saves the output video.
+        Processes video using YOLOv8 if available, else simulated.
+        Reads frames, draws boxes, and saves the output video.
         """
         try:
             cap = cv2.VideoCapture(video_path)
@@ -98,40 +98,94 @@ class AIEngine:
             width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             fps = int(cap.get(cv2.CAP_PROP_FPS))
+            if fps == 0: fps = 30
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             
-            # Use XVID for simplicity/compatibility in some cases, or mp4v
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
+            fourcc = cv2.VideoWriter_fourcc(*'avc1') 
             filename = f"processed_{uuid.uuid4()}.mp4"
             output_path = os.path.join(RESULTS_DIR, filename)
             
             out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
             
             alert_count = 0
+            detailed_logs = []
             
-            while cap.isOpened():
-                ret, frame = cap.read()
-                if not ret:
-                    break
+            def process_frames():
+                nonlocal alert_count, detailed_logs
+                frame_idx = 0
+                frame_skip = 3
+                last_boxes = []
+                last_logged_time = {}
                 
-                # Randomly draw boxes on some frames
-                if random.random() > 0.7:
-                     x1 = random.randint(0, width // 2)
-                     y1 = random.randint(0, height // 2)
-                     x2 = x1 + random.randint(50, 200)
-                     y2 = y1 + random.randint(50, 200)
-                     
-                     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                     cv2.putText(frame, "CANH BAO RUI RO", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                     alert_count += 1
+                while cap.isOpened():
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
+                        
+                    current_time_sec = frame_idx / fps
+                    
+                    if frame_idx % frame_skip == 0:
+                        if self.model:
+                            res = self.model(frame, verbose=False)
+                            boxes_data = []
+                            for box in res[0].boxes:
+                                x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                                conf = float(box.conf[0].item())
+                                cls = int(box.cls[0].item())
+                                boxes_data.append((x1, y1, x2, y2, conf, cls))
+                            last_boxes = boxes_data
+                        else:
+                            # Simulated if no model loaded
+                            if random.random() > 0.8:
+                                x1 = random.randint(0, width // 2)
+                                y1 = random.randint(0, height // 2)
+                                x2 = x1 + random.randint(50, 200)
+                                y2 = y1 + random.randint(50, 200)
+                                last_boxes = [(x1, y1, x2, y2, 0.99, -1)]
+                            else:
+                                last_boxes = []
 
-                out.write(frame)
+                    for box in last_boxes:
+                        x1, y1, x2, y2, conf, cls = box
+                        if cls == -1:
+                            label = "Vật thể Mô phỏng"
+                        else:
+                            label = DISEASES_SEED_DATA[cls]["name"] if 0 <= cls < len(DISEASES_SEED_DATA) else f"Class {cls}"
+                            
+                        if conf > 0.5:
+                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                            cv2.putText(frame, f"{label} {conf:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                            
+                            if current_time_sec - last_logged_time.get(label, -5) >= 5.0:
+                                last_logged_time[label] = current_time_sec
+                                alert_count += 1
+                                m = int(current_time_sec // 60)
+                                s = int(current_time_sec % 60)
+                                time_str = f"{m:02d}:{s:02d}"
+                                detailed_logs.append({
+                                    "time": time_str,
+                                    "msg": f"Tại {time_str} phát hiện rủi ro: [{label}]",
+                                    "type": "alert"
+                                })
+
+                    out.write(frame)
+                    
+                    if progress_callback and frame_idx % 10 == 0 and total_frames > 0:
+                        progress_callback(int((frame_idx / total_frames) * 100))
+                        
+                    frame_idx += 1
+
+            await asyncio.to_thread(process_frames)
                 
             cap.release()
             out.release()
             
+            if progress_callback: progress_callback(100)
+            
             return {
                 "video_url": f"/results/{filename}",
-                "alert_count": alert_count
+                "alert_count": alert_count,
+                "detailed_logs": detailed_logs
             }
             
         except Exception as e:
@@ -295,8 +349,8 @@ class AIEngine:
                     # Target roughly 30 FPS for the video stream
                     await asyncio.sleep(0.03)
 
-                # Encode and yield
-                _, buffer = cv2.imencode('.jpg', frame_to_send)
+                # Encode and yield with slightly lower quality (80) to reduce bandwidth/base64 overhead
+                _, buffer = cv2.imencode('.jpg', frame_to_send, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
                 frame_bytes = base64.b64encode(buffer).decode('utf-8')
                 
                 payload = {

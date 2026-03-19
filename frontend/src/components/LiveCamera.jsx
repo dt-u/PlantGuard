@@ -10,6 +10,8 @@ const LiveCamera = ({ onLogEvent }) => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const wsRef = useRef(null);
     const containerRef = useRef(null);
+    const isStreamingRef = useRef(false);
+    const reconnectTimeoutRef = useRef(null);
 
     useEffect(() => {
         const handleFullscreenChange = () => {
@@ -26,8 +28,10 @@ const LiveCamera = ({ onLogEvent }) => {
     }, []);
 
     const startStream = () => {
+        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
         setWsError(null);
         setIsStreaming(true);
+        isStreamingRef.current = true;
         setStatus("connecting");
 
         // Tự động xác định backend host (localhost hoặc 127.0.0.1) khớp với trình duyệt
@@ -77,21 +81,29 @@ const LiveCamera = ({ onLogEvent }) => {
         ws.onclose = (e) => {
             console.log("Disconnected from WebSocket", e);
             setStatus("disconnected");
-            setIsStreaming(false);
-            if (!e.wasClean) {
-                setWsError("Kết nối bị ngắt quãng. Hãy đảm bảo bạn đã nhập đúng URL DroidCam (kèm /video) và điện thoại đang mở ứng dụng.");
+            if (isStreamingRef.current) {
+                setWsError("Kết nối bị ngắt quãng. Đang thử tự động kết nối lại...");
+                reconnectTimeoutRef.current = setTimeout(() => {
+                    if (isStreamingRef.current) startStream();
+                }, 3000);
+            } else {
+                setIsStreaming(false);
+                if (!e.wasClean) {
+                    setWsError("Kết nối bị ngắt. Hãy kiểm tra URL DroidCam.");
+                }
             }
         };
 
         ws.onerror = (error) => {
             console.error("WebSocket Error:", error);
             setStatus("disconnected");
-            setIsStreaming(false);
-            setWsError("Không thể thiết lập kết nối với Server xử lý AI.");
+            setWsError("Lỗi kết nối tín hiệu video...");
         };
     };
 
     const stopStream = () => {
+        isStreamingRef.current = false;
+        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
         if (wsRef.current) {
             wsRef.current.close();
         }
@@ -150,10 +162,6 @@ const LiveCamera = ({ onLogEvent }) => {
                 {/* Surveillance Overlays */}
                 {status === "connected" && (
                     <>
-                        <div className="absolute top-6 left-6 flex items-center gap-2 z-10">
-                            <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.8)]"></div>
-                            <span className="text-white text-xs font-mono font-bold tracking-widest drop-shadow-md">TỔNG HỢP TRỰC TIẾP</span>
-                        </div>
                         <div className="absolute bottom-6 right-6 z-10">
                             <span className="text-white/80 text-xs font-mono drop-shadow-md">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
                         </div>
@@ -195,13 +203,6 @@ const LiveCamera = ({ onLogEvent }) => {
                 </div>
             </div>
 
-            <div className="bg-amber-50 p-4 rounded-xl flex items-start gap-3 text-xs text-amber-900 border border-amber-100 shadow-sm transition-all hover:shadow-md">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600" />
-                <p className="leading-relaxed">
-                    <strong>Thông tin kỹ thuật:</strong> Nếu URL camera không khả dụng (do mạng hoặc thiết bị), hệ thống sẽ tự động chuyển sang
-                    <span className="font-extrabold text-amber-700"> Chế độ Giả lập (Simulation)</span> để bạn có thể kiểm thử giao diện và luồng dữ liệu AI.
-                </p>
-            </div>
         </div>
     );
 };
