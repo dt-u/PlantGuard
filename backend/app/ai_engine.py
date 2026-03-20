@@ -113,7 +113,7 @@ class AIEngine:
             def process_frames():
                 nonlocal alert_count, detailed_logs
                 frame_idx = 0
-                frame_skip = 3
+                frame_skip = 10 # Optimized: skip more frames for Drone footage
                 last_boxes = []
                 last_logged_time = {}
                 
@@ -126,10 +126,18 @@ class AIEngine:
                     
                     if frame_idx % frame_skip == 0:
                         if self.model:
-                            res = self.model(frame, verbose=False)
+                            # Optimization: resize once to standard YOLO size (640) 
+                            # to avoid internal scaling overhead per frame
+                            frame_resized = cv2.resize(frame, (640, 640))
+                            res = self.model(frame_resized, verbose=False)
                             boxes_data = []
+                            # Scale boxes back to original resolution
+                            h_ratio = height / 640.0
+                            w_ratio = width / 640.0
                             for box in res[0].boxes:
-                                x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                                rx1, ry1, rx2, ry2 = box.xyxy[0].tolist()
+                                x1, y1 = int(rx1 * w_ratio), int(ry1 * h_ratio)
+                                x2, y2 = int(rx2 * w_ratio), int(ry2 * h_ratio)
                                 conf = float(box.conf[0].item())
                                 cls = int(box.cls[0].item())
                                 boxes_data.append((x1, y1, x2, y2, conf, cls))
@@ -170,7 +178,7 @@ class AIEngine:
 
                     out.write(frame)
                     
-                    if progress_callback and frame_idx % 10 == 0 and total_frames > 0:
+                    if progress_callback and frame_idx % 30 == 0 and total_frames > 0:
                         progress_callback(int((frame_idx / total_frames) * 100))
                         
                     frame_idx += 1

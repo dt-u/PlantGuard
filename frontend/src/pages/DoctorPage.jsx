@@ -69,7 +69,7 @@ const DoctorPage = () => {
             <div className="max-w-6xl mx-auto px-4 mt-6">
                 {!result && !loading && (
                     <div className="max-w-2xl mx-auto text-center mb-8">
-                        <h1 className="text-4xl font-bold text-agri-dark mb-3 font-inter">Bác Sĩ Cây Trồng</h1>
+                        <h1 className="text-4xl font-bold text-agri-dark mb-3 font-vietnam">Bác Sĩ Cây Trồng</h1>
                         <p className="text-gray-600 text-lg">Chẩn đoán sâu bệnh tức thì thông qua phân tích hình ảnh lá cây.</p>
                         <div className="mt-10">
                             <FileUpload onFileSelect={handleUpload} accept={{ 'image/*': [] }} label="ảnh lá cây" />
@@ -162,7 +162,7 @@ const DoctorPage = () => {
                                 {/* Full Treatment Plan */}
                                 <div className="glass-panel p-8 border-t-4 border-agri-green shadow-xl">
                                     <div className="flex items-center justify-between mb-8">
-                                        <h3 className="text-2xl font-bold text-agri-dark font-inter flex items-center gap-3">
+                                        <h3 className="text-2xl font-bold text-agri-dark font-vietnam flex items-center gap-3">
                                             {result.disease.is_healthy ? (
                                                 <>
                                                     <Cross className="w-7 h-7 text-green-500" />

@@ -31,7 +31,13 @@ function GlobalProgressIndicator({ jobState, setJobState }) {
     }, [jobState.jobId, jobState.status]);
 
     if (!jobState.jobId || jobState.status === 'idle') return null;
-    if (location.pathname === '/monitor' && jobState.monitorTab === 'upload') return null;
+    
+    // Hide progress box if we are already on the Monitor Page's Drone (Upload) tab
+    // We check the pathname (robustly) and the jobState's current tab
+    const isMonitorPage = location.pathname === '/monitor' || location.pathname === '/monitor/';
+    const isDroneTab = jobState.monitorTab === 'upload';
+    
+    if (isMonitorPage && isDroneTab) return null;
 
     return (
         <div className="fixed bottom-6 right-6 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-gray-100 z-50 w-80 animate-in slide-in-from-bottom">
@@ -60,7 +66,13 @@ function GlobalProgressIndicator({ jobState, setJobState }) {
 }
 
 function MainApp() {
-    const [jobState, setJobState] = useState({ jobId: null, status: 'idle', progress: 0, result: null });
+    const [jobState, setJobState] = useState({ 
+        jobId: null, 
+        status: 'idle', 
+        progress: 0, 
+        result: null,
+        monitorTab: 'live' // Default to live tab
+    });
     
     return (
         <>

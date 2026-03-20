@@ -5,11 +5,11 @@ import { Home, Activity, Stethoscope } from 'lucide-react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { 
   useFonts, 
-  Inter_400Regular, 
-  Inter_500Medium, 
-  Inter_600SemiBold, 
-  Inter_700Bold 
-} from '@expo-google-fonts/inter';
+  BeVietnamPro_400Regular, 
+  BeVietnamPro_500Medium, 
+  BeVietnamPro_600SemiBold, 
+  BeVietnamPro_700Bold 
+} from '@expo-google-fonts/be-vietnam-pro';
 
 // Screens
 import HomeScreen from './src/screens/HomeScreen';
@@ -22,10 +22,10 @@ const Tab = createBottomTabNavigator();
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    'Inter-Regular': Inter_400Regular,
-    'Inter-Medium': Inter_500Medium,
-    'Inter-SemiBold': Inter_600SemiBold,
-    'Inter-Bold': Inter_700Bold,
+    'Vietnam-Regular': BeVietnamPro_400Regular,
+    'Vietnam-Medium': BeVietnamPro_500Medium,
+    'Vietnam-SemiBold': BeVietnamPro_600SemiBold,
+    'Vietnam-Bold': BeVietnamPro_700Bold,
   });
 
   const onLayoutRootView = useCallback(async () => {
@@ -55,7 +55,7 @@ export default function App() {
             height: 60,
           },
           tabBarLabelStyle: {
-            fontFamily: 'Inter-Medium',
+            fontFamily: 'Vietnam-Medium',
             fontSize: 10,
           }
         })}

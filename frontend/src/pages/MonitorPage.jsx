@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import FileUpload from '../components/FileUpload';
 import Loader from '../components/Loader';
 import LiveCamera from '../components/LiveCamera';
-import { Video, AlertTriangle, Upload, Radio, Download, Trash2 } from 'lucide-react';
+import { Video, AlertTriangle, Upload, Radio, Download, Trash2, Zap } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
 const MonitorPage = ({ jobState, setJobState }) => {
@@ -23,9 +23,20 @@ const MonitorPage = ({ jobState, setJobState }) => {
         setJobState(prev => ({ ...prev, monitorTab: activeTab }));
     }, [activeTab, setJobState]);
 
-    // Live State
     const [liveLogs, setLiveLogs] = useState([]);
     const [liveAlertCount, setLiveAlertCount] = useState(0);
+
+    // Download dropdown state
+    const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
+    const videoRef = useRef(null);
+
+    const seekToVideoTime = (timeStr) => {
+        if (!videoRef.current) return;
+        const [m, s] = timeStr.split(':').map(Number);
+        const totalSeconds = m * 60 + s;
+        videoRef.current.currentTime = totalSeconds;
+        videoRef.current.play();
+    };
 
     const handleLiveLog = (newLog) => {
         if (newLog.type === 'alert') {
@@ -174,38 +185,81 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                 {result && (
                                     <div className="animate-in fade-in slide-in-from-bottom-2">
                                         <div className="glass-panel p-3 border-2 border-[#3B82F6]/30">
-                                            <h4 className="text-xs font-bold text-[#3B82F6] uppercase mb-2 flex items-center justify-center gap-2">
-                                                <Video className="w-4 h-4" /> AI Phân tích Hoàn tất
-                                            </h4>
+                                            <div className="flex justify-between items-center mb-3 px-1">
+                                                <h4 className="text-xs font-bold text-[#3B82F6] uppercase flex items-center gap-2">
+                                                    <Video className="w-4 h-4" /> AI Phân tích Hoàn tất
+                                                </h4>
+                                                
+                                                <div className="relative">
+                                                    <button 
+                                                        onClick={() => setShowDownloadDropdown(!showDownloadDropdown)}
+                                                        className="text-[10px] font-bold text-white bg-[#3B82F6] hover:bg-blue-600 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all shadow-md shadow-blue-500/20"
+                                                    >
+                                                        <Download className="w-3.5 h-3.5" /> Tải xuống
+                                                    </button>
+                                                    
+                                                    {showDownloadDropdown && (
+                                                        <>
+                                                            <div 
+                                                                className="fixed inset-0 z-40" 
+                                                                onClick={() => setShowDownloadDropdown(false)}
+                                                            ></div>
+                                                            <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                                                                <div className="px-3 py-1 mb-1 border-b border-gray-50">
+                                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Tùy chọn tải xuống</span>
+                                                                </div>
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        setShowDownloadDropdown(false);
+                                                                        try {
+                                                                            const response = await fetch(`http://127.0.0.1:8000${result.video_url}`);
+                                                                            const blob = await response.blob();
+                                                                            const url = window.URL.createObjectURL(blob);
+                                                                            const a = document.createElement('a');
+                                                                            a.href = url;
+                                                                            a.download = `PG_Video_${jobState.jobId.slice(0, 8)}.mp4`;
+                                                                            a.click();
+                                                                        } catch (e) { console.error(e); }
+                                                                    }}
+                                                                    className="w-full text-left px-4 py-2 text-[11px] font-medium text-gray-700 hover:bg-blue-50 hover:text-[#3B82F6] transition-colors flex items-center gap-2"
+                                                                >
+                                                                    <Video className="w-3.5 h-3.5" /> Chỉ tải Video (.mp4)
+                                                                </button>
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        setShowDownloadDropdown(false);
+                                                                        window.open(`http://127.0.0.1:8000/api/monitor/logs/excel/${jobState.jobId}`, '_blank');
+                                                                    }}
+                                                                    className="w-full text-left px-4 py-2 text-[11px] font-medium text-gray-700 hover:bg-blue-50 hover:text-[#3B82F6] transition-colors flex items-center gap-2"
+                                                                >
+                                                                    <div className="w-3.5 h-3.5 bg-green-100 rounded text-green-600 flex items-center justify-center text-[8px] font-bold">X</div>
+                                                                    Chỉ tải Nhật ký (.xlsx)
+                                                                </button>
+                                                                <div className="h-px bg-gray-50 my-1"></div>
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        setShowDownloadDropdown(false);
+                                                                        window.open(`http://127.0.0.1:8000/api/monitor/zip/${jobState.jobId}`, '_blank');
+                                                                    }}
+                                                                    className="w-full text-left px-4 py-2 text-[11px] font-bold text-[#3B82F6] hover:bg-blue-50 transition-colors flex items-center gap-2"
+                                                                >
+                                                                    <Download className="w-3.5 h-3.5" /> Tải trọn bộ (.zip)
+                                                                </button>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+
                                             <video
+                                                ref={videoRef}
                                                 src={`http://127.0.0.1:8000${result.video_url}`}
                                                 controls
                                                 className="w-full max-h-[60vh] object-contain rounded-lg shadow-md mb-2 bg-black"
                                                 key={result.video_url}
                                             />
-                                            <div className="flex justify-between items-center mt-2 px-1">
-                                                <button 
-                                                   onClick={async () => {
-                                                        try {
-                                                            const response = await fetch(`http://127.0.0.1:8000${result.video_url}`);
-                                                            const blob = await response.blob();
-                                                            const url = window.URL.createObjectURL(blob);
-                                                            const a = document.createElement('a');
-                                                            a.style.display = 'none';
-                                                            a.href = url;
-                                                            a.download = `Drone_Analysis_${Date.now()}.mp4`;
-                                                            document.body.appendChild(a);
-                                                            a.click();
-                                                            window.URL.revokeObjectURL(url);
-                                                        } catch (e) {
-                                                            console.error('Download failed', e);
-                                                        }
-                                                   }}
-                                                   className="text-[10px] font-bold text-[#3B82F6] hover:underline flex items-center gap-1 bg-blue-50 px-2 py-1 rounded"
-                                                >
-                                                    <Download className="w-3 h-3" /> Tải xuống
-                                                </button>
-                                                <span className="text-[10px] text-gray-500 font-bold">{result.alert_count} Cảnh Báo</span>
+                                            <div className="flex justify-end items-center mt-2 px-1">
+                                                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">{result.alert_count} Cảnh Báo Phát Hiện</span>
                                             </div>
                                         </div>
 
@@ -260,7 +314,16 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                 {currentLogs.map((log, idx) => (
                                     <div key={log.id || idx} className="border-l-2 border-gray-600 pl-3 py-1 animate-in fade-in slide-in-from-right-2">
                                         <div className="flex justify-between text-[9px] text-gray-500">
-                                            <span>{log.time}</span>
+                                            {activeTab === 'upload' ? (
+                                                <button 
+                                                    onClick={() => seekToVideoTime(log.time)}
+                                                    className="text-[10px] font-bold text-[#3B82F6] hover:underline cursor-pointer flex items-center gap-1"
+                                                >
+                                                    <Zap className="w-2.5 h-2.5" /> {log.time}
+                                                </button>
+                                            ) : (
+                                                <span>{log.time}</span>
+                                            )}
                                             <span className={log.type === 'alert' ? 'text-red-400 font-bold' : ''}>
                                                 {(log.type || '').toUpperCase()}
                                             </span>

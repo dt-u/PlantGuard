@@ -201,13 +201,13 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 32,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
         color: '#111827',
         letterSpacing: -0.5,
     },
     subtitle: {
         fontSize: 15,
-        fontFamily: 'Inter-Regular',
+        fontFamily: 'Vietnam-Regular',
         color: '#6B7280',
         marginTop: 6,
         lineHeight: 22,
@@ -239,12 +239,12 @@ const styles = StyleSheet.create({
     btnTextLarge: {
         color: '#FFFFFF',
         fontSize: 20,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
     },
     btnSubtext: {
         color: 'rgba(255,255,255,0.7)',
         fontSize: 13,
-        fontFamily: 'Inter-Medium',
+        fontFamily: 'Vietnam-Medium',
         marginTop: 4,
     },
     secondaryUploadBtn: {
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     btnTextSmall: {
         color: '#374151',
         fontSize: 16,
-        fontFamily: 'Inter-SemiBold',
+        fontFamily: 'Vietnam-SemiBold',
     },
     loaderContainer: {
         marginTop: 80,
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
         color: '#374151',
         fontSize: 15,
-        fontFamily: 'Inter-SemiBold',
+        fontFamily: 'Vietnam-SemiBold',
         textAlign: 'center',
     },
     resultSection: {
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     overlayText: {
         color: '#10B981',
         fontSize: 10,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
         letterSpacing: 1,
     },
     infoContainer: {
@@ -322,14 +322,14 @@ const styles = StyleSheet.create({
     },
     labelSmall: {
         fontSize: 11,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
         color: '#9CA3AF',
         letterSpacing: 1,
         marginBottom: 6,
     },
     diseaseName: {
         fontSize: 26,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
         color: '#111827',
         lineHeight: 32,
     },
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     },
     confidencePercentage: {
         fontSize: 16,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
         color: '#10B981',
     },
     techDetails: {
@@ -365,14 +365,14 @@ const styles = StyleSheet.create({
     },
     detailLabel: {
         fontSize: 12,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
         color: '#374151',
         opacity: 0.5,
     },
     descriptionText: {
         fontSize: 15,
         color: '#4B5563',
-        fontFamily: 'Inter-Medium',
+        fontFamily: 'Vietnam-Medium',
         fontStyle: 'italic',
         lineHeight: 22,
         borderLeftWidth: 3,
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     symptomText: {
         fontSize: 14,
         color: '#4B5563',
-        fontFamily: 'Inter-Regular',
+        fontFamily: 'Vietnam-Regular',
     },
     resetBtn: {
         flexDirection: 'row',
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     resetBtnText: {
         fontSize: 15,
         color: '#4B5563',
-        fontFamily: 'Inter-SemiBold',
+        fontFamily: 'Vietnam-SemiBold',
     },
     treatmentSection: {
         backgroundColor: '#FFFFFF',
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     },
     treatmentTitle: {
         fontSize: 22,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
     },
     disclaimerCard: {
         backgroundColor: '#FFFBEB',
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     },
     disclaimerTitle: {
         fontSize: 12,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
         color: '#92400E',
         letterSpacing: 0.5,
     },
@@ -459,11 +459,11 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#92400E',
         lineHeight: 19,
-        fontFamily: 'Inter-Regular',
+        fontFamily: 'Vietnam-Regular',
         opacity: 0.8,
     },
     disclaimerBold: {
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
         textDecorationLine: 'underline',
     }
 });

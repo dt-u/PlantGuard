@@ -1,10 +1,15 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks
+from fastapi.responses import FileResponse
 from ..ai_engine import AIEngine
 from ..models import AnalysisResponse
 import shutil
 import os
 import uuid
 import asyncio
+import pandas as pd
+import zipfile
+import tempfile
+from datetime import datetime
 
 router = APIRouter()
 ai_engine = AIEngine()
@@ -49,6 +54,76 @@ async def get_job_status(job_id: str):
     if job_id not in jobs:
         raise HTTPException(status_code=404, detail="Job not found")
     return jobs[job_id]
+
+@router.get("/logs/excel/{job_id}")
+async def download_logs_excel(job_id: str):
+    if job_id not in jobs or not jobs[job_id]["result"]:
+        raise HTTPException(status_code=404, detail="Kết quả không tồn tại hoặc Server đã khởi động lại")
+    
+    logs = jobs[job_id]["result"].get("detailed_logs", [])
+    
+    # Prepare data for Excel
+    data = []
+    for i, log in enumerate(logs, 1):
+        data.append({
+            "STT": i,
+            "Thời gian": log["time"],
+            "Loại": log["type"].upper(),
+            "Nội dung": log["msg"]
+        })
+    
+    df = pd.DataFrame(data)
+    
+    # Create temp file
+    temp_dir = tempfile.gettempdir()
+    excel_filename = f"PlantGuard_Report_{job_id[:8]}.xlsx"
+    excel_path = os.path.join(temp_dir, excel_filename)
+    
+    # Save to Excel
+    with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Nhật ký Phân tích')
+        
+    return FileResponse(
+        excel_path, 
+        filename=excel_filename,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+@router.get("/zip/{job_id}")
+async def download_combined_zip(job_id: str):
+    if job_id not in jobs or not jobs[job_id]["result"]:
+        raise HTTPException(status_code=404, detail="Kết quả không tồn tại hoặc Server đã khởi động lại")
+    
+    result = jobs[job_id]["result"]
+    video_rel_path = result["video_url"].lstrip("/") # results/processed_...
+    # Correct path: backend is 2 levels up from routes/monitor.py
+    video_abs_path = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), video_rel_path))
+    
+    if not os.path.exists(video_abs_path):
+        raise HTTPException(status_code=404, detail="Tệp video không tìm thấy trên máy chủ")
+    
+    temp_dir = tempfile.gettempdir()
+    zip_filename = f"PlantGuard_Full_Results_{job_id[:8]}.zip"
+    zip_path = os.path.join(temp_dir, zip_filename)
+    
+    # Create Excel logs first
+    logs = result.get("detailed_logs", [])
+    data = [{"STT": i, "Thời gian": l["time"], "Loại": l["type"].upper(), "Nội dung": l["msg"]} for i, l in enumerate(logs, 1)]
+    df = pd.DataFrame(data)
+    excel_filename = f"Nhat_ky_Phan_tich_{job_id[:8]}.xlsx"
+    excel_path = os.path.join(temp_dir, excel_filename)
+    df.to_excel(excel_path, index=False)
+    
+    # Create Zip
+    with zipfile.ZipFile(zip_path, 'w') as zf:
+        zf.write(video_abs_path, arcname=os.path.basename(video_abs_path))
+        zf.write(excel_path, arcname=excel_filename)
+    
+    return FileResponse(
+        zip_path,
+        filename=zip_filename,
+        media_type="application/zip"
+    )
 
 @router.websocket("/ws/live")
 async def websocket_endpoint(websocket: WebSocket):

@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
         marginTop: 15,
         fontSize: 16,
         color: '#2E7D32',
-        fontWeight: '600',
+        fontFamily: 'Vietnam-SemiBold',
     }
 });
 
