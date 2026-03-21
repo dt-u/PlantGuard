@@ -18,7 +18,19 @@ export const API_BASE_URL = `http://${LOCAL_IP}:8000`;
 export const WS_BASE_URL = `ws://${LOCAL_IP}:8000`;
 
 export const ENDPOINTS = {
-    DIAGNOSE: `${API_BASE_URL}/api/doctor/diagnose`,
+    // Auth
+    LOGIN: `${API_BASE_URL}/api/auth/login`,
+    REGISTER: `${API_BASE_URL}/api/auth/register`,
+    
+    // Monitor
     ANALYZE_VIDEO: `${API_BASE_URL}/api/monitor/analyze`,
-    WS_LIVE: `${WS_BASE_URL}/api/monitor/ws/live`
+    WS_LIVE: `${WS_BASE_URL}/api/monitor/ws/live`,
+    
+    // Doctor
+    DIAGNOSE: `${API_BASE_URL}/api/doctor/diagnose`,
+    
+    // History
+    HISTORY_LIST: `${API_BASE_URL}/api/history/list`,
+    HISTORY_SAVE: `${API_BASE_URL}/api/history/save`,
+    HISTORY_DELETE: (id) => `${API_BASE_URL}/api/history/${id}`
 };

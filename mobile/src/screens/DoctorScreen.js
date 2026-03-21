@@ -1,17 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
-import { Camera, AlertCircle, RefreshCw, Cross, Hospital, CheckCircle, Info } from 'lucide-react-native';
+import { Camera, AlertCircle, RefreshCw, Cross, Hospital, CheckCircle, Info, Save } from 'lucide-react-native';
 import { API_BASE_URL, ENDPOINTS } from '../api/config';
 import TreatmentCard from '../components/TreatmentCard';
+import { useAuth } from '../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
-const DoctorScreen = () => {
+const DoctorScreen = ({ navigation }) => {
+    const { user, isAuthenticated, getUserId } = useAuth();
     const [image, setImage] = useState(null);
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [savedToHistory, setSavedToHistory] = useState(false);
+    const [isPendingSave, setIsPendingSave] = useState(false);
+
+    // Auto-save when user logs in and there's a pending save
+    useEffect(() => {
+        if (user && isPendingSave && result && !savedToHistory) {
+            autoSaveAfterLogin();
+        }
+    }, [user, isPendingSave]);
+
+    const autoSaveAfterLogin = async () => {
+        try {
+            const historyRecord = {
+                image_url: result.image_url,
+                disease_name: result.disease.common_name,
+                confidence: result.confidence,
+                symptoms: result.disease.symptoms,
+                description: result.disease.description,
+                treatments: result.disease.treatments,
+                is_healthy: result.disease.is_healthy,
+                created_at: new Date().toISOString(),
+                user_id: user.id
+            };
+            
+            await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
+            setSavedToHistory(true);
+            setIsPendingSave(false);
+            Alert.alert('Thành công', 'Đã lưu kết quả chẩn đoán vào lịch sử của bạn.');
+        } catch (error) {
+            console.error('Error auto-saving:', error);
+            setIsPendingSave(false);
+        }
+    };
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -47,6 +82,7 @@ const DoctorScreen = () => {
     const handleUpload = async (fileAsset) => {
         setLoading(true);
         setResult(null);
+        setSavedToHistory(false);
         setImage(fileAsset.uri);
 
         const formData = new FormData();
@@ -69,9 +105,47 @@ const DoctorScreen = () => {
         }
     };
 
+    const handleSaveToHistory = async () => {
+        if (!isAuthenticated()) {
+            setIsPendingSave(true);
+            Alert.alert(
+                'Yêu cầu đăng nhập',
+                'Vui lòng đăng nhập để lưu kết quả chẩn đoán vào lịch sử cá nhân của bạn.',
+                [
+                    { text: 'Để sau', onPress: () => setIsPendingSave(false), style: 'cancel' },
+                    { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') }
+                ]
+            );
+            return;
+        }
+
+        try {
+            const historyRecord = {
+                image_url: result.image_url,
+                disease_name: result.disease.common_name,
+                confidence: result.confidence,
+                symptoms: result.disease.symptoms,
+                description: result.disease.description,
+                treatments: result.disease.treatments,
+                is_healthy: result.disease.is_healthy,
+                created_at: new Date().toISOString(),
+                user_id: getUserId()
+            };
+            
+            await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
+            setSavedToHistory(true);
+            Alert.alert('Thành công', 'Đã lưu kết quả chẩn đoán vào lịch sử.');
+        } catch (error) {
+            console.error('Error saving to history:', error);
+            Alert.alert('Lỗi', 'Không thể lưu vào lịch sử. Vui lòng thử lại sau.');
+        }
+    };
+
     const reset = () => {
         setImage(null);
         setResult(null);
+        setSavedToHistory(false);
+        setIsPendingSave(false);
     };
 
     return (
@@ -126,6 +200,31 @@ const DoctorScreen = () => {
                                 <Text style={styles.confidencePercentage}>{(result.confidence * 100).toFixed(1)}%</Text>
                             </View>
 
+                            <View style={styles.actionButtons}>
+                                <TouchableOpacity 
+                                    style={[styles.saveBtn, savedToHistory && styles.savedBtn]} 
+                                    onPress={handleSaveToHistory}
+                                    disabled={savedToHistory}
+                                >
+                                    {savedToHistory ? (
+                                        <>
+                                            <CheckCircle color="#94A3B8" size={18} />
+                                            <Text style={styles.savedBtnText}>Đã lưu</Text>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save color="#FFFFFF" size={18} />
+                                            <Text style={styles.saveBtnText}>Lưu lịch sử</Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+
+                                <TouchableOpacity style={styles.resetBtn} onPress={reset}>
+                                    <RefreshCw color="#6B7280" size={18} />
+                                    <Text style={styles.resetBtnText}>Lá khác</Text>
+                                </TouchableOpacity>
+                            </View>
+
                             <View style={styles.techDetails}>
                                 <View style={styles.detailItem}>
                                     <Text style={styles.detailLabel}>MÔ TẢ BỆNH LÝ</Text>
@@ -144,11 +243,6 @@ const DoctorScreen = () => {
                                     </View>
                                 </View>
                             </View>
-
-                            <TouchableOpacity style={styles.resetBtn} onPress={reset}>
-                                <RefreshCw color="#6B7280" size={16} />
-                                <Text style={styles.resetBtnText}>Kiểm tra lá khác</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
 
@@ -338,7 +432,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 12,
         marginTop: 15,
-        marginBottom: 25,
+        marginBottom: 20,
     },
     progressBarContainer: {
         flex: 1,
@@ -356,9 +450,54 @@ const styles = StyleSheet.create({
         fontFamily: 'Vietnam-Bold',
         color: '#10B981',
     },
+    actionButtons: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 25,
+    },
+    saveBtn: {
+        flex: 1.5,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        backgroundColor: '#2E7D32',
+        borderRadius: 14,
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+    },
+    savedBtn: {
+        backgroundColor: '#F1F5F9',
+    },
+    saveBtnText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontFamily: 'Vietnam-Bold',
+    },
+    savedBtnText: {
+        color: '#94A3B8',
+        fontSize: 14,
+        fontFamily: 'Vietnam-Bold',
+    },
+    resetBtn: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        borderWidth: 1.5,
+        borderColor: '#E5E7EB',
+        borderRadius: 14,
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+    },
+    resetBtnText: {
+        fontSize: 14,
+        color: '#4B5563',
+        fontFamily: 'Vietnam-Bold',
+    },
     techDetails: {
         gap: 20,
-        marginBottom: 25,
     },
     detailItem: {
         gap: 8,
@@ -391,22 +530,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#4B5563',
         fontFamily: 'Vietnam-Regular',
-    },
-    resetBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        borderWidth: 1.5,
-        borderColor: '#E5E7EB',
-        borderRadius: 16,
-        padding: 14,
-        marginTop: 10,
-    },
-    resetBtnText: {
-        fontSize: 15,
-        color: '#4B5563',
-        fontFamily: 'Vietnam-SemiBold',
     },
     treatmentSection: {
         backgroundColor: '#FFFFFF',

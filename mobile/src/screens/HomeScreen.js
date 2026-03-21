@@ -1,131 +1,281 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
-import { Leaf, Eye, ArrowRight } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar } from 'react-native';
+import { Leaf, Eye, ArrowRight, Sprout, LogIn } from 'lucide-react-native';
+import { useAuth } from '../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Nông Nghiệp</Text>
-        <Text style={[styles.title, styles.greenText]}>Thông Minh</Text>
-        <Text style={styles.subtitle}>
-          PlantGuard bảo vệ mùa màng của bạn bằng AI. Phát hiện bệnh sớm và giám sát đồng ruộng thời gian thực.
-        </Text>
-      </View>
+    const { user, isAuthenticated } = useAuth();
 
-      <View style={styles.grid}>
-        <TouchableOpacity 
-          style={styles.card} 
-          onPress={() => navigation.navigate('Giám sát')}
-        >
-          <View style={[styles.iconContainer, { backgroundColor: '#E3F2FD' }]}>
-            <Eye color="#1E88E5" size={32} />
-          </View>
-          <Text style={styles.cardTitle}>Chế độ Giám sát</Text>
-          <Text style={styles.cardDesc}>Phân tích Drone footage phát hiện cây bị stress và các điểm nóng trên cánh đồng lớn.</Text>
-          <View style={styles.cardFooter}>
-            <Text style={styles.footerText}>Bắt đầu Giám sát</Text>
-            <ArrowRight color="#1E88E5" size={16} />
-          </View>
-        </TouchableOpacity>
+    const handleProfilePress = () => {
+        if (isAuthenticated()) {
+            navigation.navigate('Tài khoản');
+        } else {
+            navigation.navigate('Login');
+        }
+    };
 
-        <TouchableOpacity 
-          style={styles.card}
-          onPress={() => navigation.navigate('Bác sĩ')}
-        >
-          <View style={[styles.iconContainer, { backgroundColor: '#E8F5E9' }]}>
-            <Leaf color="#2E7D32" size={32} />
-          </View>
-          <Text style={styles.cardTitle}>Bác sĩ Cây trồng</Text>
-          <Text style={styles.cardDesc}>Chẩn đoán bệnh trực tiếp qua ảnh lá và nhận ngay phác đồ điều trị chi tiết.</Text>
-          <View style={styles.cardFooter}>
-            <Text style={[styles.footerText, { color: '#2E7D32' }]}>Chẩn đoán ngay</Text>
-            <ArrowRight color="#2E7D32" size={16} />
-          </View>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-  );
+    return (
+        <View style={styles.container}>
+            <StatusBar barStyle="dark-content" />
+            
+            {/* Header / Profile */}
+            <View style={styles.header}>
+                <View style={styles.logoContainer}>
+                    <Sprout color="#2E7D32" size={28} />
+                    <Text style={styles.logoText}>PlantGuard</Text>
+                </View>
+                
+                <TouchableOpacity 
+                    onPress={handleProfilePress}
+                    style={styles.profileButton}
+                >
+                    {user ? (
+                        <View style={styles.userBadge}>
+                            <View style={styles.avatarMini}>
+                                <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
+                            </View>
+                            <Text style={styles.userNameMini} numberOfLines={1}>{user.name}</Text>
+                        </View>
+                    ) : (
+                        <View style={styles.loginBadge}>
+                            <LogIn color="#2E7D32" size={16} />
+                            <Text style={styles.loginTextMini}>Đăng nhập</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                {/* Hero Section */}
+                <View style={styles.heroSection}>
+                    <Text style={styles.title}>
+                        Nông Nghiệp{"\n"}
+                        <Text style={styles.highlightText}>Thông Minh</Text>
+                    </Text>
+                    <Text style={styles.subtitle}>Khởi Đầu Đơn Giản</Text>
+                    <Text style={styles.description}>
+                        Bảo vệ mùa màng của bạn bằng AI tiên tiến. Phát hiện sớm bệnh lý và giám sát sức khỏe đồng ruộng.
+                    </Text>
+                </View>
+
+                {/* Options List - Stacked for better readability */}
+                <View style={styles.menuList}>
+                    <TouchableOpacity 
+                        style={[styles.fullCard, styles.monitorCard]}
+                        onPress={() => navigation.navigate('Giám sát')}
+                    >
+                        <View style={styles.cardHeader}>
+                            <View style={[styles.iconBox, { backgroundColor: '#DBEAFE' }]}>
+                                <Eye color="#3B82F6" size={24} />
+                            </View>
+                            <Text style={styles.cardTitle}>Chế độ Giám sát</Text>
+                        </View>
+                        <Text style={styles.cardDesc}>
+                            Phân tích dữ liệu từ Drone và Camera để phát hiện sớm các vùng cây bị stress trên diện rộng.
+                        </Text>
+                        <View style={styles.cardFooter}>
+                            <Text style={[styles.actionText, { color: '#3B82F6' }]}>Bắt đầu ngay</Text>
+                            <ArrowRight color="#3B82F6" size={16} />
+                        </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                        style={[styles.fullCard, styles.doctorCard]}
+                        onPress={() => navigation.navigate('Bác sĩ')}
+                    >
+                        <View style={styles.cardHeader}>
+                            <View style={[styles.iconBox, { backgroundColor: '#DCFCE7' }]}>
+                                <Leaf color="#2E7D32" size={24} />
+                            </View>
+                            <Text style={styles.cardTitle}>Bác sĩ Cây trồng</Text>
+                        </View>
+                        <Text style={styles.cardDesc}>
+                            Chẩn đoán chính xác các loại bệnh trên lá và nhận phác đồ điều trị tức thì từ chuyên gia AI.
+                        </Text>
+                        <View style={styles.cardFooter}>
+                            <Text style={[styles.actionText, { color: '#2E7D32' }]}>Chẩn đoán ngay</Text>
+                            <ArrowRight color="#2E7D32" size={16} />
+                        </View>
+                    </TouchableOpacity>
+                </View>
+
+                <Text style={styles.footerText}>© 2026 PlantGuard AI • Giải pháp thông minh</Text>
+            </ScrollView>
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    paddingTop: 80,
-    backgroundColor: '#F9FAFB',
-    alignItems: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 36,
-    fontFamily: 'Vietnam-Bold',
-    color: '#1A1A1A',
-    textAlign: 'center',
-    lineHeight: 44,
-  },
-  greenText: {
-    color: '#2E7D32',
-  },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: 'Vietnam-Regular',
-    color: '#6B7280',
-    textAlign: 'center',
-    marginTop: 15,
-    maxWidth: 300,
-  },
-  grid: {
-    width: '100%',
-    gap: 20,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  cardTitle: {
-    fontSize: 22,
-    fontFamily: 'Vietnam-Bold',
-    color: '#1A1A1A',
-    marginBottom: 8,
-  },
-  cardDesc: {
-    fontSize: 14,
-    fontFamily: 'Vietnam-Regular',
-    color: '#9CA3AF',
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  footerText: {
-    fontSize: 16,
-    fontFamily: 'Vietnam-SemiBold',
-    color: '#1E88E5',
-  }
+    container: {
+        flex: 1,
+        backgroundColor: '#F8FAFC',
+    },
+    scrollContent: {
+        paddingBottom: 40,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingTop: 60,
+        paddingBottom: 15,
+        backgroundColor: '#F8FAFC',
+    },
+    logoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    logoText: {
+        fontSize: 20,
+        fontFamily: 'Vietnam-Bold',
+        color: '#1E293B',
+        marginLeft: 8,
+    },
+    profileButton: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+        elevation: 2,
+    },
+    userBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    avatarMini: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#DCFCE7',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8,
+    },
+    avatarText: {
+        fontSize: 10,
+        fontFamily: 'Vietnam-Bold',
+        color: '#2E7D32',
+    },
+    userNameMini: {
+        fontSize: 12,
+        fontFamily: 'Vietnam-Bold',
+        color: '#1E293B',
+        maxWidth: 80,
+    },
+    loginBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    loginTextMini: {
+        fontSize: 12,
+        fontFamily: 'Vietnam-Bold',
+        color: '#2E7D32',
+    },
+    heroSection: {
+        paddingHorizontal: 24,
+        marginTop: 30,
+        alignItems: 'center',
+    },
+    title: {
+        fontSize: 32,
+        fontFamily: 'Vietnam-Bold',
+        color: '#0F172A',
+        textAlign: 'center',
+        lineHeight: 40,
+    },
+    highlightText: {
+        color: '#2E7D32',
+    },
+    subtitle: {
+        fontSize: 18,
+        fontFamily: 'Vietnam-SemiBold',
+        color: '#10B981',
+        marginTop: 4,
+    },
+    description: {
+        fontSize: 14,
+        fontFamily: 'Vietnam-Regular',
+        color: '#64748B',
+        textAlign: 'center',
+        marginTop: 16,
+        lineHeight: 22,
+        paddingHorizontal: 20,
+    },
+    menuList: {
+        paddingHorizontal: 24,
+        marginTop: 40,
+        gap: 20,
+    },
+    fullCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 28,
+        padding: 24,
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.05,
+        shadowRadius: 20,
+        elevation: 4,
+        borderWidth: 1,
+        borderColor: '#F1F5F9',
+    },
+    monitorCard: {
+        borderLeftWidth: 6,
+        borderLeftColor: '#3B82F6',
+    },
+    doctorCard: {
+        borderLeftWidth: 6,
+        borderLeftColor: '#2E7D32',
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    iconBox: {
+        width: 48,
+        height: 48,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    cardTitle: {
+        fontSize: 18,
+        fontFamily: 'Vietnam-Bold',
+        color: '#1E293B',
+    },
+    cardDesc: {
+        fontSize: 14,
+        fontFamily: 'Vietnam-Medium',
+        color: '#64748B',
+        lineHeight: 20,
+        marginBottom: 20,
+    },
+    cardFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: 8,
+    },
+    actionText: {
+        fontSize: 14,
+        fontFamily: 'Vietnam-Bold',
+    },
+    footerText: {
+        textAlign: 'center',
+        fontSize: 12,
+        fontFamily: 'Vietnam-Medium',
+        color: '#CBD5E1',
+        marginTop: 40,
+    }
 });
 
 export default HomeScreen;

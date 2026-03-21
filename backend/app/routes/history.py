@@ -51,11 +51,15 @@ async def save_diagnosis(record: DiagnosisRecord):
         raise HTTPException(status_code=500, detail=f"Lỗi khi lưu lịch sử: {str(e)}")
 
 @router.get("/all", response_model=HistoryResponse)
-async def get_history(user_id: Optional[str] = "default_user", limit: int = 20, skip: int = 0):
+@router.get("/list", response_model=HistoryResponse)
+async def get_history(user_id: Optional[str] = None, limit: int = 50, skip: int = 0):
     """Lấy lịch sử chẩn đoán của người dùng"""
     try:
-        # Build query
-        query = {"user_id": user_id} if user_id else {}
+        # Build query - if user_id is "anonymous" or empty, might want to handle differently
+        # But usually we filter by user_id if provided
+        query = {}
+        if user_id and user_id != "anonymous" and user_id != "undefined":
+            query = {"user_id": user_id}
         
         # Get records with pagination
         cursor = mongodb.history.find(query).sort("created_at", -1).skip(skip).limit(limit)
@@ -64,8 +68,13 @@ async def get_history(user_id: Optional[str] = "default_user", limit: int = 20, 
         # Convert ObjectId to string and format
         formatted_records = []
         for record in records:
-            record["id"] = str(record.pop("_id"))
-            formatted_records.append(DiagnosisRecord(**record))
+            try:
+                record["id"] = str(record.pop("_id"))
+                # Use construct or handle missing fields to avoid Pydantic validation errors causing 500
+                formatted_records.append(DiagnosisRecord(**record))
+            except Exception as parse_err:
+                print(f"Error parsing history record: {parse_err}")
+                continue
         
         # Get total count
         total = await mongodb.history.count_documents(query)
@@ -77,6 +86,8 @@ async def get_history(user_id: Optional[str] = "default_user", limit: int = 20, 
             message="Lấy lịch sử thành công"
         )
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Lỗi khi lấy lịch sử: {str(e)}")
 
 @router.get("/{diagnosis_id}", response_model=HistoryRecordResponse)
