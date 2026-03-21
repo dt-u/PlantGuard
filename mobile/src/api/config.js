@@ -1,7 +1,18 @@
+import Constants from 'expo-constants';
+
 /**
  * BACKEND API CONFIGURATION
  */
 
+// Lấy IP động từ Expo (hoạt động tốt khi chạy máy ảo hoặc LAN)
+const getHostUri = () => {
+    if (Constants.expoConfig && Constants.expoConfig.hostUri) {
+        return Constants.expoConfig.hostUri.split(':')[0];
+    }
+    return "192.168.1.100"; // Fallback
+};
+
+export const LOCAL_IP = getHostUri();
 // Thay thế bằng IP của máy tính bạn
 export const LOCAL_IP = " 10.170.14.29"; 
 

@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 36,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Vietnam-Bold',
     color: '#1A1A1A',
     textAlign: 'center',
     lineHeight: 44,
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Vietnam-Regular',
     color: '#6B7280',
     textAlign: 'center',
     marginTop: 15,
@@ -105,13 +105,13 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 22,
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Vietnam-Bold',
     color: '#1A1A1A',
     marginBottom: 8,
   },
   cardDesc: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Vietnam-Regular',
     color: '#9CA3AF',
     marginBottom: 20,
     lineHeight: 20,
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Vietnam-SemiBold',
     color: '#1E88E5',
   }
 });

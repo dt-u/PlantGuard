@@ -10,6 +10,8 @@
 -   **Video Analysis**: Upload drone footage to automatically detect and highlight areas of concern (Mock detection implemented).
 -   **Real-time Live Stream**: Connect to an IP Camera (e.g., DroidCam) via WebSocket for real-time field monitoring.
 -   **Alert System**: Displays an alert count for detected issues.
+-   **Log Management**: One-tap "Clear Logs" functionality to keep the surveillance log clean.
+-   **Technical Transparency**: Integrated technical disclaimers explaining AI inference limitations.
 
 ### 🩺 Doctor Mode
 -   **Leaf Diagnosis**: Upload a photo of a crop leaf to identify diseases like "Tomato Blight" or "Corn Rust".
@@ -22,6 +24,7 @@
 -   **Mobile App**: React Native (Expo), Lucide-React-Native.
 -   **Database**: MongoDB.
 -   **AI/ML**: Mock AI Engine (Simulating YOLOv8 detection behavior).
+-   **Design**: Premium, state-of-the-art UI with glassmorphism, dynamic transitions, and cross-platform branding.
 
 ## 📂 Project Structure
 
@@ -95,39 +98,30 @@ PlantGuard/
     ```bash
     cd mobile
     ```
-2.  Update Backend IP:
-    -   Open `src/api/config.js` and change `LOCAL_IP` to your computer's IP (e.g., `192.168.1.3`).
-3.  Install dependencies:
+2.  Install dependencies:
     ```bash
     npm install
     ```
-4.  Start Expo:
+3.  Start Expo:
     ```bash
     npx expo start
     ```
-5.  **Scan the QR Code** with the **Expo Go** app on your phone.
-
+4.  **Scan the QR Code** with the **Expo Go** app on your phone.
+    -   *Note: The app automatically detects your computer's IP via Expo Constants.*
 
 ## 📖 Usage Guide
 
+### Using Monitor Mode
+1.  **Tab Switcher**: Toggle between **Live Cam** and **Upload Video**.
+2.  **Live Cam**: Enter your DroidCam URL. Enjoy **Auto-Rotation** (landscape) and **Keyboard persistence** for seamless starts.
+3.  **Log Management**: Use the **Trash Icon** next to log headers to clear detection history.
+4.  **Technical Insights**: Refer to the **Technical Disclaimer** at the bottom for AI confidence context.
+
 ### Using Doctor Mode
-1.  Go to the **Doctor** page.
-2.  Upload a clear image of a crop leaf.
-3.  View the diagnosed disease and confidence score.
-4.  Click on the **Treatment Cards** (Mild/Moderate/Severe) to view detailed solutions.
+1.  Upload a clear image of a crop leaf.
+2.  View the diagnosed disease and confidence score.
+3.  Click on the **Treatment Cards** (Mild/Moderate/Severe) for tailored solutions.
 
-### Using Monitor Mode (Upload)
-1.  Go to the **Monitor** page.
-2.  Stay on the "Upload Video" tab.
-3.  Upload a video file (`.mp4`, etc.).
-4.  Watch the processed output with red bounding boxes indicating detected stress.
-
-### Using Monitor Mode (Live Stream)
-1.  Go to the **Monitor** page.
-2.  Switch to the **Live Camera** tab.
-3.  Enter your IP Webcaming URL (e.g., `http://192.168.1.5:4747/video`).
-    -   *If you don't have a camera, the system will enter "Simulation Mode" and show a generated stream.*
-4.  Click **Start Stream** to begin.
 
 ## ⚠️ Notes
 -   **Mock AI**: This version uses a simulation engine. Real YOLOv8 models (`.pt` files) should be loaded in `backend/app/ai_engine.py` for production use.

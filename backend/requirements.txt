@@ -12,3 +12,5 @@ websockets
 passlib
 bcrypt
 email-validator
+pandas
+openpyxl

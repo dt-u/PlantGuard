@@ -1,16 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, Unplug, Play, Square, AlertCircle } from 'lucide-react';
+import { Camera, Unplug, Play, Square, AlertCircle, Radio, Maximize, Minimize } from 'lucide-react';
 
-const LiveCamera = () => {
+const LiveCamera = ({ onLogEvent }) => {
     const [cameraUrl, setCameraUrl] = useState("http://192.168.5.100:4747/video");
     const [isStreaming, setIsStreaming] = useState(false);
     const [status, setStatus] = useState("disconnected"); // disconnected, connecting, connected
     const [frame, setFrame] = useState(null);
     const [wsError, setWsError] = useState(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const wsRef = useRef(null);
+    const containerRef = useRef(null);
+    const isStreamingRef = useRef(false);
+    const reconnectTimeoutRef = useRef(null);
 
     useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        
         return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
             if (wsRef.current) {
                 wsRef.current.close();
             }
@@ -18,8 +28,10 @@ const LiveCamera = () => {
     }, []);
 
     const startStream = () => {
+        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
         setWsError(null);
         setIsStreaming(true);
+        isStreamingRef.current = true;
         setStatus("connecting");
 
         // Tự động xác định backend host (localhost hoặc 127.0.0.1) khớp với trình duyệt
@@ -44,28 +56,54 @@ const LiveCamera = () => {
         };
 
         ws.onmessage = (event) => {
-            // Received base64 frame
-            setFrame(`data:image/jpeg;base64,${event.data}`);
+            try {
+                // Thử parse dữ liệu trả về dưới dạng JSON
+                const data = JSON.parse(event.data);
+                if (data.image) {
+                    setFrame(`data:image/jpeg;base64,${data.image}`);
+                }
+                if (data.detections && data.detections.length > 0 && onLogEvent) {
+                    data.detections.forEach(d => {
+                        onLogEvent({
+                            id: Date.now() + Math.random(),
+                            time: new Date().toLocaleTimeString('vi-VN', { hour12: false }),
+                            msg: `Cảnh báo đối tượng: [${d.label.toUpperCase()}] - Confidence: ${(d.confidence * 100).toFixed(0)}%`,
+                            type: 'alert'
+                        });
+                    });
+                }
+            } catch (e) {
+                // Nếu không phải JSON, mặc định xử lý như luồng ảnh cũ
+                setFrame(`data:image/jpeg;base64,${event.data}`);
+            }
         };
 
         ws.onclose = (e) => {
             console.log("Disconnected from WebSocket", e);
             setStatus("disconnected");
-            setIsStreaming(false);
-            if (!e.wasClean) {
-                setWsError("Kết nối bị ngắt quãng. Hãy đảm bảo bạn đã nhập đúng URL DroidCam (kèm /video) và điện thoại đang mở ứng dụng.");
+            if (isStreamingRef.current) {
+                setWsError("Kết nối bị ngắt quãng. Đang thử tự động kết nối lại...");
+                reconnectTimeoutRef.current = setTimeout(() => {
+                    if (isStreamingRef.current) startStream();
+                }, 3000);
+            } else {
+                setIsStreaming(false);
+                if (!e.wasClean) {
+                    setWsError("Kết nối bị ngắt. Hãy kiểm tra URL DroidCam.");
+                }
             }
         };
 
         ws.onerror = (error) => {
             console.error("WebSocket Error:", error);
             setStatus("disconnected");
-            setIsStreaming(false);
-            setWsError("Không thể thiết lập kết nối với Server xử lý AI.");
+            setWsError("Lỗi kết nối tín hiệu video...");
         };
     };
 
     const stopStream = () => {
+        isStreamingRef.current = false;
+        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
         if (wsRef.current) {
             wsRef.current.close();
         }
@@ -73,6 +111,16 @@ const LiveCamera = () => {
         setStatus("disconnected");
         setFrame(null);
         setWsError(null);
+    };
+
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            containerRef.current?.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
     };
 
     return (
@@ -110,14 +158,10 @@ const LiveCamera = () => {
                 </div>
             </div>
 
-            <div className="relative glass-panel p-2 min-h-[450px] flex items-center justify-center bg-agri-dark/95 overflow-hidden border-4 border-agri-dark shadow-2xl">
+            <div ref={containerRef} className={`relative glass-panel p-2 flex items-center justify-center bg-agri-dark/95 overflow-hidden border-4 border-agri-dark shadow-2xl transition-all ${isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'min-h-[450px]'}`}>
                 {/* Surveillance Overlays */}
                 {status === "connected" && (
                     <>
-                        <div className="absolute top-6 left-6 flex items-center gap-2 z-10">
-                            <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.8)]"></div>
-                            <span className="text-white text-xs font-mono font-bold tracking-widest drop-shadow-md">TỔNG HỢP TRỰC TIẾP</span>
-                        </div>
                         <div className="absolute bottom-6 right-6 z-10">
                             <span className="text-white/80 text-xs font-mono drop-shadow-md">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
                         </div>
@@ -125,7 +169,7 @@ const LiveCamera = () => {
                 )}
 
                 {status === "connected" && frame ? (
-                    <img src={frame} alt="Luồng trực tiếp" className="w-full h-full object-contain rounded shadow-inner" />
+                    <img src={frame} alt="Luồng trực tiếp" className={`w-full object-contain rounded shadow-inner ${isFullscreen ? 'h-screen' : 'h-full'}`} />
                 ) : (
                     <div className="flex flex-col items-center justify-center text-gray-500">
                         {status === "connecting" ? (
@@ -143,20 +187,22 @@ const LiveCamera = () => {
                     </div>
                 )}
 
-                {/* Status Badge */}
-                <div className="absolute top-6 right-6 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter shadow-md flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white">
-                    <span className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-blue-400 animate-ping' : 'bg-red-500'}`}></span>
-                    {status === 'connected' ? 'Trực tuyến' : status === 'connecting' ? 'Đang kết nối' : 'Ngoại tuyến'}
+                {/* Status Badge & Fullscreen */}
+                <div className="absolute top-6 right-6 flex items-center gap-2 z-20">
+                    <button
+                        onClick={toggleFullscreen}
+                        className="p-1.5 rounded-lg text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-md"
+                        title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                    >
+                        {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                    </button>
+                    <div className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter shadow-md flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white">
+                        <span className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-blue-400 animate-ping' : 'bg-red-500'}`}></span>
+                        {status === 'connected' ? 'Trực tuyến' : status === 'connecting' ? 'Đang kết nối' : 'Ngoại tuyến'}
+                    </div>
                 </div>
             </div>
 
-            <div className="bg-amber-50 p-4 rounded-xl flex items-start gap-3 text-xs text-amber-900 border border-amber-100 shadow-sm transition-all hover:shadow-md">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600" />
-                <p className="leading-relaxed">
-                    <strong>Thông tin kỹ thuật:</strong> Nếu URL camera không khả dụng (do mạng hoặc thiết bị), hệ thống sẽ tự động chuyển sang
-                    <span className="font-extrabold text-amber-700"> Chế độ Giả lập (Simulation)</span> để bạn có thể kiểm thử giao diện và luồng dữ liệu AI.
-                </p>
-            </div>
         </div>
     );
 };

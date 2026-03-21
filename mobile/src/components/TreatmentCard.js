@@ -129,13 +129,13 @@ const styles = StyleSheet.create({
     },
     badgeText: {
         fontSize: 12,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
         textTransform: 'uppercase',
     },
     mainAction: {
         fontSize: 15,
         color: '#1F2937',
-        fontFamily: 'Inter-SemiBold',
+        fontFamily: 'Vietnam-SemiBold',
         lineHeight: 22,
     },
     expandedContent: {
@@ -160,21 +160,21 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 11,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
         color: '#6B7280',
         textTransform: 'uppercase',
         letterSpacing: 0.5,
     },
     sectionTitleSmall: {
         fontSize: 11,
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
         color: '#9CA3AF',
         textTransform: 'uppercase',
     },
     guideText: {
         fontSize: 14,
         color: '#4B5563',
-        fontFamily: 'Inter-Regular',
+        fontFamily: 'Vietnam-Regular',
         fontStyle: 'italic',
         lineHeight: 20,
         backgroundColor: '#F9FAFB',
@@ -191,14 +191,14 @@ const styles = StyleSheet.create({
     productName: {
         fontSize: 14,
         color: '#166534',
-        fontFamily: 'Inter-Bold',
+        fontFamily: 'Vietnam-Bold',
     },
     tapHint: {
         fontSize: 11,
         color: '#9CA3AF',
         textAlign: 'center',
         marginTop: 10,
-        fontFamily: 'Inter-Medium',
+        fontFamily: 'Vietnam-Medium',
     }
 });
 
