@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
 import FileUpload from '../components/FileUpload';
 import Loader from '../components/Loader';
-import LiveCamera from '../components/LiveCamera'; // Import the new component
+import LiveCamera from '../components/LiveCamera';
 import { Video, AlertTriangle, Upload, Radio } from 'lucide-react';
 
 const MonitorPage = () => {
@@ -47,8 +46,6 @@ const MonitorPage = () => {
 
     return (
         <div className="min-h-screen pb-12">
-            <Navbar />
-
             <div className="max-w-7xl mx-auto px-4 mt-4">
                 {/* Header Section: Now more compact */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">

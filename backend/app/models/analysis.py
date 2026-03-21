@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 
 class Treatment(BaseModel):
     level: str  # Mild, Moderate, Severe

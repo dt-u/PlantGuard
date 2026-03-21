@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
 import FileUpload from '../components/FileUpload';
 import Loader from '../components/Loader';
 import TreatmentCard from '../components/TreatmentCard';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Save } from 'lucide-react';
+import RequireAuthDialog from '../components/RequireAuthDialog';
+import LoginDialog from '../components/LoginDialog';
+import RegisterDialog from '../components/RegisterDialog';
+import { useAuth } from '../contexts/AuthContext';
 
 const Cross = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -23,10 +26,16 @@ const Hospital = ({ className }) => (
 );
 
 const DoctorPage = () => {
+    const { isAuthenticated, login, getUserId } = useAuth();
     const [image, setImage] = useState(null);
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [savedToHistory, setSavedToHistory] = useState(false);
+    const [showRequireAuthDialog, setShowRequireAuthDialog] = useState(false);
+    const [showLoginDialog, setShowLoginDialog] = useState(false);
+    const [showRegisterDialog, setShowRegisterDialog] = useState(false);
+    const [pendingSaveToHistory, setPendingSaveToHistory] = useState(false);
 
     const handleUpload = async (file) => {
         setLoading(true);
@@ -42,6 +51,7 @@ const DoctorPage = () => {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             setResult(response.data);
+            setSavedToHistory(false); // Reset save status
         } catch (err) {
             console.error(err);
             if (err.response && err.response.status === 404) {
@@ -56,16 +66,152 @@ const DoctorPage = () => {
         }
     };
 
+    const saveToHistory = async (skipAuthCheck = false) => {
+        console.log('=== saveToHistory called ===');
+        console.log('skipAuthCheck:', skipAuthCheck);
+        console.log('Result exists:', !!result);
+        console.log('Already saved:', savedToHistory);
+        console.log('Is authenticated:', isAuthenticated());
+        console.log('User ID:', getUserId());
+        
+        // Only check result existence, allow even if savedToHistory is true (for retry)
+        if (!result) {
+            console.log('No result to save');
+            return;
+        }
+        
+        // ALWAYS check authentication unless explicitly skipped
+        if (!skipAuthCheck) {
+            if (!isAuthenticated()) {
+                console.log('Not authenticated, showing require auth dialog');
+                setShowRequireAuthDialog(true);
+                return;
+            }
+        }
+        
+        try {
+            const historyRecord = {
+                image_url: result.image_url,
+                disease_name: result.disease.common_name,
+                confidence: result.confidence,
+                symptoms: result.disease.symptoms,
+                description: result.disease.description,
+                treatments: result.disease.treatments,
+                is_healthy: result.disease.is_healthy,
+                created_at: new Date().toISOString(),
+                user_id: getUserId()
+            };
+            
+            console.log('Saving history record:', historyRecord);
+            
+            const response = await axios.post('http://127.0.0.1:8000/api/history/save', historyRecord);
+            console.log('Save response:', response.data);
+            console.log('History saved successfully!');
+            setSavedToHistory(true);
+        } catch (error) {
+            console.error('Error saving to history:', error);
+            console.error('Error response:', error.response?.data);
+            console.error('Error status:', error.response?.status);
+            // Don't show error to user as diagnosis was successful
+        }
+    };
+
+    const handleLoginClick = () => {
+        setShowRequireAuthDialog(false);
+        setPendingSaveToHistory(true); // Mark that we need to save after login
+        setShowLoginDialog(true); // Show login dialog
+    };
+
+    const handleSwitchToRegister = () => {
+        setShowLoginDialog(false);
+        setShowRegisterDialog(true);
+    };
+
+    const handleSwitchToLogin = () => {
+        setShowRegisterDialog(false);
+        setShowLoginDialog(true);
+        // Keep pendingSaveToHistory state as is (don't reset)
+    };
+
+    const handleLogin = (userData) => {
+        console.log('handleLogin called with userData:', userData);
+        login(userData);
+        // Don't close dialog here - let LoginDialog handle it
+        
+        // If there's a pending save operation, execute it
+        if (pendingSaveToHistory) {
+            console.log('Pending save to history detected, executing...');
+            setPendingSaveToHistory(false); // Reset pending state
+            
+            // Use a much longer delay to ensure auth state is updated
+            setTimeout(() => {
+                console.log('Executing delayed save to history...');
+                console.log('Current result:', result);
+                console.log('Current savedToHistory:', savedToHistory);
+                console.log('Is authenticated:', isAuthenticated());
+                console.log('User ID:', getUserId());
+                
+                // Double-check authentication before saving
+                if (isAuthenticated() && getUserId() !== 'anonymous') {
+                    console.log('Authentication confirmed, proceeding with save');
+                    // Force save even if savedToHistory is true (in case of previous failed attempt)
+                    setSavedToHistory(false);
+                    saveToHistory(true);
+                } else {
+                    console.log('Authentication not ready, retrying...');
+                    // Retry after another delay
+                    setTimeout(() => {
+                        console.log('Retry - Is authenticated:', isAuthenticated());
+                        console.log('Retry - User ID:', getUserId());
+                        if (isAuthenticated() && getUserId() !== 'anonymous') {
+                            setSavedToHistory(false);
+                            saveToHistory(true);
+                        } else {
+                            console.error('Authentication still not working after retry');
+                        }
+                    }, 1000);
+                }
+            }, 2000); // Increased to 2 seconds
+        }
+    };
+
+    const handleRegister = (userData) => {
+        // After successful registration, show login dialog
+        setShowRegisterDialog(false);
+        setShowLoginDialog(true);
+    };
+
+    const handleSaveToHistory = () => {
+        console.log('=== handleSaveToHistory called ===');
+        console.log('Current result:', result);
+        console.log('Is authenticated:', isAuthenticated());
+        console.log('Current savedToHistory:', savedToHistory);
+        console.log('User ID:', getUserId());
+        
+        // Check if user is authenticated
+        if (!isAuthenticated()) {
+            console.log('User not authenticated, setting pending save and showing auth dialog');
+            setPendingSaveToHistory(true); // Mark that we need to save after auth
+            setShowRequireAuthDialog(true);
+            return;
+        }
+        
+        console.log('User authenticated, proceeding with save');
+        // If authenticated, proceed with save
+        saveToHistory(false);
+    };
+
     const resetPage = () => {
         setImage(null);
         setResult(null);
         setError(null);
+        setLoading(false);
+        setSavedToHistory(false);
+        setPendingSaveToHistory(false); // Reset pending state
     };
 
     return (
         <div className="min-h-screen pb-12">
-            <Navbar />
-
             <div className="max-w-6xl mx-auto px-4 mt-6">
                 {!result && !loading && (
                     <div className="max-w-2xl mx-auto text-center mb-8">
@@ -149,12 +295,26 @@ const DoctorPage = () => {
                                                 )}
                                             </div>
 
-                                            <button
-                                                onClick={resetPage}
-                                                className="btn-primary py-3 rounded-xl text-sm"
-                                            >
-                                                Kiểm tra lá khác
-                                            </button>
+                                            <div className="flex gap-3 mb-6">
+                                                <button
+                                                    onClick={handleSaveToHistory}
+                                                    disabled={savedToHistory}
+                                                    className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                                                        savedToHistory 
+                                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                                            : 'bg-green-600 hover:bg-green-700 text-white'
+                                                    }`}
+                                                >
+                                                    <Save className="w-4 h-4" />
+                                                    {savedToHistory ? '✓ Đã lưu' : 'Lưu vào lịch sử'}
+                                                </button>
+                                                <button
+                                                    onClick={resetPage}
+                                                    className="btn-primary py-3 rounded-xl text-sm"
+                                                >
+                                                    Kiểm tra lá khác
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -226,6 +386,27 @@ const DoctorPage = () => {
                     </div>
                 )}
             </div>
+            
+            {/* Auth Dialogs */}
+            <RequireAuthDialog
+                isOpen={showRequireAuthDialog}
+                onClose={() => setShowRequireAuthDialog(false)}
+                onLogin={handleLoginClick}
+            />
+            
+            <LoginDialog
+                isOpen={showLoginDialog}
+                onClose={() => setShowLoginDialog(false)}
+                onLogin={handleLogin}
+                onSwitchToRegister={handleSwitchToRegister}
+            />
+            
+            <RegisterDialog
+                isOpen={showRegisterDialog}
+                onClose={() => setShowRegisterDialog(false)}
+                onRegister={handleRegister}
+                onSwitchToLogin={handleSwitchToLogin}
+            />
         </div>
     );
 };

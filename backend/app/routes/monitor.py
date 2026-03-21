@@ -13,6 +13,10 @@ UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
 
+@router.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "monitor"}
+
 @router.post("/analyze", response_model=AnalysisResponse)
 async def analyze_video(file: UploadFile = File(...)):
     try:

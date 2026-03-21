@@ -4,8 +4,8 @@ import { Leaf, Eye, ArrowRight } from 'lucide-react';
 
 const Home = () => {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[75vh] text-center px-4 pt-4 md:pt-6">
-            <h1 className="text-5xl md:text-7xl font-bold text-agri-dark mb-4 tracking-tight leading-[1.35]">
+        <div className="flex flex-col items-center justify-center min-h-screen text-center px-4 py-8">
+            <h1 className="text-4xl md:text-6xl font-bold text-agri-dark mb-4 tracking-tight leading-[1.35]">
                 Nông Nghiệp Thông Minh
                 <span className="block mt-4 text-agri-green">Khởi Đầu Đơn Giản</span>
             </h1>
