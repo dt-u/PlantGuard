@@ -9,3 +9,8 @@ pydantic
 pydantic-settings
 requests
 websockets
+passlib
+bcrypt
+email-validator
+pandas
+openpyxl

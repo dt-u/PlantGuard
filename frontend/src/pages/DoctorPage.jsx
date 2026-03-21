@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
 import FileUpload from '../components/FileUpload';
 import Loader from '../components/Loader';
 import TreatmentCard from '../components/TreatmentCard';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Save, CheckCircle } from 'lucide-react';
+import RequireAuthDialog from '../components/RequireAuthDialog';
+import { useAuth } from '../contexts/AuthContext';
 
 const Cross = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -23,16 +24,30 @@ const Hospital = ({ className }) => (
 );
 
 const DoctorPage = () => {
-    const [image, setImage] = useState(null);
+    const { user, isAuthenticated, openLogin, openRegister, getUserId } = useAuth();
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [isRequireAuthOpen, setIsRequireAuthOpen] = useState(false);
+    const [pendingSaveToHistory, setPendingSaveToHistory] = useState(false);
+    const [pendingResult, setPendingResult] = useState(null);
+    const [savedToHistory, setSavedToHistory] = useState(false);
+    const [image, setImage] = useState(null);
+
+    // Effect to trigger save after login if pending
+    useEffect(() => {
+        if (isAuthenticated() && pendingSaveToHistory && pendingResult) {
+            saveToHistory(pendingResult);
+            setPendingSaveToHistory(false);
+            setPendingResult(null);
+        }
+    }, [user, isAuthenticated, pendingSaveToHistory, pendingResult]);
 
     const handleUpload = async (file) => {
         setLoading(true);
         setError(null);
         setResult(null);
-        setImage(URL.createObjectURL(file)); // Preview
+        setImage(URL.createObjectURL(file));
 
         const formData = new FormData();
         formData.append('file', file);
@@ -42,6 +57,7 @@ const DoctorPage = () => {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             setResult(response.data);
+            setSavedToHistory(false);
         } catch (err) {
             console.error(err);
             if (err.response && err.response.status === 404) {
@@ -49,42 +65,82 @@ const DoctorPage = () => {
             } else if (err.response && err.response.data && err.response.data.detail) {
                 setError(err.response.data.detail);
             } else {
-                setError("Không thể kết nối với máy chủ phân tích. Vui lòng kiểm tra kết nối mạng.");
+                setError("Máy chủ gặp sự cố khi xử lý hình ảnh. Vui lòng thử lại sau.");
             }
         } finally {
             setLoading(false);
         }
     };
 
+    const saveToHistory = async (targetResult) => {
+        const dataToSave = targetResult || result;
+        if (!dataToSave) return;
+        
+        try {
+            const historyRecord = {
+                image_url: dataToSave.image_url,
+                disease_name: dataToSave.disease.common_name,
+                confidence: dataToSave.confidence,
+                symptoms: dataToSave.disease.symptoms,
+                description: dataToSave.disease.description,
+                treatments: dataToSave.disease.treatments,
+                is_healthy: dataToSave.disease.is_healthy,
+                created_at: new Date().toISOString(),
+                user_id: getUserId()
+            };
+            
+            await axios.post('http://127.0.0.1:8000/api/history/save', historyRecord);
+            setSavedToHistory(true);
+        } catch (error) {
+            console.error('Error saving to history:', error);
+        }
+    };
+
+    const handleSaveToHistory = () => {
+        if (!isAuthenticated()) {
+            setPendingSaveToHistory(true);
+            setPendingResult(result);
+            setIsRequireAuthOpen(true);
+            return;
+        }
+        saveToHistory(result);
+    };
+
     const resetPage = () => {
         setImage(null);
         setResult(null);
         setError(null);
+        setLoading(false);
+        setSavedToHistory(false);
+        setPendingSaveToHistory(false);
+        setPendingResult(null);
     };
 
     return (
-        <div className="min-h-screen pb-12">
-            <Navbar />
-
-            <div className="max-w-6xl mx-auto px-4 mt-6">
+        <div className={`min-h-[calc(100vh-120px)] flex flex-col ${!result ? 'items-center justify-center' : 'pt-8 pb-12'}`}>
+            <div className="w-full max-w-6xl mx-auto px-4">
                 {!result && !loading && (
-                    <div className="max-w-2xl mx-auto text-center mb-8">
-                        <h1 className="text-4xl font-bold text-agri-dark mb-3 font-vietnam">Bác Sĩ Cây Trồng</h1>
-                        <p className="text-gray-600 text-lg">Chẩn đoán sâu bệnh tức thì thông qua phân tích hình ảnh lá cây.</p>
-                        <div className="mt-10">
+                    <div className="max-w-2xl mx-auto text-center animate-in fade-in zoom-in duration-700">
+                        <h1 className="text-4xl md:text-5xl font-black text-agri-dark mb-4 font-vietnam tracking-tight">
+                            Bác Sĩ Cây Trồng
+                        </h1>
+                        <p className="text-gray-500 text-lg md:text-xl font-medium mb-10">
+                            Chẩn đoán mầm bệnh thông qua trí tuệ nhân tạo.
+                        </p>
+                        <div className="glass-panel p-2 shadow-2xl hover:shadow-green-900/10 transition-shadow duration-500">
                             <FileUpload onFileSelect={handleUpload} accept={{ 'image/*': [] }} label="ảnh lá cây" />
                         </div>
                     </div>
                 )}
 
                 {loading && (
-                    <div className="max-w-2xl mx-auto">
+                    <div className="max-w-2xl mx-auto animate-pulse">
                         <Loader text="Đang phân tích cấu trúc lá và mầm bệnh..." />
                     </div>
                 )}
 
                 {error && (
-                    <div className="max-w-2xl mx-auto mt-8 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="max-w-2xl mx-auto mt-8 animate-in fade-in slide-in-from-top-4 duration-500 pb-12">
                         <div className="p-6 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-2xl shadow-sm">
                             <div className="flex items-center mb-4">
                                 <AlertCircle className="w-6 h-6 mr-3 text-red-500" />
@@ -115,14 +171,11 @@ const DoctorPage = () => {
                                                     alt="Ảnh đã phân tích"
                                                     className="rounded-xl shadow-inner w-full object-cover aspect-video bg-gray-50"
                                                 />
-                                                <div className="absolute top-3 left-3 bg-agri-dark/80 backdrop-blur px-3 py-1 rounded-full">
-                                                    <span className="text-[10px] text-agri-green font-bold uppercase tracking-wider">Hình ảnh chẩn đoán</span>
-                                                </div>
                                             </div>
                                         </div>
                                         <div className="w-full md:w-1/2 p-6 flex flex-col justify-center bg-white">
                                             <div className="mb-6">
-                                                <span className="text-xs font-bold text-gray-400 uppercase">Kết quả AI nhận diện:</span>
+                                                <span className="text-xs font-bold text-gray-400 uppercase">Kết quả nhận diện:</span>
                                                 <h2 className="text-3xl font-bold text-agri-dark mt-1 leading-tight">{result.disease.common_name}</h2>
 
                                                 <div className="mt-4 flex items-center gap-3">
@@ -136,25 +189,26 @@ const DoctorPage = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="flex flex-wrap gap-2 mb-6">
-                                                {result.disease.symptoms.slice(0, 2).map((s, i) => (
-                                                    <span key={i} className="text-[10px] font-bold bg-gray-50 text-gray-600 px-3 py-1.5 rounded-full border border-gray-100">
-                                                        {s}
-                                                    </span>
-                                                ))}
-                                                {result.disease.symptoms.length > 2 && (
-                                                    <span className="text-[10px] font-bold bg-gray-50 text-gray-400 px-3 py-1.5 rounded-full border border-gray-100">
-                                                        +{result.disease.symptoms.length - 2} đặc điểm khác
-                                                    </span>
-                                                )}
+                                            <div className="flex gap-3 mb-6">
+                                                <button
+                                                    onClick={handleSaveToHistory}
+                                                    disabled={savedToHistory}
+                                                    className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                                                        savedToHistory 
+                                                            ? 'bg-gray-100 text-gray-400 cursor-default opacity-80' 
+                                                            : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-lg active:scale-95'
+                                                    }`}
+                                                >
+                                                    {savedToHistory ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                                                    {savedToHistory ? 'Đã lưu vào lịch sử' : 'Lưu vào lịch sử'}
+                                                </button>
+                                                <button
+                                                    onClick={resetPage}
+                                                    className="btn-primary py-3 rounded-xl text-sm px-6 bg-agri-dark hover:bg-black transition-all active:scale-95"
+                                                >
+                                                    Ảnh khác
+                                                </button>
                                             </div>
-
-                                            <button
-                                                onClick={resetPage}
-                                                className="btn-primary py-3 rounded-xl text-sm"
-                                            >
-                                                Kiểm tra lá khác
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -171,11 +225,10 @@ const DoctorPage = () => {
                                             ) : (
                                                 <>
                                                     <Hospital className="w-7 h-7" style={{ color: '#F56565' }} />
-                                                    <span>Phác đồ Điều trị Hệ thống</span>
+                                                    <span>Phác đồ Điều trị</span>
                                                 </>
                                             )}
                                         </h3>
-                                        <div className="hidden md:block h-px flex-1 bg-gray-100 mx-6"></div>
                                     </div>
 
                                     <TreatmentCard treatments={result.disease.treatments} />
@@ -200,7 +253,7 @@ const DoctorPage = () => {
                                             <ul className="space-y-2">
                                                 {result.disease.symptoms.map((s, i) => (
                                                     <li key={i} className="text-xs text-gray-500 flex items-start gap-2">
-                                                        <span className="text-agri-green mt-1">✓</span> {s}
+                                                        <span className="text-agri-green mt-0.5">✓</span> {s}
                                                     </li>
                                                 ))}
                                             </ul>
@@ -208,7 +261,6 @@ const DoctorPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Disclaimer moved here */}
                                 <div className="p-5 bg-amber-50 rounded-2xl border border-amber-100 shadow-sm transition-all hover:shadow-md">
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="w-6 h-6 rounded-full bg-amber-200 flex items-center justify-center">
@@ -217,7 +269,7 @@ const DoctorPage = () => {
                                         <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">Khuyến cáo chuyên môn</span>
                                     </div>
                                     <p className="text-[11px] text-amber-900/70 leading-relaxed">
-                                        Kỹ thuật này dựa trên mô hình học sâu (Deep Learning). Kết quả có thể biến động tùy theo chất lượng ảnh và giống cây.
+                                        Kỹ thuật này dựa trên mô hình học sâu. Kết quả có thể biến động tùy theo chất lượng ảnh.
                                         <span className="font-bold underline decoration-amber-400/50 ml-1">Vui lòng tham vấn chuyên gia trước khi áp dụng hóa chất bảo vệ thực vật diện rộng.</span>
                                     </p>
                                 </div>
@@ -226,6 +278,13 @@ const DoctorPage = () => {
                     </div>
                 )}
             </div>
+
+            <RequireAuthDialog 
+                isOpen={isRequireAuthOpen} 
+                onClose={() => setIsRequireAuthOpen(false)} 
+                onLogin={() => { setIsRequireAuthOpen(false); openLogin(); }}
+                onRegister={() => { setIsRequireAuthOpen(false); openRegister(); }}
+            />
         </div>
     );
 };

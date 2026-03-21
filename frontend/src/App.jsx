@@ -4,6 +4,10 @@ import axios from 'axios';
 import Home from './pages/Home';
 import MonitorPage from './pages/MonitorPage';
 import DoctorPage from './pages/DoctorPage';
+import HistoryPage from './pages/HistoryPage';
+import DiagnosisDetailPage from './pages/DiagnosisDetailPage';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function GlobalProgressIndicator({ jobState, setJobState }) {
     const navigate = useNavigate();
@@ -65,7 +69,11 @@ function GlobalProgressIndicator({ jobState, setJobState }) {
     );
 }
 
+import Navbar from './components/Navbar';
+import GlobalAuthDialogs from './components/GlobalAuthDialogs';
+
 function MainApp() {
+    const location = useLocation();
     const [jobState, setJobState] = useState({ 
         jobId: null, 
         status: 'idle', 
@@ -76,10 +84,22 @@ function MainApp() {
     
     return (
         <>
+            {location.pathname !== '/' && <Navbar />}
+            <GlobalAuthDialogs />
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/monitor" element={<MonitorPage jobState={jobState} setJobState={setJobState} />} />
                 <Route path="/doctor" element={<DoctorPage />} />
+                <Route path="/history" element={
+                    <ProtectedRoute>
+                        <HistoryPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/history/:id" element={
+                    <ProtectedRoute>
+                        <DiagnosisDetailPage />
+                    </ProtectedRoute>
+                } />
             </Routes>
             <GlobalProgressIndicator jobState={jobState} setJobState={setJobState} />
         </>
@@ -89,7 +109,9 @@ function MainApp() {
 function App() {
     return (
         <Router>
-            <MainApp />
+            <AuthProvider>
+                <MainApp />
+            </AuthProvider>
         </Router>
     );
 }

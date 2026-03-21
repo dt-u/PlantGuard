@@ -1,0 +1,99 @@
+from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import ASCENDING, DESCENDING
+from datetime import datetime
+import os
+
+# MongoDB connection
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+DB_NAME = os.getenv("DB_NAME", "plantguard_db")
+
+# Create MongoDB client
+client = AsyncIOMotorClient(MONGO_URI)
+database = client[DB_NAME]
+
+# Collections
+mongodb = database
+diseases_collection = mongodb.diseases
+
+async def connect_to_mongodb():
+    """Connect to MongoDB"""
+    try:
+        # Test connection
+        await client.admin.command('ping')
+        print(f"✅ Connected to MongoDB: {DB_NAME}")
+        
+        # Create indexes for better performance
+        await create_indexes()
+        
+        return True
+    except Exception as e:
+        print(f"❌ Failed to connect to MongoDB: {e}")
+        return False
+
+async def create_indexes():
+    """Create indexes for collections"""
+    try:
+        # Users collection indexes
+        await mongodb.users.create_index("email", unique=True)
+        await mongodb.users.create_index("created_at")
+        
+        # History collection indexes
+        await mongodb.history.create_index("user_id")
+        await mongodb.history.create_index("created_at")
+        await mongodb.history.create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
+        
+        print("✅ Database indexes created")
+    except Exception as e:
+        print(f"⚠️ Index creation warning: {e}")
+
+async def disconnect_from_mongodb():
+    """Disconnect from MongoDB"""
+    try:
+        client.close()
+        print("✅ Disconnected from MongoDB")
+    except Exception as e:
+        print(f"❌ Failed to disconnect from MongoDB: {e}")
+
+async def seed_db():
+    """Seed database with initial data"""
+    try:
+        # Check if users collection exists and has data
+        users_count = await mongodb.users.count_documents({})
+        
+        if users_count == 0:
+            print("🌱 Seeding database...")
+            
+            # Create collections if they don't exist
+            collections = await database.list_collection_names()
+            
+            if "users" not in collections:
+                await database.create_collection("users")
+                print("✅ Created users collection")
+            
+            if "history" not in collections:
+                await database.create_collection("history")
+                print("✅ Created history collection")
+            
+            print("✅ Database seeded successfully")
+        else:
+            print(f"✅ Database already contains {users_count} users")
+            
+    except Exception as e:
+        print(f"❌ Error seeding database: {e}")
+
+# Database helper functions
+async def get_user_by_email(email: str):
+    """Get user by email"""
+    return await mongodb.users.find_one({"email": email})
+
+async def create_user(user_data: dict):
+    """Create a new user"""
+    result = await mongodb.users.insert_one(user_data)
+    return result.inserted_id
+
+async def verify_user_credentials(email: str, password: str):
+    """Verify user credentials"""
+    user = await mongodb.users.find_one({"email": email})
+    if user and user.get("password") == password:  # In production, use hashed passwords
+        return user
+    return None
