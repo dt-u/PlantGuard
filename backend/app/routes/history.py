@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from bson import ObjectId
 
 from ..database.mongodb import mongodb
+from ..websocket import manager
 
 router = APIRouter()
 
@@ -29,9 +30,9 @@ async def health_check():
 async def save_diagnosis(record: DiagnosisRecord):
     """Lưu một bản ghi chẩn đoán mới"""
     try:
-        # Add timestamp if not provided
-        if not record.created_at:
-            record.created_at = datetime.utcnow()
+        # Add local timestamp if not provided or to ensure local time is used
+        # We prefer local time for display convenience in this specific app context
+        record.created_at = datetime.now()
         
         # Insert into database
         result = await mongodb.history.insert_one(record.dict())
@@ -41,6 +42,13 @@ async def save_diagnosis(record: DiagnosisRecord):
         
         # Convert ObjectId to string
         saved_record["id"] = str(saved_record.pop("_id"))
+        
+        # Broadcast save event
+        if record.user_id:
+            await manager.broadcast_to_user(
+                str(record.user_id), 
+                {"action": "history_updated", "type": "save", "record_id": saved_record["id"]}
+            )
         
         return HistoryRecordResponse(
             success=True,
@@ -118,12 +126,25 @@ async def get_diagnosis_detail(diagnosis_id: str):
 async def delete_diagnosis(diagnosis_id: str):
     """Xóa một bản ghi chẩn đoán"""
     try:
-        # Convert string ID to ObjectId and delete record
+        # Convert string ID to ObjectId
         object_id = ObjectId(diagnosis_id)
+        
+        # Get record first to find user_id for broadcasting
+        record = await mongodb.history.find_one({"_id": object_id})
+        if not record:
+            raise HTTPException(status_code=404, detail="Không tìm thấy bản ghi chẩn đoán")
+            
+        user_id = record.get("user_id")
+        
+        # Delete record
         result = await mongodb.history.delete_one({"_id": object_id})
         
-        if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy bản ghi chẩn đoán")
+        # Broadcast delete event
+        if user_id:
+            await manager.broadcast_to_user(
+                str(user_id), 
+                {"action": "history_updated", "type": "delete", "record_id": diagnosis_id}
+            )
         
         return {"success": True, "message": "Xóa bản ghi thành công"}
         

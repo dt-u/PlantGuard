@@ -3,9 +3,10 @@ import axios from 'axios';
 import FileUpload from '../components/FileUpload';
 import Loader from '../components/Loader';
 import TreatmentCard from '../components/TreatmentCard';
-import { AlertCircle, Save, CheckCircle } from 'lucide-react';
+import { AlertCircle, Bookmark } from 'lucide-react';
 import RequireAuthDialog from '../components/RequireAuthDialog';
 import { useAuth } from '../contexts/AuthContext';
+import { useHistorySync } from '../hooks/useHistorySync';
 
 const Cross = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -32,7 +33,19 @@ const DoctorPage = () => {
     const [pendingSaveToHistory, setPendingSaveToHistory] = useState(false);
     const [pendingResult, setPendingResult] = useState(null);
     const [savedToHistory, setSavedToHistory] = useState(false);
+    const [savedId, setSavedId] = useState(null);
     const [image, setImage] = useState(null);
+
+    // Sync remote deletes (e.g. from History tab)
+    useHistorySync(
+        null, // ignore saves
+        (deletedId) => {
+            if (savedId === deletedId) {
+                setSavedToHistory(false);
+                setSavedId(null);
+            }
+        }
+    );
 
     // Effect to trigger save after login if pending
     useEffect(() => {
@@ -58,6 +71,7 @@ const DoctorPage = () => {
             });
             setResult(response.data);
             setSavedToHistory(false);
+            setSavedId(null);
         } catch (err) {
             console.error(err);
             if (err.response && err.response.status === 404) {
@@ -85,14 +99,31 @@ const DoctorPage = () => {
                 description: dataToSave.disease.description,
                 treatments: dataToSave.disease.treatments,
                 is_healthy: dataToSave.disease.is_healthy,
-                created_at: new Date().toISOString(),
                 user_id: getUserId()
             };
             
-            await axios.post('http://127.0.0.1:8000/api/history/save', historyRecord);
+            const response = await axios.post('http://127.0.0.1:8000/api/history/save', historyRecord);
+            if (response.data && response.data.success) {
+                setSavedId(response.data.data.id);
+            }
             setSavedToHistory(true);
         } catch (error) {
             console.error('Error saving to history:', error);
+        }
+    };
+
+    const deleteFromHistory = async () => {
+        if (!savedId) return;
+        try {
+            await axios.delete(`http://127.0.0.1:8000/api/history/${savedId}`);
+            setSavedToHistory(false);
+            setSavedId(null);
+        } catch (error) {
+            console.error('Error deleting from history:', error);
+            if (error.response && error.response.status === 404) {
+                setSavedToHistory(false);
+                setSavedId(null);
+            }
         }
     };
 
@@ -103,7 +134,12 @@ const DoctorPage = () => {
             setIsRequireAuthOpen(true);
             return;
         }
-        saveToHistory(result);
+
+        if (savedToHistory) {
+            deleteFromHistory();
+        } else {
+            saveToHistory(result);
+        }
     };
 
     const resetPage = () => {
@@ -112,6 +148,7 @@ const DoctorPage = () => {
         setError(null);
         setLoading(false);
         setSavedToHistory(false);
+        setSavedId(null);
         setPendingSaveToHistory(false);
         setPendingResult(null);
     };
@@ -192,19 +229,21 @@ const DoctorPage = () => {
                                             <div className="flex gap-3 mb-6">
                                                 <button
                                                     onClick={handleSaveToHistory}
-                                                    disabled={savedToHistory}
-                                                    className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                                                    className={`flex-1 h-[48px] rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm border ${
                                                         savedToHistory 
-                                                            ? 'bg-gray-100 text-gray-400 cursor-default opacity-80' 
-                                                            : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-lg active:scale-95'
+                                                            ? 'bg-green-50 text-agri-green border-green-200 hover:bg-green-100' 
+                                                            : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white border-transparent hover:shadow-lg active:scale-95'
                                                     }`}
                                                 >
-                                                    {savedToHistory ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                                                    {savedToHistory ? 'Đã lưu vào lịch sử' : 'Lưu vào lịch sử'}
+                                                    <Bookmark 
+                                                        className="w-4 h-4" 
+                                                        fill={savedToHistory ? "currentColor" : "none"} 
+                                                    />
+                                                    {savedToHistory ? 'Bỏ lưu' : 'Lưu'}
                                                 </button>
                                                 <button
                                                     onClick={resetPage}
-                                                    className="btn-primary py-3 rounded-xl text-sm px-6 bg-agri-dark hover:bg-black transition-all active:scale-95"
+                                                    className="flex-1 h-[48px] btn-primary rounded-xl text-sm bg-agri-dark hover:bg-black transition-all active:scale-95 flex items-center justify-center border border-transparent"
                                                 >
                                                     Ảnh khác
                                                 </button>

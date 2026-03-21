@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from .database import seed_db
 from .routes import monitor, doctor, admin, auth, history
+from .websocket import manager
 import os
 
 app = FastAPI(title="PlantGuard API")
@@ -15,6 +16,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    await manager.connect(websocket, user_id)
+    try:
+        while True:
+            # We don't really expect clients to send messages, just keep the connection open
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, user_id)
 
 # Routes
 app.include_router(monitor.router, prefix="/api/monitor", tags=["Monitor"])

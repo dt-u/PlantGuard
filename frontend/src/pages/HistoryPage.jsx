@@ -5,6 +5,7 @@ import { Clock, AlertCircle, Leaf, Trash2, Filter, Search, Eye } from 'lucide-re
 import { Link } from 'react-router-dom';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useAuth } from '../contexts/AuthContext';
+import { useHistorySync } from '../hooks/useHistorySync';
 
 const HistoryPage = () => {
     const navigate = useNavigate();
@@ -16,6 +17,19 @@ const HistoryPage = () => {
     const [filter, setFilter] = useState('all'); // all, healthy, disease
     const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
     const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, recordId: null });
+
+    // Handle WebSocket sync events
+    useHistorySync(
+        () => {
+            // Re-fetch on any remote save
+            fetchHistory();
+        },
+        (deletedId) => {
+            // Remove deleted item from list locally
+            setHistory(prev => prev.filter(item => item.id !== deletedId));
+            setPagination(prev => ({ ...prev, total: Math.max(0, prev.total - 1) }));
+        }
+    );
 
     useEffect(() => {
         // Check authentication before fetching history
@@ -82,9 +96,11 @@ const HistoryPage = () => {
         return date.toLocaleString('vi-VN', {
             hour: '2-digit',
             minute: '2-digit',
+            second: '2-digit',
             day: '2-digit',
             month: '2-digit',
-            year: 'numeric'
+            year: 'numeric',
+            hour12: false
         });
     };
 

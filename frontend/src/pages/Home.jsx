@@ -60,14 +60,14 @@ const Home = () => {
                         <div className="flex items-center space-x-3">
                             <button
                                 onClick={openLogin}
-                                className="flex items-center space-x-2 px-4 py-2 rounded-xl font-bold text-agri-dark hover:bg-white/50 transition-all text-sm"
+                                className="flex items-center space-x-2 px-5 py-2 rounded-xl font-bold bg-agri-green text-white hover:bg-green-700 transition-all shadow-lg shadow-green-500/20 text-sm"
                             >
                                 <LogIn className="w-3.5 h-3.5" />
                                 <span>Đăng nhập</span>
                             </button>
                             <button
                                 onClick={openRegister}
-                                className="flex items-center space-x-2 px-5 py-2 rounded-xl font-bold bg-agri-green text-white hover:bg-green-700 transition-all shadow-lg shadow-green-500/20 text-sm"
+                                className="flex items-center space-x-2 px-5 py-2 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 text-sm"
                             >
                                 <UserPlus className="w-3.5 h-3.5" />
                                 <span>Đăng ký</span>

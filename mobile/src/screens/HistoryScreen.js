@@ -12,6 +12,7 @@ import {
 import axios from 'axios';
 import { ENDPOINTS, API_BASE_URL } from '../api/config';
 import { useAuth } from '../contexts/AuthContext';
+import { useHistorySync } from '../hooks/useHistorySync';
 import { ArrowLeft, Calendar, ChevronRight, AlertCircle, Trash2 } from 'lucide-react-native';
 
 const HistoryScreen = ({ navigation }) => {
@@ -19,6 +20,16 @@ const HistoryScreen = ({ navigation }) => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+
+    // Sync remote updates
+    useHistorySync(
+        () => {
+            fetchHistory();
+        },
+        (deletedId) => {
+            setHistory(prev => prev.filter(item => item.id !== deletedId));
+        }
+    );
 
     const fetchHistory = async () => {
         if (!user) return;

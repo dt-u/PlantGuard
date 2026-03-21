@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
-import { Camera, AlertCircle, RefreshCw, Cross, Hospital, CheckCircle, Info, Save } from 'lucide-react-native';
+import { Camera, AlertCircle, RefreshCw, Cross, Hospital, CheckCircle, Info, Bookmark } from 'lucide-react-native';
 import { API_BASE_URL, ENDPOINTS } from '../api/config';
 import TreatmentCard from '../components/TreatmentCard';
 import { useAuth } from '../contexts/AuthContext';
+import { useHistorySync } from '../hooks/useHistorySync';
 
 const { width } = Dimensions.get('window');
 
@@ -15,7 +16,19 @@ const DoctorScreen = ({ navigation }) => {
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [savedToHistory, setSavedToHistory] = useState(false);
+    const [savedId, setSavedId] = useState(null);
     const [isPendingSave, setIsPendingSave] = useState(false);
+
+    // Sync remote deletes
+    useHistorySync(
+        null,
+        (deletedId) => {
+            if (savedId === deletedId) {
+                setSavedToHistory(false);
+                setSavedId(null);
+            }
+        }
+    );
 
     // Auto-save when user logs in and there's a pending save
     useEffect(() => {
@@ -34,11 +47,13 @@ const DoctorScreen = ({ navigation }) => {
                 description: result.disease.description,
                 treatments: result.disease.treatments,
                 is_healthy: result.disease.is_healthy,
-                created_at: new Date().toISOString(),
                 user_id: user.id
             };
             
-            await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
+            const response = await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
+            if (response.data && response.data.data) {
+                setSavedId(response.data.data.id);
+            }
             setSavedToHistory(true);
             setIsPendingSave(false);
             Alert.alert('Thành công', 'Đã lưu kết quả chẩn đoán vào lịch sử của bạn.');
@@ -83,6 +98,7 @@ const DoctorScreen = ({ navigation }) => {
         setLoading(true);
         setResult(null);
         setSavedToHistory(false);
+        setSavedId(null);
         setImage(fileAsset.uri);
 
         const formData = new FormData();
@@ -119,6 +135,25 @@ const DoctorScreen = ({ navigation }) => {
             return;
         }
 
+        if (savedToHistory && savedId) {
+            // Unsave logic
+            try {
+                await axios.delete(ENDPOINTS.HISTORY_DELETE(savedId));
+                setSavedToHistory(false);
+                setSavedId(null);
+                Alert.alert('Thành công', 'Đã xóa khỏi lịch sử.');
+            } catch (error) {
+                console.error('Error deleting from history:', error);
+                if (error.response && error.response.status === 404) {
+                    setSavedToHistory(false);
+                    setSavedId(null);
+                } else {
+                    Alert.alert('Lỗi', 'Không thể xóa khỏi lịch sử. Vui lòng thử lại sau.');
+                }
+            }
+            return;
+        }
+
         try {
             const historyRecord = {
                 image_url: result.image_url,
@@ -132,7 +167,10 @@ const DoctorScreen = ({ navigation }) => {
                 user_id: getUserId()
             };
             
-            await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
+            const response = await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
+            if (response.data && response.data.data) {
+                setSavedId(response.data.data.id);
+            }
             setSavedToHistory(true);
             Alert.alert('Thành công', 'Đã lưu kết quả chẩn đoán vào lịch sử.');
         } catch (error) {
@@ -145,6 +183,7 @@ const DoctorScreen = ({ navigation }) => {
         setImage(null);
         setResult(null);
         setSavedToHistory(false);
+        setSavedId(null);
         setIsPendingSave(false);
     };
 
@@ -180,7 +219,6 @@ const DoctorScreen = ({ navigation }) => {
 
             {result && (
                 <View style={styles.resultSection}>
-                    {/* Analysis Summary Card */}
                     <View style={styles.analysisCard}>
                         <View style={styles.imageWrapper}>
                             <Image source={{ uri: `${API_BASE_URL}${result.image_url}` }} style={styles.analyzedImage} />
@@ -204,19 +242,15 @@ const DoctorScreen = ({ navigation }) => {
                                 <TouchableOpacity 
                                     style={[styles.saveBtn, savedToHistory && styles.savedBtn]} 
                                     onPress={handleSaveToHistory}
-                                    disabled={savedToHistory}
                                 >
-                                    {savedToHistory ? (
-                                        <>
-                                            <CheckCircle color="#94A3B8" size={18} />
-                                            <Text style={styles.savedBtnText}>Đã lưu</Text>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Save color="#FFFFFF" size={18} />
-                                            <Text style={styles.saveBtnText}>Lưu lịch sử</Text>
-                                        </>
-                                    )}
+                                    <Bookmark 
+                                        color={savedToHistory ? "#2E7D32" : "#FFFFFF"} 
+                                        fill={savedToHistory ? "#2E7D32" : "none"} 
+                                        size={18} 
+                                    />
+                                    <Text style={[styles.saveBtnText, savedToHistory && styles.savedBtnText]}>
+                                        {savedToHistory ? "Bỏ lưu" : "Lưu"}
+                                    </Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity style={styles.resetBtn} onPress={reset}>
@@ -246,7 +280,6 @@ const DoctorScreen = ({ navigation }) => {
                         </View>
                     </View>
 
-                    {/* Treatment Section */}
                     <View style={[styles.treatmentSection, { borderTopColor: result.disease.is_healthy ? '#2E7D32' : '#F56565' }]}>
                         <View style={styles.treatmentHeader}>
                             {result.disease.is_healthy ? (
@@ -264,7 +297,6 @@ const DoctorScreen = ({ navigation }) => {
                         <TreatmentCard treatments={result.disease.treatments} />
                     </View>
 
-                    {/* Enhanced Disclaimer */}
                     <View style={styles.disclaimerCard}>
                         <View style={styles.disclaimerHeader}>
                             <View style={styles.warningCircle}>
@@ -456,7 +488,7 @@ const styles = StyleSheet.create({
         marginBottom: 25,
     },
     saveBtn: {
-        flex: 1.5,
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -475,7 +507,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Vietnam-Bold',
     },
     savedBtnText: {
-        color: '#94A3B8',
+        color: '#2E7D32',
         fontSize: 14,
         fontFamily: 'Vietnam-Bold',
     },
