@@ -18,12 +18,20 @@ const MonitorPage = () => {
         }
     }, [location.state?.ts]); // React on timestamp change to allow re-clicking on the same tab path
 
-    React.useEffect(() => {
-        setJobState(prev => ({ ...prev, monitorTab: activeTab }));
-    }, [activeTab, setJobState]);
-
     const [liveLogs, setLiveLogs] = useState([]);
     const [liveAlertCount, setLiveAlertCount] = useState(0);
+    const [jobState, setJobState] = useState({ 
+        jobId: null, 
+        status: 'idle', 
+        progress: 0, 
+        result: null,
+        monitorTab: 'live'
+    });
+
+    // Update monitorTab when activeTab changes
+    React.useEffect(() => {
+        setJobState(prev => ({ ...prev, monitorTab: activeTab }));
+    }, [activeTab]);
 
     // Download dropdown state
     const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
