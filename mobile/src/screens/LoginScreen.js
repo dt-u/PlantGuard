@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     View, 
     Text, 
@@ -11,8 +11,9 @@ import {
     ActivityIndicator,
     Alert
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, Lock, Eye, EyeOff, User, ArrowLeft } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, User, ArrowLeft, CheckSquare, Square } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const LoginScreen = ({ navigation }) => {
@@ -20,7 +21,28 @@ const LoginScreen = ({ navigation }) => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
     const { login } = useAuth();
+
+    // Load saved credentials on mount
+    useEffect(() => {
+        const loadCredentials = async () => {
+            try {
+                const savedEmail = await AsyncStorage.getItem('remembered_email');
+                const savedPassword = await AsyncStorage.getItem('remembered_password');
+                const savedRememberMe = await AsyncStorage.getItem('remember_me');
+
+                if (savedRememberMe === 'true') {
+                    if (savedEmail) setEmail(savedEmail);
+                    if (savedPassword) setPassword(savedPassword);
+                    setRememberMe(true);
+                }
+            } catch (e) {
+                console.error('Error loading credentials:', e);
+            }
+        };
+        loadCredentials();
+    }, []);
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -33,6 +55,21 @@ const LoginScreen = ({ navigation }) => {
         setLoading(false);
 
         if (result.success) {
+            // Handle Remember Me logic
+            try {
+                if (rememberMe) {
+                    await AsyncStorage.setItem('remembered_email', email);
+                    await AsyncStorage.setItem('remembered_password', password);
+                    await AsyncStorage.setItem('remember_me', 'true');
+                } else {
+                    await AsyncStorage.removeItem('remembered_email');
+                    await AsyncStorage.removeItem('remembered_password');
+                    await AsyncStorage.setItem('remember_me', 'false');
+                }
+            } catch (e) {
+                console.error('Error saving credentials:', e);
+            }
+
             if (navigation.canGoBack()) {
                 navigation.goBack();
             } else {
@@ -99,6 +136,21 @@ const LoginScreen = ({ navigation }) => {
                             </TouchableOpacity>
                         </View>
                     </View>
+
+                    <TouchableOpacity 
+                        style={styles.rememberMeRow} 
+                        onPress={() => setRememberMe(!rememberMe)}
+                        activeOpacity={0.7}
+                    >
+                        {rememberMe ? (
+                            <CheckSquare color="#2E7D32" size={20} />
+                        ) : (
+                            <Square color="#94A3B8" size={20} />
+                        )}
+                        <Text style={[styles.rememberMeText, rememberMe && styles.rememberMeActive]}>
+                            Ghi nhớ đăng nhập
+                        </Text>
+                    </TouchableOpacity>
 
                     <TouchableOpacity 
                         onPress={handleLogin} 
@@ -219,6 +271,22 @@ const styles = StyleSheet.create({
     },
     eyeIcon: {
         padding: 4,
+    },
+    rememberMeRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 24,
+        paddingLeft: 4,
+    },
+    rememberMeText: {
+        fontSize: 14,
+        fontFamily: 'Vietnam-Medium',
+        color: '#64748B',
+        marginLeft: 8,
+    },
+    rememberMeActive: {
+        color: '#2E7D32',
+        fontFamily: 'Vietnam-Bold',
     },
     loginButtonWrapper: {
         marginTop: 10,

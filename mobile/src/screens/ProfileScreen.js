@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, History, LogOut, ChevronRight, Settings, Shield, Bell } from 'lucide-react-native';
+import { User, Mail, History, LogOut, ChevronRight, Settings, Shield, Bell, LogIn, ArrowLeft, UserPlus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ProfileScreen = ({ navigation }) => {
-    const { user, logout } = useAuth();
+    const { user, logout, isAuthenticated } = useAuth();
+    const insets = useSafeAreaInsets();
+    const [showGuestView, setShowGuestView] = React.useState(false);
+
+    // Tự động đóng GuestView khi trạng thái user thay đổi (đăng nhập thành công)
+    useEffect(() => {
+        if (user) {
+            setShowGuestView(false);
+        }
+    }, [user]);
 
     const handleLogout = () => {
         Alert.alert(
@@ -25,10 +35,25 @@ const ProfileScreen = ({ navigation }) => {
         );
     };
 
-    if (!user) {
+    const handleHistoryPress = () => {
+        if (isAuthenticated()) {
+            navigation.navigate('History');
+        } else {
+            setShowGuestView(true);
+        }
+    };
+
+    if (!user && showGuestView) {
         return (
             <View style={styles.container}>
-                <View style={styles.guestContent}>
+                <View style={[styles.guestContent, { paddingTop: insets.top + 60 }]}>
+                    <TouchableOpacity 
+                        style={[styles.backButtonGuest, { top: insets.top + 10 }]}
+                        onPress={() => setShowGuestView(false)}
+                    >
+                        <ArrowLeft color="#2E7D32" size={24} />
+                    </TouchableOpacity>
+
                     <View style={styles.guestIconContainer}>
                         <User color="#2E7D32" size={48} />
                     </View>
@@ -52,20 +77,56 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
             <LinearGradient
                 colors={['#2E7D32', '#10B981']}
-                style={styles.header}
+                style={[styles.header, { paddingTop: Math.max(insets.top + 35, 70), paddingBottom: 50 }]}
             >
-                <View style={styles.profileInfo}>
-                    <View style={styles.avatarContainer}>
-                        <User color="#2E7D32" size={40} />
+                {user ? (
+                    <View style={styles.profileInfo}>
+                        <View style={styles.avatarContainer}>
+                            <User color="#2E7D32" size={40} />
+                        </View>
+                        <View style={styles.nameContainer}>
+                            <Text style={styles.userName}>{user.name}</Text>
+                            <Text style={styles.userEmail}>{user.email}</Text>
+                        </View>
                     </View>
-                    <View style={styles.nameContainer}>
-                        <Text style={styles.userName}>{user.name}</Text>
-                        <Text style={styles.userEmail}>{user.email}</Text>
+                ) : (
+                    <View style={styles.guestHeaderWrapper}>
+                        <View style={styles.guestActionRow}>
+                            <TouchableOpacity 
+                                style={styles.authButtonSmall}
+                                onPress={() => navigation.navigate('Login')}
+                            >
+                                <LinearGradient
+                                    colors={['#2E7D32', '#10B981']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.authButtonGradient}
+                                >
+                                    <LogIn color="#FFFFFF" size={20} />
+                                    <Text style={[styles.authButtonSmallText, { color: '#FFFFFF' }]}>Đăng nhập</Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                style={styles.authButtonSmall}
+                                onPress={() => navigation.navigate('Register')}
+                            >
+                                <LinearGradient
+                                    colors={['#3B82F6', '#6366F1']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.authButtonGradient}
+                                >
+                                    <UserPlus color="#FFFFFF" size={20} />
+                                    <Text style={[styles.authButtonSmallText, { color: '#FFFFFF' }]}>Đăng ký</Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </View>
+                )}
             </LinearGradient>
 
             <View style={styles.content}>
@@ -73,7 +134,7 @@ const ProfileScreen = ({ navigation }) => {
                 
                 <TouchableOpacity 
                     style={styles.menuItem}
-                    onPress={() => navigation.navigate('History')}
+                    onPress={handleHistoryPress}
                 >
                     <View style={styles.menuIconContainer}>
                         <History color="#2E7D32" size={20} />
@@ -108,15 +169,17 @@ const ProfileScreen = ({ navigation }) => {
                     <ChevronRight color="#CBD5E1" size={20} />
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={[styles.menuItem, styles.logoutItem]}
-                    onPress={handleLogout}
-                >
-                    <View style={[styles.menuIconContainer, styles.logoutIconContainer]}>
-                        <LogOut color="#EF4444" size={20} />
-                    </View>
-                    <Text style={[styles.menuLabel, styles.logoutLabel]}>Đăng xuất</Text>
-                </TouchableOpacity>
+                {user && (
+                    <TouchableOpacity 
+                        style={[styles.menuItem, styles.logoutItem]}
+                        onPress={handleLogout}
+                    >
+                        <View style={[styles.menuIconContainer, styles.logoutIconContainer]}>
+                            <LogOut color="#EF4444" size={20} />
+                        </View>
+                        <Text style={[styles.menuLabel, styles.logoutLabel]}>Đăng xuất</Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
             <Text style={styles.versionText}>PlantGuard v1.0.0 • AI Agriculture</Text>
@@ -130,8 +193,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#F8FAFC',
     },
     header: {
-        paddingTop: 80,
-        paddingBottom: 40,
         paddingHorizontal: 24,
         borderBottomLeftRadius: 32,
         borderBottomRightRadius: 32,
@@ -154,6 +215,8 @@ const styles = StyleSheet.create({
     },
     nameContainer: {
         marginLeft: 16,
+        flex: 1,
+        justifyContent: 'center',
     },
     userName: {
         fontSize: 22,
@@ -165,6 +228,39 @@ const styles = StyleSheet.create({
         fontFamily: 'Vietnam-Medium',
         color: 'rgba(255, 255, 255, 0.8)',
         marginTop: 2,
+    },
+    guestHeaderWrapper: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    guestActionRow: {
+        flexDirection: 'row',
+        gap: 12,
+        justifyContent: 'center',
+        width: '100%',
+    },
+    authButtonSmall: {
+        flex: 1,
+        maxWidth: 160,
+        borderRadius: 18,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
+    },
+    authButtonGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 10,
+    },
+    authButtonSmallText: {
+        fontSize: 14,
+        fontFamily: 'Vietnam-Bold',
+        marginLeft: 8,
     },
     content: {
         paddingHorizontal: 20,
@@ -217,11 +313,26 @@ const styles = StyleSheet.create({
     logoutLabel: {
         color: '#EF4444',
     },
+    backButtonGuest: {
+        position: 'absolute',
+        left: 20,
+        padding: 12,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+        zIndex: 20,
+    },
     guestContent: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 40,
+        backgroundColor: '#F8FAFC',
+        position: 'relative',
     },
     guestIconContainer: {
         width: 100,

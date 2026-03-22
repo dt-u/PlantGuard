@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image, ActivityIndicator, Alert, Modal, StatusBar, Keyboard } from 'react-native';
 import { Radio, Upload, Play, Square, AlertTriangle, Activity, Maximize, Minimize, Trash2, Download, Video as VideoIcon, FileText, Archive, ChevronRight, Zap } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as FileSystem from 'expo-file-system';
@@ -59,6 +60,7 @@ const LiveCameraView = memo(({ imageRef, isFullscreen }) => {
 }, () => true); // Never re-render via props
 
 const MonitorScreen = () => {
+    const insets = useSafeAreaInsets();
     const [activeTab, setActiveTab] = useState('live');
     const [cameraUrl, setCameraUrl] = useState("http://192.168.5.100:4747/video");
     const [isStreaming, setIsStreaming] = useState(false);
@@ -297,8 +299,8 @@ const MonitorScreen = () => {
     const currentLogs = activeTab === 'live' ? liveLogs : droneLogs;
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
+        <View style={[styles.container, { paddingTop: Math.max(insets.top + 20, 60) }]}>
+            <View style={[styles.header, { marginBottom: 25 }]}>
                 <View>
                     <Text style={styles.title}>Giám Sát Vườn</Text>
                     <Text style={styles.subtitle}>Theo dõi sức khỏe cây trồng thực địa</Text>
@@ -551,7 +553,7 @@ const MonitorScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F9FAFB', paddingTop: 60 },
+    container: { flex: 1, backgroundColor: '#F9FAFB' },
     header: { paddingHorizontal: 20, marginBottom: 20 },
     title: { fontSize: 28, fontFamily: 'Vietnam-Bold', color: '#111827' },
     subtitle: { fontSize: 13, color: '#6B7280', marginTop: 2 },

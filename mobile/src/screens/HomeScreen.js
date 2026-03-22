@@ -1,12 +1,14 @@
 import React from 'react';
 import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar } from 'react-native';
 import { Leaf, Eye, ArrowRight, Sprout, LogIn } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
     const { user, isAuthenticated } = useAuth();
+    const insets = useSafeAreaInsets();
 
     const handleProfilePress = () => {
         if (isAuthenticated()) {
@@ -17,11 +19,11 @@ const HomeScreen = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: '#F8FAFC' }]}>
             <StatusBar barStyle="dark-content" />
             
             {/* Header / Profile */}
-            <View style={styles.header}>
+            <View style={[styles.header, { paddingTop: Math.max(insets.top + 15, 50), paddingBottom: 15 }]}>
                 <View style={styles.logoContainer}>
                     <Sprout color="#2E7D32" size={28} />
                     <Text style={styles.logoText}>PlantGuard</Text>
@@ -181,7 +183,7 @@ const styles = StyleSheet.create({
     },
     heroSection: {
         paddingHorizontal: 24,
-        marginTop: 30,
+        marginTop: 15,
         alignItems: 'center',
     },
     title: {

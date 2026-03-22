@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Act
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { Camera, AlertCircle, RefreshCw, Cross, Hospital, CheckCircle, Info, Bookmark } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_BASE_URL, ENDPOINTS } from '../api/config';
 import TreatmentCard from '../components/TreatmentCard';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,6 +12,7 @@ import { useHistorySync } from '../hooks/useHistorySync';
 const { width } = Dimensions.get('window');
 
 const DoctorScreen = ({ navigation }) => {
+    const insets = useSafeAreaInsets();
     const { user, isAuthenticated, getUserId } = useAuth();
     const [image, setImage] = useState(null);
     const [result, setResult] = useState(null);
@@ -188,8 +190,8 @@ const DoctorScreen = ({ navigation }) => {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-            <View style={styles.header}>
+        <ScrollView contentContainerStyle={[styles.container, { paddingTop: Math.max(insets.top + 20, 60) }]} showsVerticalScrollIndicator={false}>
+            <View style={[styles.header, { marginBottom: 25 }]}>
                 <Text style={styles.title}>Bác Sĩ Cây Trồng</Text>
                 <Text style={styles.subtitle}>Chẩn đoán sức khỏe lá cây tức thì bằng công nghệ AI chuyên sâu.</Text>
             </View>
@@ -318,7 +320,6 @@ const DoctorScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         padding: 20,
-        paddingTop: 60,
         paddingBottom: 40,
         backgroundColor: '#F3F4F6',
     },
@@ -326,17 +327,17 @@ const styles = StyleSheet.create({
         marginBottom: 25,
     },
     title: {
-        fontSize: 32,
+        fontSize: 28,
         fontFamily: 'Vietnam-Bold',
         color: '#111827',
         letterSpacing: -0.5,
     },
     subtitle: {
-        fontSize: 15,
+        fontSize: 13,
         fontFamily: 'Vietnam-Regular',
         color: '#6B7280',
         marginTop: 6,
-        lineHeight: 22,
+        lineHeight: 20,
     },
     uploadSection: {
         marginTop: 20,
@@ -364,12 +365,12 @@ const styles = StyleSheet.create({
     },
     btnTextLarge: {
         color: '#FFFFFF',
-        fontSize: 20,
+        fontSize: 18,
         fontFamily: 'Vietnam-Bold',
     },
     btnSubtext: {
         color: 'rgba(255,255,255,0.7)',
-        fontSize: 13,
+        fontSize: 12,
         fontFamily: 'Vietnam-Medium',
         marginTop: 4,
     },
@@ -401,7 +402,7 @@ const styles = StyleSheet.create({
     loaderText: {
         marginTop: 20,
         color: '#374151',
-        fontSize: 15,
+        fontSize: 14,
         fontFamily: 'Vietnam-SemiBold',
         textAlign: 'center',
     },
@@ -454,10 +455,10 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     diseaseName: {
-        fontSize: 26,
+        fontSize: 22,
         fontFamily: 'Vietnam-Bold',
         color: '#111827',
-        lineHeight: 32,
+        lineHeight: 28,
     },
     confidenceRow: {
         flexDirection: 'row',
@@ -478,7 +479,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#10B981',
     },
     confidencePercentage: {
-        fontSize: 16,
+        fontSize: 14,
         fontFamily: 'Vietnam-Bold',
         color: '#10B981',
     },
@@ -541,11 +542,11 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     descriptionText: {
-        fontSize: 15,
+        fontSize: 13,
         color: '#4B5563',
         fontFamily: 'Vietnam-Medium',
         fontStyle: 'italic',
-        lineHeight: 22,
+        lineHeight: 20,
         borderLeftWidth: 3,
         borderLeftColor: '#10B98120',
         paddingLeft: 12,
@@ -559,7 +560,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     symptomText: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#4B5563',
         fontFamily: 'Vietnam-Regular',
     },
@@ -580,7 +581,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     treatmentTitle: {
-        fontSize: 22,
+        fontSize: 18,
         fontFamily: 'Vietnam-Bold',
     },
     disclaimerCard: {
@@ -605,15 +606,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     disclaimerTitle: {
-        fontSize: 12,
+        fontSize: 10,
         fontFamily: 'Vietnam-Bold',
         color: '#92400E',
         letterSpacing: 0.5,
     },
     disclaimerBody: {
-        fontSize: 13,
+        fontSize: 11,
         color: '#92400E',
-        lineHeight: 19,
+        lineHeight: 16,
         fontFamily: 'Vietnam-Regular',
         opacity: 0.8,
     },
