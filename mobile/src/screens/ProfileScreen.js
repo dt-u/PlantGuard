@@ -1,16 +1,19 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, History, LogOut, ChevronRight, Settings, Shield, Bell, LogIn, ArrowLeft, UserPlus } from 'lucide-react-native';
+import { useLanguage } from '../contexts/LanguageContext';
+import { User, Mail, History, LogOut, ChevronRight, Settings, Shield, Bell, LogIn, ArrowLeft, UserPlus, Globe, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ProfileScreen = ({ navigation }) => {
     const { user, logout, isAuthenticated } = useAuth();
+    const { t, language, changeLanguage } = useLanguage();
     const insets = useSafeAreaInsets();
     const [showGuestView, setShowGuestView] = React.useState(false);
+    const [showLanguageModal, setShowLanguageModal] = React.useState(false);
 
-    // Tự động đóng GuestView khi trạng thái user thay đổi (đăng nhập thành công)
+    // Auto-close GuestView when user state changes
     useEffect(() => {
         if (user) {
             setShowGuestView(false);
@@ -19,14 +22,15 @@ const ProfileScreen = ({ navigation }) => {
 
     const handleLogout = () => {
         Alert.alert(
-            'Đăng xuất',
-            'Bạn có chắc chắn muốn đăng xuất?',
+            t('common.logout'),
+            t('profile.logout_confirm'),
             [
-                { text: 'Hủy', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 { 
-                    text: 'Đăng xuất', 
+                    text: t('common.logout'), 
                     onPress: async () => {
                         await logout();
+                        setShowGuestView(false);
                         navigation.navigate('MainTabs', { screen: 'Trang chủ' });
                     },
                     style: 'destructive' 
@@ -43,6 +47,11 @@ const ProfileScreen = ({ navigation }) => {
         }
     };
 
+    const selectLanguage = (lang) => {
+        changeLanguage(lang);
+        setShowLanguageModal(false);
+    };
+
     if (!user && showGuestView) {
         return (
             <View style={styles.container}>
@@ -57,8 +66,8 @@ const ProfileScreen = ({ navigation }) => {
                     <View style={styles.guestIconContainer}>
                         <User color="#2E7D32" size={48} />
                     </View>
-                    <Text style={styles.guestTitle}>Chưa đăng nhập</Text>
-                    <Text style={styles.guestSubtitle}>Đăng nhập để lưu lịch sử chẩn đoán và quản lý tài khoản của bạn</Text>
+                    <Text style={styles.guestTitle}>{t('profile.not_logged_in')}</Text>
+                    <Text style={styles.guestSubtitle}>{t('profile.not_logged_in_desc')}</Text>
                     
                     <TouchableOpacity 
                         style={styles.authButton} 
@@ -68,7 +77,7 @@ const ProfileScreen = ({ navigation }) => {
                             colors={['#2E7D32', '#10B981']}
                             style={styles.gradient}
                         >
-                            <Text style={styles.authButtonText}>Đăng nhập ngay</Text>
+                            <Text style={styles.authButtonText}>{t('profile.login_now')}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>
@@ -77,10 +86,10 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     return (
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
             <LinearGradient
                 colors={['#2E7D32', '#10B981']}
-                style={[styles.header, { paddingTop: Math.max(insets.top + 35, 70), paddingBottom: 50 }]}
+                style={[styles.header, { paddingTop: Math.max(insets.top + 30, 65), paddingBottom: 40 }]}
             >
                 {user ? (
                     <View style={styles.profileInfo}>
@@ -106,7 +115,7 @@ const ProfileScreen = ({ navigation }) => {
                                     style={styles.authButtonGradient}
                                 >
                                     <LogIn color="#FFFFFF" size={20} />
-                                    <Text style={[styles.authButtonSmallText, { color: '#FFFFFF' }]}>Đăng nhập</Text>
+                                    <Text style={[styles.authButtonSmallText, { color: '#FFFFFF' }]}>{t('common.login')}</Text>
                                 </LinearGradient>
                             </TouchableOpacity>
 
@@ -121,7 +130,7 @@ const ProfileScreen = ({ navigation }) => {
                                     style={styles.authButtonGradient}
                                 >
                                     <UserPlus color="#FFFFFF" size={20} />
-                                    <Text style={[styles.authButtonSmallText, { color: '#FFFFFF' }]}>Đăng ký</Text>
+                                    <Text style={[styles.authButtonSmallText, { color: '#FFFFFF' }]}>{t('common.register')}</Text>
                                 </LinearGradient>
                             </TouchableOpacity>
                         </View>
@@ -130,7 +139,7 @@ const ProfileScreen = ({ navigation }) => {
             </LinearGradient>
 
             <View style={styles.content}>
-                <Text style={styles.sectionTitle}>Tài khoản</Text>
+                <Text style={styles.sectionTitle}>{t('profile.account')}</Text>
                 
                 <TouchableOpacity 
                     style={styles.menuItem}
@@ -139,7 +148,7 @@ const ProfileScreen = ({ navigation }) => {
                     <View style={styles.menuIconContainer}>
                         <History color="#2E7D32" size={20} />
                     </View>
-                    <Text style={styles.menuLabel}>Lịch sử chẩn đoán</Text>
+                    <Text style={styles.menuLabel}>{t('profile.history')}</Text>
                     <ChevronRight color="#CBD5E1" size={20} />
                 </TouchableOpacity>
 
@@ -147,17 +156,33 @@ const ProfileScreen = ({ navigation }) => {
                     <View style={styles.menuIconContainer}>
                         <Bell color="#2E7D32" size={20} />
                     </View>
-                    <Text style={styles.menuLabel}>Thông báo</Text>
+                    <Text style={styles.menuLabel}>{t('profile.notifications')}</Text>
                     <ChevronRight color="#CBD5E1" size={20} />
                 </TouchableOpacity>
 
-                <Text style={styles.sectionTitle}>Cài đặt</Text>
+                <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
+
+                <TouchableOpacity 
+                    style={styles.menuItem}
+                    onPress={() => setShowLanguageModal(true)}
+                >
+                    <View style={styles.menuIconContainer}>
+                        <Globe color="#2E7D32" size={20} />
+                    </View>
+                    <Text style={styles.menuLabel}>{t('profile.language')}</Text>
+                    <View style={styles.languageValue}>
+                        <Text style={styles.languageText}>
+                            {language === 'vi' ? 'Tiếng Việt' : 'English'}
+                        </Text>
+                        <ChevronRight color="#CBD5E1" size={20} />
+                    </View>
+                </TouchableOpacity>
 
                 <TouchableOpacity style={styles.menuItem}>
                     <View style={styles.menuIconContainer}>
                         <Shield color="#2E7D32" size={20} />
                     </View>
-                    <Text style={styles.menuLabel}>Quyền riêng tư</Text>
+                    <Text style={styles.menuLabel}>{t('profile.privacy')}</Text>
                     <ChevronRight color="#CBD5E1" size={20} />
                 </TouchableOpacity>
 
@@ -165,7 +190,7 @@ const ProfileScreen = ({ navigation }) => {
                     <View style={styles.menuIconContainer}>
                         <Settings color="#2E7D32" size={20} />
                     </View>
-                    <Text style={styles.menuLabel}>Thiết lập ứng dụng</Text>
+                    <Text style={styles.menuLabel}>{t('profile.app_settings')}</Text>
                     <ChevronRight color="#CBD5E1" size={20} />
                 </TouchableOpacity>
 
@@ -177,12 +202,54 @@ const ProfileScreen = ({ navigation }) => {
                         <View style={[styles.menuIconContainer, styles.logoutIconContainer]}>
                             <LogOut color="#EF4444" size={20} />
                         </View>
-                        <Text style={[styles.menuLabel, styles.logoutLabel]}>Đăng xuất</Text>
+                        <Text style={[styles.menuLabel, styles.logoutLabel]}>{t('common.logout')}</Text>
                     </TouchableOpacity>
                 )}
             </View>
 
-            <Text style={styles.versionText}>PlantGuard v1.0.0 • AI Agriculture</Text>
+            <Text style={styles.versionText}>{t('profile.version')}</Text>
+
+            {/* Language Selection Modal */}
+            <Modal
+                visible={showLanguageModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowLanguageModal(false)}
+            >
+                <TouchableOpacity 
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setShowLanguageModal(false)}
+                >
+                    <View style={styles.bottomSheet}>
+                        <View style={styles.sheetHandle} />
+                        <Text style={styles.sheetTitle}>{t('profile.language')}</Text>
+                        
+                        <TouchableOpacity 
+                            style={styles.languageOption}
+                            onPress={() => selectLanguage('vi')}
+                        >
+                            <Text style={[styles.languageOptionText, language === 'vi' && styles.languageOptionActive]}>Tiếng Việt</Text>
+                            {language === 'vi' && <Check color="#2E7D32" size={20} />}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={styles.languageOption}
+                            onPress={() => selectLanguage('en')}
+                        >
+                            <Text style={[styles.languageOptionText, language === 'en' && styles.languageOptionActive]}>English (US)</Text>
+                            {language === 'en' && <Check color="#2E7D32" size={20} />}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={styles.closeSheetBtn}
+                            onPress={() => setShowLanguageModal(false)}
+                        >
+                            <Text style={styles.closeSheetText}>{t('common.cancel')}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </ScrollView>
     );
 };
@@ -202,9 +269,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     avatarContainer: {
-        width: 72,
-        height: 72,
-        borderRadius: 24,
+        width: 70,
+        height: 70,
+        borderRadius: 22,
         backgroundColor: '#FFFFFF',
         justifyContent: 'center',
         alignItems: 'center',
@@ -264,7 +331,7 @@ const styles = StyleSheet.create({
     },
     content: {
         paddingHorizontal: 20,
-        paddingTop: 30,
+        paddingTop: 20,
     },
     sectionTitle: {
         fontSize: 12,
@@ -272,17 +339,18 @@ const styles = StyleSheet.create({
         color: '#94A3B8',
         textTransform: 'uppercase',
         letterSpacing: 1,
-        marginBottom: 16,
+        marginBottom: 12,
         marginLeft: 4,
+        marginTop: 12,
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
-        paddingVertical: 14,
+        paddingVertical: 13.5,
         paddingHorizontal: 16,
         borderRadius: 16,
-        marginBottom: 12,
+        marginBottom: 9,
         shadowColor: '#0F172A',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
@@ -304,8 +372,18 @@ const styles = StyleSheet.create({
         fontFamily: 'Vietnam-SemiBold',
         color: '#1E293B',
     },
+    languageValue: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    languageText: {
+        fontSize: 13,
+        fontFamily: 'Vietnam-Medium',
+        color: '#64748B',
+    },
     logoutItem: {
-        marginTop: 20,
+        marginTop: 15,
     },
     logoutIconContainer: {
         backgroundColor: '#FEF2F2',
@@ -377,8 +455,64 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#CBD5E1',
         fontFamily: 'Vietnam-Medium',
-        marginTop: 40,
-        marginBottom: 40,
+        marginTop: 35,
+        marginBottom: 20,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    bottomSheet: {
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 20,
+        paddingBottom: 40,
+    },
+    sheetHandle: {
+        width: 40,
+        height: 4,
+        backgroundColor: '#E5E7EB',
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginBottom: 20,
+    },
+    sheetTitle: {
+        fontSize: 18,
+        fontFamily: 'Vietnam-Bold',
+        color: '#111827',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    languageOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    languageOptionText: {
+        fontSize: 16,
+        fontFamily: 'Vietnam-Medium',
+        color: '#374151',
+    },
+    languageOptionActive: {
+        color: '#2E7D32',
+        fontFamily: 'Vietnam-Bold',
+    },
+    closeSheetBtn: {
+        marginTop: 20,
+        paddingVertical: 15,
+        backgroundColor: '#F3F4F6',
+        borderRadius: 14,
+        alignItems: 'center',
+    },
+    closeSheetText: {
+        fontSize: 15,
+        fontFamily: 'Vietnam-Bold',
+        color: '#4B5563',
     }
 });
 

@@ -1,0 +1,1043 @@
+{
+  "navbar": {
+    "monitor": "Monitor",
+    "doctor": "Doctor",
+    "login": "Login",
+    "history": "Diagnosis History",
+    "logout": "Logout"
+  },
+  "home": {
+    "title": "Smart Agriculture",
+    "subtitle": "Starting Simply",
+    "description1": "PlantGuard protects your crops with advanced AI.",
+    "description2": "Early detection of pathologies and real-time monitoring of field health.",
+    "monitor_title": "Monitoring Mode",
+    "monitor_desc": "Analyze data from Drones/Cameras to early detect stressed areas on a large scale.",
+    "monitor_btn": "Start Monitoring",
+    "doctor_title": "Plant Doctor",
+    "doctor_desc": "Accurately diagnose leaf diseases and receive immediate treatment protocols.",
+    "doctor_btn": "Diagnose Now",
+    "register": "Register",
+    "account": "Account",
+    "footer": "© 2026 PlantGuard AI • Smart crop protection solutions"
+  },
+  "monitor": {
+    "title": "Garden Monitoring",
+    "subtitle": "Analyze Live Cam & Drone data in real-time.",
+    "live_cam": "Live Cam",
+    "drone": "Drone",
+    "garden_status": "Garden Status",
+    "status": {
+      "disconnected": "Disconnected",
+      "risk": "Risk",
+      "stable": "Stable",
+      "connecting": "Connecting",
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "drone_data": "Drone Data",
+    "stress_zones": "Stress Zones",
+    "upload_label": "drone/cctv video",
+    "processing": "Processing...",
+    "processing_desc": "The system is scanning data. You can visit other pages while waiting.",
+    "cancel_btn": "Cancel Analysis",
+    "analysis_complete": "AI Analysis Complete",
+    "download": "Download",
+    "download_options": "Download Options",
+    "download_video": "Download Video only (.mp4)",
+    "download_logs": "Download Logs only (.xlsx)",
+    "download_all": "Download Full Pack (.zip)",
+    "alerts_detected": "Alerts Detected",
+    "analyze_another": "Analyze another record",
+    "disclaimer": "Note: Analysis results are based on remote imagery. In low light or shaky camera conditions, accuracy may decrease. Please cross-reference with Plant Doctor data for the most accurate results.",
+    "logs_live": "Live Log",
+    "logs_analysis": "Analysis Log",
+    "no_data": "No data recorded.",
+    "auto_update": "Auto updating...",
+    "camera_url": "Camera URL (IP/DroidCam)",
+    "camera_placeholder": "Example: http://192.168.1.100:4747/video",
+    "start_btn": "Start Monitoring",
+    "stop_btn": "Stop Stream",
+    "camera_disconnected": "Camera not connected",
+    "camera_desc": "Enter URL and press Start to scan the field",
+    "fullscreen": "Fullscreen",
+    "exit_fullscreen": "Exit Fullscreen",
+    "error_upload": "Error analyzing video. Please try again.",
+    "error_connection": "Video signal connection error...",
+    "error_reconnecting": "Connection interrupted. Attempting to reconnect automatically...",
+    "global_progress": {
+      "title": "Analyze Drone Footage",
+      "processing": "Processing...",
+      "complete": "Analysis complete!",
+      "view_result": "View Results",
+      "close": "Close",
+      "error": "An error occurred during analysis."
+    }
+  },
+  "doctor": {
+    "title": "Plant Doctor",
+    "subtitle": "Diagnose pathogens through artificial intelligence.",
+    "upload_label": "leaf image",
+    "analyzing": "Analyzing leaf structure and pathogens...",
+    "error_title": "Processing error occurred",
+    "try_again": "Try again with another image",
+    "analysis_result": "Identification Result",
+    "save": "Save",
+    "unsave": "Unsave",
+    "other_image": "Other Image",
+    "care_plan": "Care Plan",
+    "treatment_plan": "Treatment Protocol",
+    "tech_details": "Technical Details",
+    "description": "Pathology Description",
+    "symptoms": "Symptoms",
+    "recommendation": "Expert Recommendation",
+    "recommendation_desc": "This technique is based on deep learning models. Results may vary depending on image quality. Please consult an expert before applying large-scale plant protection chemicals.",
+    "server_error": "Server encountered an issue processing the image. Please try again later."
+  },
+  "history": {
+    "title": "Diagnosis History",
+    "subtitle": "Review all your crop diagnosis records",
+    "search_placeholder": "Search by disease name, symptoms...",
+    "empty": "No diagnosis history found.",
+    "delete_confirm": "Delete this record?",
+    "delete_success": "Record deleted.",
+    "detail_btn": "View Details"
+  },
+  "logs": {
+    "detected_at": "At {{time}} detected risk: [{{label}}]",
+    "live_alert": "Object alert: [{{label}}] - Confidence: {{confidence}}%"
+  },
+  "auth": {
+    "login_title": "Login",
+    "login_subtitle": "Welcome back to PlantGuard",
+    "register_title": "Register",
+    "register_subtitle": "Start protecting your garden",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full Name",
+    "confirm_password": "Confirm Password",
+    "login_btn": "Login",
+    "register_btn": "Register",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "error_fill": "Please fill in all information",
+    "error_password": "Passwords do not match",
+    "error_login": "Invalid email or password",
+    "error_register": "Error during registration"
+  },
+  "diseases": {
+    "Apple Healthy": {
+      "name": "Healthy Apple Leaf",
+      "desc": "Apple leaf in its best growth state.",
+      "symptoms": [
+        "Uniform green color, smooth surface",
+        "No spots or pests"
+      ],
+      "treatments": [
+        {
+          "level": "Maintenance",
+          "identification_guide": "Leaf maintains smooth green color, no abnormal signs found.",
+          "action": "Continue regular care, water steadily",
+          "product": "Bio-organic fertilizer"
+        },
+        {
+          "level": "Maintenance",
+          "identification_guide": "Entire canopy looks uniform, no abnormal yellow leaf drop.",
+          "action": "Regularly check for pests on the underside of leaves",
+          "product": "Clean water"
+        },
+        {
+          "level": "Maintenance",
+          "identification_guide": "Growth points develop well, healthy young shoots.",
+          "action": "Maintain macro, medium, and micro-nutrient fertilization regime",
+          "product": "Periodic NPK"
+        }
+      ]
+    },
+    "Apple Scab": {
+      "name": "Apple Scab",
+      "desc": "Disease caused by the fungus Venturia inaequalis, severely affecting apple yield.",
+      "symptoms": [
+        "Circular brown-black spots, slightly raised",
+        "Deformed, wrinkled leaves",
+        "Early leaf drop"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "A few small olive-colored spots appear on the underside of leaves.",
+          "action": "Clean up fallen leaves, water at the base",
+          "product": "Lime water"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Many brown-black spots enlarge on both sides of the leaf, leaf begins to curl slightly.",
+          "action": "Spray antifungal when buds open",
+          "product": "Captan or Myclobutanil"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Dense ulcers make leaves wrinkled, dry, and fall early in mass.",
+          "action": "Apply a strict spraying schedule",
+          "product": "Difenoconazole (Anvil)"
+        }
+      ]
+    },
+    "Apple Black Rot": {
+      "name": "Apple Black Rot",
+      "desc": "Fungal disease Diplodia seriata causing dark rot spots.",
+      "symptoms": [
+        "Purple-edged brown spots",
+        "Rotting fruit",
+        "Cankers on branches"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Small purple spots appear on the upper leaf surface.",
+          "action": "Prune dead or infected branches",
+          "product": "Pruning shears"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Spots enlarge and develop a 'frog-eye' appearance with a tan center.",
+          "action": "Spray fungicides during bloom",
+          "product": "Captan or Sulfur"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Leaves turn yellow and drop, fruit shows black rot, branch cankers expand.",
+          "action": "Intensive fungicide treatment and sanitation",
+          "product": "Thiophanate-methyl"
+        }
+      ]
+    },
+    "Apple Cedar Rust": {
+      "name": "Cedar Apple Rust",
+      "desc": "Gymnosporangium juniperi-virginianae fungus causes prominent orange spots.",
+      "symptoms": [
+        "Bright orange spots on the upper leaf surface",
+        "Small fungal spikes under the leaf",
+        "Mass leaf drop"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "A few small lemon-yellow spots appear individually on the leaf surface.",
+          "action": "Remove nearby alternate hosts (juniper trees)",
+          "product": "Manual pruning"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Spots turn dark orange, small black dots begin to appear in the center of the lesion.",
+          "action": "Spray when young leaves first emerge",
+          "product": "Sulfur-containing fungicides"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Spore-bearing spike-like tubes grow under the leaf surface, leaves turn yellow and fall.",
+          "action": "Use strong antifungal drugs",
+          "product": "Myclobutanil or Fenbuconazole"
+        }
+      ]
+    },
+    "Blueberry Healthy": {
+      "name": "Healthy Blueberry Leaf",
+      "desc": "Analysis of blueberry leaf status in good growth.",
+      "symptoms": [
+        "Lush green leaves, no spots",
+        "Even plant growth"
+      ],
+      "treatments": [
+        {
+          "level": "Maintenance",
+          "identification_guide": "Leaves are even green, no signs of insect sucking.",
+          "action": "Maintain appropriate soil pH (4.5-5.5)",
+          "product": "Blueberry specific fertilizer"
+        }
+      ]
+    },
+    "Cherry Powdery Mildew": {
+      "name": "Cherry Powdery Mildew",
+      "desc": "Disease caused by Podosphaera clandestina fungus causing a white powder layer on leaves.",
+      "symptoms": [
+        "White powder layer on leaf surface",
+        "Leaves curled and deformed",
+        "Reduced photosynthetic capacity"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Faint white spots appear on the underside of young leaves.",
+          "action": "Prune branches for canopy ventilation",
+          "product": "Neem oil"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "White powder covers 30-50% of leaf area, leaf margins slightly curled.",
+          "action": "Spray baking soda or sulfur solution",
+          "product": "Low concentration sulfur"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Leaves completely covered by powder, dry brittle and drop.",
+          "action": "Use specific antifungal drugs",
+          "product": "Myclobutanil"
+        }
+      ]
+    },
+    "Cherry Healthy": {
+      "name": "Healthy Cherry Leaf",
+      "desc": "Cherry tree develops stably.",
+      "symptoms": [
+        "Glossy, dark green leaves",
+        "No fungus or pests"
+      ],
+      "treatments": [
+        {
+          "level": "Maintenance",
+          "identification_guide": "Healthy leaves, no signs of powdery mildew.",
+          "action": "Check root moisture regularly",
+          "product": "Clean water"
+        }
+      ]
+    },
+    "Corn Common Rust": {
+      "name": "Corn Common Rust",
+      "desc": "Disease caused by Puccinia sorghi fungus, reddish-brown pustules appear.",
+      "symptoms": [
+        "Cinnamon-brown pustules on both leaf surfaces",
+        "Stunted plants",
+        "Reduced yield"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "A few brown pustules scattered on the lower leaves.",
+          "action": "Monitor weather and plant stage",
+          "product": "Resistant varieties"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Pustules appear more and spread to upper leaves.",
+          "action": "Spray leaf fungicide if moist conditions",
+          "product": "Pyraclostrobin"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Leaves covered by pustules, turn yellow and die dry.",
+          "action": "Emergency fungicide spray",
+          "product": "Propiconazole"
+        }
+      ]
+    },
+    "Corn Gray Leaf Spot": {
+      "name": "Corn Gray Leaf Spot",
+      "desc": "Disease caused by Cercospora zeae-maydis fungus causing rectangular lesions.",
+      "symptoms": [
+        "Gray rectangular lesions running parallel to leaf veins",
+        "Lesions spread causing leaf blight",
+        "Major impact on yield"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Small tan spots surrounded by a yellow halo.",
+          "action": "Crop rotation and soil turning",
+          "product": "Field sanitation"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Lesions lengthen into gray rectangles 1-2 cm long.",
+          "action": "Spray fungicide when tasseling starts",
+          "product": "Azoxystrobin"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Lesions connect to each other killing the whole leaf.",
+          "action": "Strong chemical intervention",
+          "product": "Tebucoconazole"
+        }
+      ]
+    },
+    "Corn Northern Leaf Blight": {
+      "name": "Northern Corn Leaf Blight",
+      "desc": "Disease caused by Exserohilum turcicum fungus causing spindle-shaped lesions.",
+      "symptoms": [
+        "Large gray-green or brown spindle-shaped lesions",
+        "Massive leaf blight",
+        "Often appears in cool and moist weather"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "A few small cigar-shaped lesions on lower leaves.",
+          "action": "Use resistant varieties",
+          "product": "Choose standard seed"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Long spindle lesions appear on many leaves.",
+          "action": "Spray fungicide when high humidity",
+          "product": "Fluxapyroxad"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Leaves completely blighted, severe impact on grain.",
+          "action": "Active chemical treatment",
+          "product": "Mancozeb"
+        }
+      ]
+    },
+    "Corn Healthy": {
+      "name": "Healthy Corn Leaf",
+      "desc": "Corn tree develops well.",
+      "symptoms": [
+        "Lush green, large strong leaves",
+        "No signs of fungus or rust"
+      ],
+      "treatments": [
+        {
+          "level": "Maintenance",
+          "identification_guide": "Healthy leaves, no spots or brown pustules.",
+          "action": "Ensure adequate nitrogen and water supply",
+          "product": "Urea fertilizer"
+        }
+      ]
+    },
+    "Grape Black Rot": {
+      "name": "Grape Black Rot",
+      "desc": "Disease caused by Guignardia bidwellii fungus seriously damaging grapes.",
+      "symptoms": [
+        "Circular brown spots on leaves with small black dots",
+        "Grapes withered black and hard",
+        "Major impact on harvest"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "A few small brown spots with dark border on leaves.",
+          "action": "Cut off diseased leaves and fruit clusters",
+          "product": "Garden sanitation"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Lesions spread to fruit stems, some fruits start withering.",
+          "action": "Spray fungicide from new shoot emergence",
+          "product": "Mancozeb"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "The whole grape cluster is black rotted and withered.",
+          "action": "Use strong systemic fungicide",
+          "product": "Myclobutanil"
+        }
+      ]
+    },
+    "Grape Esca": {
+      "name": "Grape Esca (Black Measles)",
+      "desc": "Disease complex caused by fungi weakening old grapevines.",
+      "symptoms": [
+        "Tiger-stripe scorching on leaves",
+        "Black spots on fruit",
+        "Plant dies gradually from inside"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Leaves have light yellow streaks between veins.",
+          "action": "Disinfect pruning tools",
+          "product": "70 degree alcohol"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Leaf scorch spreads clearly in red-brown color.",
+          "action": "Apply protective drug to pruning cuts",
+          "product": "Wound sealant"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Branches die dry, fruit has scattered black spots.",
+          "action": "Remove heavily diseased plants to avoid spreading",
+          "product": "Replace with new plant"
+        }
+      ]
+    },
+    "Grape Leaf Blight": {
+      "name": "Grape Leaf Blight",
+      "desc": "Disease caused by Pseudocercospora vitis fungus.",
+      "symptoms": [
+        "Irregular brown spots on leaves",
+        "Leaves blighted and drop early",
+        "Often appears at the end of the season"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Small brown spots appear on old leaves.",
+          "action": "Improve ventilation for grape trellis",
+          "product": "Prune basal leaves"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Lesions enlarge and connect causing large blight area.",
+          "action": "Spray copper-based drug",
+          "product": "Bordeaux 1%"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Mass leaf drop, affecting fruit ripening.",
+          "action": "Treat with broad-spectrum fungicide",
+          "product": "Azoxystrobin"
+        }
+      ]
+    },
+    "Grape Healthy": {
+      "name": "Healthy Grape Leaf",
+      "desc": "Grape tree develops normally.",
+      "symptoms": [
+        "Green leaves, even margins",
+        "Fruit develops well, no spots"
+      ],
+      "treatments": [
+        {
+          "level": "Maintenance",
+          "identification_guide": "Glossy leaves, no tiger-stripe scorch.",
+          "action": "Apply Potassium to increase fruit quality",
+          "product": "Potassium Sulfate"
+        }
+      ]
+    },
+    "Orange Haunglongbing": {
+      "name": "Citrus Greening (HLB)",
+      "desc": "Disease caused by Liberibacter bacteria via Asian citrus psyllid.",
+      "symptoms": [
+        "Asymmetrical blotchy yellowing on leaves",
+        "Leaf veins turned green or swollen",
+        "Small, lopsided fruit, bitter taste"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "A few leaves have blotchy yellowing on a few branches.",
+          "action": "Completely destroy psyllids",
+          "product": "Mineral oil"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Many branches are yellowed, fruit starts dropping.",
+          "action": "Supplement foliar nutrition to maintain plant strength",
+          "product": "Micronutrient foliar fertilizer"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Plant completely exhausted, leaves drop, branches die dry.",
+          "action": "Destroy plant to prevent spread of disease area",
+          "product": "Uproot completely"
+        }
+      ]
+    },
+    "Peach Bacterial Spot": {
+      "name": "Peach Bacterial Spot",
+      "desc": "Disease caused by Xanthomonas bacteria on peaches and plums.",
+      "symptoms": [
+        "Small water-soaked spots on leaves, then shot-holes",
+        "Fruit has cracked lesions",
+        "Early leaf drop"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Small light brown dots appear on the upper leaf surface.",
+          "action": "Choose resistant varieties when planting",
+          "product": "Garden sanitation"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Lesions dry up and fall out creating holes (shot-hole).",
+          "action": "Spray copper-based drug periodically",
+          "product": "Copper Hydroxide"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Many yellow leaves drop, fruit deeply cracked.",
+          "action": "Use plant antibiotics",
+          "product": "Oxytetracycline"
+        }
+      ]
+    },
+    "Peach Healthy": {
+      "name": "Healthy Peach Leaf",
+      "desc": "Peach tree develops well.",
+      "symptoms": [
+        "Long green leaves, smooth",
+        "Lush foliage"
+      ],
+      "treatments": [
+        {
+          "level": "Maintenance",
+          "identification_guide": "Healthy leaves, no tiny shot-holes from bacteria.",
+          "action": "Apply organic fertilizer after harvest",
+          "product": "Composted manure"
+        }
+      ]
+    },
+    "Pepper Bell Bacterial Spot": {
+      "name": "Pepper Bell Bacterial Spot",
+      "desc": "Xanthomonas campestris bacteria causing spots on leaves.",
+      "symptoms": [
+        "Small water-soaked spots turn brown",
+        "Leaves yellow and drop",
+        "Lesions on fruit reduce value"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "A few small green-black spots on the back of the leaf.",
+          "action": "Use disease-free seeds",
+          "product": "Seed treatment"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Lesions spread causing leaf margin blight.",
+          "action": "Spray mixture of copper and Mancozeb",
+          "product": "Champ DP + Mancozeb"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Mass leaf drop, bare branches.",
+          "action": "Remove diseased plants, avoid overhead irrigation",
+          "product": "Destroy diseased plants"
+        }
+      ]
+    },
+    "Pepper Bell Healthy": {
+      "name": "Healthy Pepper Bell",
+      "desc": "Pepper tree develops normally.",
+      "symptoms": [
+        "Lush green leaves, no spots",
+        "Large, glossy fruit"
+      ],
+      "treatments": [
+        {
+          "level": "Maintenance",
+          "identification_guide": "Lush leaves, no water-soaked spots.",
+          "action": "Apply extra Calcium to avoid blossom end rot",
+          "product": "Calcium Nitrate"
+        }
+      ]
+    },
+    "Potato Early Blight": {
+      "name": "Potato Early Blight",
+      "desc": "Disease caused by Alternaria solani fungus causing concentric rings.",
+      "symptoms": [
+        "Dark brown spots with concentric rings like a target",
+        "Old leaves infected first",
+        "Reduced tuber yield"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "A few small brown spots with concentric rings on basal leaves.",
+          "action": "Water at the base, avoid wetting leaves",
+          "product": "Old leaf sanitation"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Lesions spread to middle leaf layers.",
+          "action": "Spray preventive fungicide",
+          "product": "Chlorothalonil"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "The entire foliage is blighted dry.",
+          "action": "Treat with strong fungicide",
+          "product": "Azoxystrobin"
+        }
+      ]
+    },
+    "Potato Late Blight": {
+      "name": "Potato Late Blight",
+      "desc": "Extremely dangerous disease caused by Phytophthora infestans fungus.",
+      "symptoms": [
+        "Fast-spreading blue-gray water-soaked lesions",
+        "White mold on underside of leaves in moist weather",
+        "Tubers rot quickly"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Small water-soaked lesion at leaf margin or tip.",
+          "action": "Closely monitor cool moist weather forecast",
+          "product": "Copper preventive spray"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Lesions enlarge, faint white mold appears.",
+          "action": "Spray systemic fungicide",
+          "product": "Ridomil Gold"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "The whole potato field turns black and collapses.",
+          "action": "Emergency outbreak spray or destruction",
+          "product": "Cymoxanil"
+        }
+      ]
+    },
+    "Potato Healthy": {
+      "name": "Healthy Potato Leaf",
+      "desc": "Potato tree develops well.",
+      "symptoms": [
+        "Green leaves, no spots",
+        "Sturdy plant"
+      ],
+      "treatments": [
+        {
+          "level": "Maintenance",
+          "identification_guide": "Clean leaves, no concentric black rings.",
+          "action": "Hill up high to protect tubers",
+          "product": "Clean soil"
+        }
+      ]
+    },
+    "Raspberry Healthy": {
+      "name": "Healthy Raspberry Leaf",
+      "desc": "Raspberry tree develops normally.",
+      "symptoms": [
+        "Fresh green leaves, even serrated margins",
+        "No signs of fungus or pests"
+      ],
+      "treatments": [
+        {
+          "level": "Maintenance",
+          "identification_guide": "Healthy leaves, no yellowing or brown spots.",
+          "action": "Prune branches after harvest",
+          "product": "Organic fertilizer"
+        }
+      ]
+    },
+    "Soybean Healthy": {
+      "name": "Healthy Soybean Leaf",
+      "desc": "Soybean tree develops well.",
+      "symptoms": [
+        "Dark green leaves, smooth surface",
+        "Plant flowers and fruits evenly"
+      ],
+      "treatments": [
+        {
+          "level": "Maintenance",
+          "identification_guide": "Clean leaves, no leaf rollers or bacterial spots.",
+          "action": "Ensure good drainage",
+          "product": "Microbial phosphorus"
+        }
+      ]
+    },
+    "Squash Powdery Mildew": {
+      "name": "Squash Powdery Mildew",
+      "desc": "Fungus covers leaves with a white powder layer.",
+      "symptoms": [
+        "White powder layer covering leaf surface",
+        "Leaves yellow and dry die",
+        "Small fruit, poor quality"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Small white powder spots scattered on leaf surface.",
+          "action": "Cut off heavily infected leaves",
+          "product": "Neem oil"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "White powder layer spreads to the whole leaf.",
+          "action": "Spray Potassium Bicarbonate or sulfur",
+          "product": "Low concentration sulfur"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Leaves completely covered, brittle and blighted.",
+          "action": "Active chemical treatment",
+          "product": "Diniconazole"
+        }
+      ]
+    },
+    "Strawberry Leaf Scorch": {
+      "name": "Strawberry Leaf Scorch",
+      "desc": "Disease caused by Diplocarpon earlianum fungus.",
+      "symptoms": [
+        "Irregular dark purple spots",
+        "Leaves blighted dry as if scorched by fire",
+        "Stunted plants"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Small purple spots appear individually.",
+          "action": "Remove diseased leaves and debris",
+          "product": "Clean garden"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Lesions spread causing leaf margin dry blight.",
+          "action": "Spray broad-spectrum fungicide",
+          "product": "Captan"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "The entire foliage is scorched, plant exhausted.",
+          "action": "Intervene with strong fungicide",
+          "product": "Difenoconazole"
+        }
+      ]
+    },
+    "Strawberry Healthy": {
+      "name": "Healthy Strawberry Leaf",
+      "desc": "Strawberry tree develops well.",
+      "symptoms": [
+        "Dark green leaves, even white flowers",
+        "Succulent fruit, no spots"
+      ],
+      "treatments": [
+        {
+          "level": "Maintenance",
+          "identification_guide": "Lush leaves, no margin scorch or purple spots.",
+          "action": "Drip irrigation, avoid wetting fruit",
+          "product": "Calcium-Boron foliar fertilizer"
+        }
+      ]
+    },
+    "Tomato Early Blight": {
+      "name": "Tomato Early Blight",
+      "desc": "Disease caused by Alternaria solani fungus, creating concentric rings on leaves.",
+      "symptoms": [
+        "Dark brown spots with distinct concentric rings",
+        "Old leaves wilt and drop first",
+        "Spreads fast in moist weather"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "A few small target spots on basal leaves.",
+          "action": "Prune basal leaves for ventilation",
+          "product": "Prune old leaves"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Many target spots spread to middle leaf layers.",
+          "action": "Spray preventive fungicide periodically",
+          "product": "Chlorothalonil"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Foliage blighted more than 50%, affecting fruit.",
+          "action": "Treat with strong fungicide",
+          "product": "Mancozeb"
+        }
+      ]
+    },
+    "Tomato Late Blight": {
+      "name": "Tomato Late Blight",
+      "desc": "Very dangerous disease, can kill the whole tomato field after a few days.",
+      "symptoms": [
+        "Fast-spreading blue-gray water-soaked lesions",
+        "White mold layer on underside of leaves when moist",
+        "Dark rot on stems and fruit"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Small water-soaked lesion starts appearing at leaf margin.",
+          "action": "Limit watering, increase ventilation",
+          "product": "Copper preventive spray"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Lesions spread to stem and white mold appears.",
+          "action": "Spray specific fungicide",
+          "product": "Metalaxyl (Ridomil Gold)"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "The whole plant collapses, rotted.",
+          "action": "Emergency fungicide spray or uproot",
+          "product": "Cymoxanil"
+        }
+      ]
+    },
+    "Tomato Bacterial Spot": {
+      "name": "Tomato Bacterial Spot",
+      "desc": "Caused by Xanthomonas vesicatoria bacteria.",
+      "symptoms": [
+        "Small, hard, scabby black spots on leaves and fruit",
+        "Lesions spread quickly during heavy rain",
+        "Leaves turn yellow and dry"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Small black spots slightly scratched on the leaf back, not yet spread to leaf sheaths.",
+          "action": "Use disease-free seeds, soak in warm water",
+          "product": "Nano Copper solution"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Dense black spots, leaf margin scorching, plant slightly wilted.",
+          "action": "Spray biological antibacterial drugs",
+          "product": "Kasumin (Kasugamycin)"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Disease spreads to branches and young fruit, plant stem rots black, severe necrosis.",
+          "action": "Spray mixture of Copper and Mancozeb",
+          "product": "Kocide + Mancozeb"
+        }
+      ]
+    },
+    "Tomato Septoria Leaf Spot": {
+      "name": "Tomato Septoria Leaf Spot",
+      "desc": "Fungus causes many small spots, gray center with brown border.",
+      "symptoms": [
+        "Many small circular gray-white spots with black borders",
+        "Dense spots cause leaf death",
+        "Leaves drop from base to top"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Only a few faint gray spots scattered on a few single leaves.",
+          "action": "Avoid watering leaves at night",
+          "product": "Cinnamon essential oil"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Entire leaf peppered with dozens of small spots, leaf margins start curling dry.",
+          "action": "Clean up mulch straw thoroughly",
+          "product": "Antracol (Propineb)"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Basal leaves all fallen, disease spread near the top, plant thin and weak.",
+          "action": "Use specific mold drugs",
+          "product": "Daconil (Chlorothalonil)"
+        }
+      ]
+    },
+    "Tomato Mosaic Virus": {
+      "name": "Tomato Mosaic Virus (ToMV)",
+      "desc": "Virus spreads through seeds, tools, and insects.",
+      "symptoms": [
+        "Mottled green and yellow leaves (mosaic)",
+        "Leaves deformed like thread",
+        "Stunted plants, poor fruit development"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Small part of young leaves has light green - dark green mottling.",
+          "action": "Wash hands with soap after touching diseased plants",
+          "product": "Skim milk (to prevent virus)"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Lá mọc ra bị vặn xoắn, có đốm vàng loang lổ khắp tán.",
+          "action": "Tiêu diệt côn trùng truyền bệnh rầy, rệp",
+          "product": "Actara (Thiamethoxam)"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Plant completely deformed, thread-like leaves, cannot flower or set fruit.",
+          "action": "Uproot all diseased plants, disinfect tools",
+          "product": "Stop cultivating Solanaceous crops for one season"
+        }
+      ]
+    },
+    "Tomato Yellow Leaf Curl Virus": {
+      "name": "Tomato Yellow Leaf Curl Virus (TYLCV)",
+      "desc": "Virus transmitted by silverleaf whiteflies, causes leaf curling and yellowing.",
+      "symptoms": [
+        "Distinct yellowing at the top, young leaves become small",
+        "Leaf margins curl upwards",
+        "Plant stops growing"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Plant tip starts turning lemon yellow, leaves slightly thickened.",
+          "action": "Use whitefly netting",
+          "product": "Fine mesh netting"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Young leaves twisted tight, margins curled up like a cup, plant stops growing tall.",
+          "action": "Spray mineral oil so whiteflies don't land",
+          "product": "SK Enspray mineral oil"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Squash tip matted and not developing, entire foliage yellowed.",
+          "action": "Absolutely control whiteflies with strong drugs",
+          "product": "Pymetrozine (Chess)"
+        }
+      ]
+    },
+    "Tomato Leaf Mold": {
+      "name": "Tomato Leaf Mold",
+      "desc": "Disease caused by Fulvia fulva fungus in extremely high humidity.",
+      "symptoms": [
+        "Light yellow spots on upper leaf surface, green/gray mold layer on underside",
+        "Leaves dry and drop but don't wilt",
+        "Often appears in greenhouses"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "A few faint light yellow streaks on the upper leaf surface, flip to the underside to see fine gray fuzz.",
+          "action": "Increase greenhouse ventilation",
+          "product": "Ventilation fans"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Mold sticks thick like gray velvet on the underside of most old leaves.",
+          "action": "Use broad-spectrum antifungal drugs",
+          "product": "Chlorothalonil"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Leaves dry black and fall in mass, disease spreads up to young leaves at the tip.",
+          "action": "Need chemical drug intervention",
+          "product": "Azoxystrobin combined with Cyproconazole"
+        }
+      ]
+    },
+    "Tomato Two Spotted Spider Mites": {
+      "name": "Tomato Two-Spotted Spider Mite",
+      "desc": "Mites suck sap causing leaves to discolor and dry.",
+      "symptoms": [
+        "Tiny white dots on leaves",
+        "Pale leaves, thin spider webs on underside",
+        "Leaves scorched yellow across the field"
+      ],
+      "treatments": [
+        {
+          "level": "Mild",
+          "identification_guide": "Leaves have a few faint tiny white dots, look closely to see small mites moving on the back.",
+          "action": "Spray water strongly on the leaf underside",
+          "product": "Clean water"
+        },
+        {
+          "level": "Moderate",
+          "identification_guide": "Leaves clearly silver-white, thin web on the back, leaves slightly curled.",
+          "action": "Use herbal oils or soap",
+          "product": "Neem oil or Salicylic acid"
+        },
+        {
+          "level": "Severe",
+          "identification_guide": "Entire field scorched yellow, leaves dry and dead, mites cover the plant tips.",
+          "action": "Use specific miticides",
+          "product": "Abamectin or Spiromesifen"
+        }
+      ]
+    }
+  }
+}

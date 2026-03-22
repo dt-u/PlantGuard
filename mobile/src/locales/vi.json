@@ -1,0 +1,1043 @@
+{
+  "navbar": {
+    "monitor": "Giám sát",
+    "doctor": "Bác sĩ",
+    "login": "Đăng nhập",
+    "history": "Lịch sử chẩn đoán",
+    "logout": "Đăng xuất"
+  },
+  "home": {
+    "title": "Nông Nghiệp Thông Minh",
+    "subtitle": "Khởi Đầu Đơn Giản",
+    "description1": "PlantGuard bảo vệ mùa màng của bạn bằng AI tiên tiến.",
+    "description2": "Phát hiện sớm bệnh lý và giám sát sức khỏe đồng ruộng theo thời gian thực.",
+    "monitor_title": "Chế độ Giám sát",
+    "monitor_desc": "Phân tích dữ liệu từ Drone/Camera để phát hiện sớm các vùng cây bị stress trên diện rộng.",
+    "monitor_btn": "Bắt đầu Giám sát",
+    "doctor_title": "Bác sĩ Cây trồng",
+    "doctor_desc": "Chẩn đoán chính xác các loại bệnh trên lá và nhận phác đồ điều trị tức thì.",
+    "doctor_btn": "Chẩn đoán ngay",
+    "register": "Đăng ký",
+    "account": "Tài khoản",
+    "footer": "© 2026 PlantGuard AI • Giải pháp bảo vệ cây trồng thông minh"
+  },
+  "monitor": {
+    "title": "Giám Sát Vườn",
+    "subtitle": "Phân tích dữ liệu Live Cam & Drone thời gian thực.",
+    "live_cam": "Live Cam",
+    "drone": "Drone",
+    "garden_status": "Trạng thái vườn",
+    "status": {
+      "disconnected": "Chưa kết nối",
+      "risk": "Có rủi ro",
+      "stable": "Ổn định",
+      "connecting": "Đang kết nối",
+      "online": "Trực tuyến",
+      "offline": "Ngoại tuyến"
+    },
+    "drone_data": "Dữ liệu Drone",
+    "stress_zones": "Vùng Stress",
+    "upload_label": "video drone/cctv",
+    "processing": "Đang xử lý...",
+    "processing_desc": "Hệ thống đang quét dữ liệu. Bạn có thể sang trang khác trong lúc chờ.",
+    "cancel_btn": "Hủy phân tích",
+    "analysis_complete": "AI Phân tích Hoàn tất",
+    "download": "Tải xuống",
+    "download_options": "Tùy chọn tải xuống",
+    "download_video": "Chỉ tải Video (.mp4)",
+    "download_logs": "Chỉ tải Nhật ký (.xlsx)",
+    "download_all": "Tải trọn bộ (.zip)",
+    "alerts_detected": "Cảnh Báo Phát Hiện",
+    "analyze_another": "Phân tích bản ghi khác",
+    "disclaimer": "Ghi chú: Kết quả phân tích dựa trên hình ảnh từ xa. Trong điều kiện ánh sáng yếu hoặc camera bị rung, độ chính xác có thể giảm. Vui lòng đối chiếu với dữ liệu từ Bác Sĩ Cây Trồng để có kết quả chính xác nhất.",
+    "logs_live": "Nhật ký Live",
+    "logs_analysis": "Nhật ký Phân tích",
+    "no_data": "Chưa có dữ liệu ghi nhận.",
+    "auto_update": "Cập nhật tự động...",
+    "camera_url": "Đường dẫn Camera (IP/DroidCam)",
+    "camera_placeholder": "Ví dụ: http://192.168.1.100:4747/video",
+    "start_btn": "Bắt đầu Giám sát",
+    "stop_btn": "Dừng Luồng",
+    "camera_disconnected": "Camera chưa kết nối",
+    "camera_desc": "Nhập URL và nhấn Bắt đầu để quét thực địa",
+    "fullscreen": "Toàn màn hình",
+    "exit_fullscreen": "Thoát toàn màn hình",
+    "error_upload": "Lỗi khi phân tích video. Vui lòng thử lại.",
+    "error_connection": "Lỗi kết nối tín hiệu video...",
+    "error_reconnecting": "Kết nối bị ngắt quãng. Đang thử tự động kết nối lại...",
+    "global_progress": {
+      "title": "Phân Tích Drone Footage",
+      "processing": "Đang xử lý...",
+      "complete": "Phân tích hoàn tất!",
+      "view_result": "Xem Kết Quả",
+      "close": "Đóng",
+      "error": "Có lỗi xảy ra khi phân tích."
+    }
+  },
+  "doctor": {
+    "title": "Bác Sĩ Cây Trồng",
+    "subtitle": "Chẩn đoán mầm bệnh thông qua trí tuệ nhân tạo.",
+    "upload_label": "ảnh lá cây",
+    "analyzing": "Đang phân tích cấu trúc lá và mầm bệnh...",
+    "error_title": "Xảy ra lỗi xử lý",
+    "try_again": "Thử lại bằng ảnh khác",
+    "analysis_result": "Kết quả nhận diện",
+    "save": "Lưu",
+    "unsave": "Bỏ lưu",
+    "other_image": "Ảnh khác",
+    "care_plan": "Kế hoạch Chăm sóc",
+    "treatment_plan": "Phác đồ Điều trị",
+    "tech_details": "Chi tiết kỹ thuật",
+    "description": "Mô tả bệnh lý",
+    "symptoms": "Triệu chứng",
+    "recommendation": "Khuyến cáo chuyên môn",
+    "recommendation_desc": "Kỹ thuật này dựa trên mô hình học sâu. Kết quả có thể biến động tùy theo chất lượng ảnh. Vui lòng tham vấn chuyên gia trước khi áp dụng hóa chất bảo vệ thực vật diện rộng.",
+    "server_error": "Máy chủ gặp sự cố khi xử lý hình ảnh. Vui lòng thử lại sau."
+  },
+  "history": {
+    "title": "Lịch Sử Chẩn Đoán",
+    "subtitle": "Xem lại tất cả các lần chẩn đoán bệnh cây trồng của bạn",
+    "search_placeholder": "Tìm kiếm theo tên bệnh, triệu chứng...",
+    "empty": "Chưa có lịch sử chẩn đoán nào.",
+    "delete_confirm": "Xóa bản ghi này?",
+    "delete_success": "Đã xóa bản ghi.",
+    "detail_btn": "Xem chi tiết"
+  },
+  "logs": {
+    "detected_at": "Tại {{time}} phát hiện rủi ro: [{{label}}]",
+    "live_alert": "Cảnh báo đối tượng: [{{label}}] - Độ tin cậy: {{confidence}}%"
+  },
+  "auth": {
+    "login_title": "Đăng Nhập",
+    "login_subtitle": "Chào mừng trở lại với PlantGuard",
+    "register_title": "Đăng Ký",
+    "register_subtitle": "Bắt đầu bảo vệ khu vườn của bạn",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "name": "Họ và tên",
+    "confirm_password": "Xác nhận mật khẩu",
+    "login_btn": "Đăng nhập",
+    "register_btn": "Đăng ký",
+    "no_account": "Chưa có tài khoản?",
+    "have_account": "Đã có tài khoản?",
+    "error_fill": "Vui lòng điền đầy đủ thông tin",
+    "error_password": "Mật khẩu không khớp",
+    "error_login": "Sai email hoặc mật khẩu",
+    "error_register": "Lỗi khi đăng ký tài khoản"
+  },
+  "diseases": {
+    "Apple Healthy": {
+      "name": "Lá táo khỏe mạnh",
+      "desc": "Lá táo ở trạng thái phát triển tốt nhất.",
+      "symptoms": [
+        "Màu xanh đồng nhất, bề mặt nhẵn bóng",
+        "Không có đốm bệnh hay côn trùng gây hại"
+      ],
+      "treatments": [
+        {
+          "level": "Duy trì",
+          "identification_guide": "Lá giữ màu xanh mướt, không thấy dấu hiệu bất thường.",
+          "action": "Tiếp tục chăm sóc định kỳ, tưới nước ổn định",
+          "product": "Phân bón hữu cơ vi sinh"
+        },
+        {
+          "level": "Duy trì",
+          "identification_guide": "Tán cây trông đồng đều, không rụng lá vàng bất thường.",
+          "action": "Kiểm tra sâu bệnh định kỳ dưới mặt lá",
+          "product": "Nước sạch"
+        },
+        {
+          "level": "Duy trì",
+          "identification_guide": "Các điểm sinh trưởng phát triển tốt, chồi non khỏe.",
+          "action": "Duy trì chế độ bón phân đa trung vi lượng",
+          "product": "NPK định kỳ"
+        }
+      ]
+    },
+    "Apple Scab": {
+      "name": "Bệnh ghẻ lá táo",
+      "desc": "Bệnh do nấm Venturia inaequalis gây ra, ảnh hưởng nặng đến năng suất táo.",
+      "symptoms": [
+        "Các đốm tròn màu nâu đen, hơi gồ lên",
+        "Lá bị biến dạng, nhăn nheo",
+        "Rụng lá sớm"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Xuất hiện vài đốm nhỏ màu ô liu ở mặt dưới lá.",
+          "action": "Dọn sạch lá rụng, tưới nước ở gốc",
+          "product": "Nước vôi trong"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Nhiều đốm nâu đen loang rộng cả 2 mặt lá, lá bắt đầu hơi xoăn.",
+          "action": "Phun thuốc diệt nấm khi nụ hoa nở",
+          "product": "Captan hoặc Myclobutanil"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Các vết loét dày đặc làm lá nhăn nheo, khô và rụng hàng loạt sớm.",
+          "action": "Áp dụng lịch phun thuốc nghiêm ngặt",
+          "product": "Difenoconazole (Anvil)"
+        }
+      ]
+    },
+    "Apple Black Rot": {
+      "name": "Bệnh thối đen táo",
+      "desc": "Bệnh do nấm Diplodia seriata gây ra các vết thối sẫm màu.",
+      "symptoms": [
+        "Các đốm nâu có viền tím",
+        "Quả bị thối",
+        "Vết loét trên cành"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Các đốm tím nhỏ xuất hiện trên mặt lá trên.",
+          "action": "Cắt tỉa các cành chết hoặc bị nhiễm bệnh",
+          "product": "Kéo cắt tỉa"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh to ra, phát triển thành dạng 'mắt ếch' với tâm màu nâu nhạt.",
+          "action": "Phun thuốc diệt nấm trong giai đoạn ra hoa",
+          "product": "Captan hoặc Lưu huỳnh"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Lá vàng và rụng, quả thối đen, vết loét cành lan rộng.",
+          "action": "Điều trị bằng thuốc nấm cường độ cao và vệ sinh vườn",
+          "product": "Thiophanate-methyl"
+        }
+      ]
+    },
+    "Apple Cedar Rust": {
+      "name": "Bệnh gỉ sắt Cedar táo",
+      "desc": "Nấm Gymnosporangium juniperi-virginianae gây ra các vết cam nổi bật.",
+      "symptoms": [
+        "Đốm cam sáng trên mặt lá trên",
+        "Các gai nấm nhỏ dưới mặt lá",
+        "Rụng lá hàng loạt"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vài đốm vàng chanh nhỏ xuất hiện đơn lẻ trên mặt lá.",
+          "action": "Loại bỏ các vật chủ trung gian (cây bách tùng) gần đó",
+          "product": "Cắt tỉa thủ công"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh chuyển sang màu cam đậm, bắt đầu có các chấm đen nhỏ giữa vết loét.",
+          "action": "Phun thuốc khi lá non mới nhú",
+          "product": "Thuốc nấm chứa lưu huỳnh"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Các ống gai bào tử mọc dưới mặt lá, lá vàng và rụng.",
+          "action": "Sử dụng các loại thuốc diệt nấm mạnh",
+          "product": "Myclobutanil hoặc Fenbuconazole"
+        }
+      ]
+    },
+    "Blueberry Healthy": {
+      "name": "Lá việt quất khỏe mạnh",
+      "desc": "Phân tích trạng thái lá cây việt quất phát triển tốt.",
+      "symptoms": [
+        "Lá xanh mướt, không có vết đốm",
+        "Cây phát triển đều"
+      ],
+      "treatments": [
+        {
+          "level": "Duy trì",
+          "identification_guide": "Lá xanh đều, không có dấu hiệu bị côn trùng chích hút.",
+          "action": "Duy trì độ pH đất thích hợp (4.5-5.5)",
+          "product": "Phân bón chuyên dụng việt quất"
+        }
+      ]
+    },
+    "Cherry Powdery Mildew": {
+      "name": "Bệnh phấn trắng anh đào",
+      "desc": "Bệnh do nấm Podosphaera clandestina gây ra lớp bột trắng trên lá.",
+      "symptoms": [
+        "Lớp bột trắng như phấn trên mặt lá",
+        "Lá bị xoăn và biến dạng",
+        "Giảm khả năng quang hợp"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vết trắng mờ xuất hiện ở mặt dưới các lá non.",
+          "action": "Tỉa bớt cành để thông thoáng tán cây",
+          "product": "Dầu Neem"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Lớp phấn trắng bao phủ 30-50% diện tích lá, mép lá hơi cuốn.",
+          "action": "Phun dung dịch baking soda hoặc lưu huỳnh",
+          "product": "Lưu huỳnh nồng độ thấp"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Lá bị bao phủ hoàn toàn bởi lớp phấn, khô giòn và rụng.",
+          "action": "Sử dụng thuốc nấm chuyên dụng",
+          "product": "Myclobutanil"
+        }
+      ]
+    },
+    "Cherry Healthy": {
+      "name": "Lá anh đào khỏe mạnh",
+      "desc": "Cây anh đào phát triển ổn định.",
+      "symptoms": [
+        "Lá bóng mượt, xanh đậm",
+        "Không có nấm hay sâu bệnh"
+      ],
+      "treatments": [
+        {
+          "level": "Duy trì",
+          "identification_guide": "Lá khỏe mạnh, không có dấu hiệu bị nấm phấn trắng.",
+          "action": "Kiểm tra độ ẩm gốc cây thường xuyên",
+          "product": "Nước sạch"
+        }
+      ]
+    },
+    "Corn Common Rust": {
+      "name": "Bệnh gỉ sắt ngô",
+      "desc": "Bệnh do nấm Puccinia sorghi gây ra, xuất hiện các vết nổi màu nâu đỏ.",
+      "symptoms": [
+        "Các nốt mụn màu nâu quế trên cả hai mặt lá",
+        "Cây còi cọc",
+        "Giảm năng suất"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vài nốt mụn nâu rải rác ở các lá phía dưới.",
+          "action": "Theo dõi thời tiết và giai đoạn cây",
+          "product": "Giống kháng bệnh"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Các nốt mụn xuất hiện nhiều hơn và lan lên các lá phía trên.",
+          "action": "Phun thuốc nấm lá nếu điều kiện ẩm ướt",
+          "product": "Pyraclostrobin"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Lá bị bao phủ bởi nốt mụn, chuyển vàng và chết khô.",
+          "action": "Phun thuốc nấm khẩn cấp",
+          "product": "Propiconazole"
+        }
+      ]
+    },
+    "Corn Gray Leaf Spot": {
+      "name": "Bệnh đốm lá xám ngô",
+      "desc": "Bệnh do nấm Cercospora zeae-maydis gây ra các vết bệnh hình chữ nhật.",
+      "symptoms": [
+        "Các vết bệnh màu xám hình chữ nhật chạy song song với gân lá",
+        "Vết bệnh lan rộng gây cháy lá",
+        "Ảnh hưởng lớn đến năng suất"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Đốm nhỏ màu rám nắng bao quanh bởi quầng vàng.",
+          "action": "Luân canh cây trồng và cày lật đất",
+          "product": "Vệ sinh đồng ruộng"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh kéo dài thành hình chữ nhật xám dài 1-2 cm.",
+          "action": "Phun thuốc nấm khi bắt đầu trổ cờ",
+          "product": "Azoxystrobin"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Các vết bệnh nối liền nhau làm chết cả lá.",
+          "action": "Can thiệp hóa chất mạnh",
+          "product": "Tebucoconazole"
+        }
+      ]
+    },
+    "Corn Northern Leaf Blight": {
+      "name": "Bệnh héo lá ngô phương Bắc",
+      "desc": "Bệnh do nấm Exserohilum turcicum gây ra các vết bệnh hình thoi.",
+      "symptoms": [
+        "Vết bệnh hình thoi lớn màu xám xanh hoặc nâu",
+        "Lá bị cháy khô diện rộng",
+        "Thường xuất hiện khi thời tiết mát và ẩm"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Một vài vết bệnh hình điếu xì gà nhỏ trên lá thấp.",
+          "action": "Sử dụng giống kháng bệnh",
+          "product": "Chọn giống chuẩn"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh hình thoi dài xuất hiện trên nhiều lá.",
+          "action": "Phun thuốc nấm khi độ ẩm cao",
+          "product": "Fluxapyroxad"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Lá cháy khô hoàn toàn, ảnh hưởng nghiêm trọng đến hạt.",
+          "action": "Điều trị hóa chất tích cực",
+          "product": "Mancozeb"
+        }
+      ]
+    },
+    "Corn Healthy": {
+      "name": "Lá ngô khỏe mạnh",
+      "desc": "Cây ngô phát triển tốt.",
+      "symptoms": [
+        "Lá xanh mướt, bản to khỏe",
+        "Không có dấu hiệu nấm hay rỉ sắt"
+      ],
+      "treatments": [
+        {
+          "level": "Duy trì",
+          "identification_guide": "Lá khỏe, không có vết đốm hay nốt mụn nâu.",
+          "action": "Đảm bảo cung cấp đủ đạm và nước",
+          "product": "Phân Urê"
+        }
+      ]
+    },
+    "Grape Black Rot": {
+      "name": "Bệnh thối đen nho",
+      "desc": "Bệnh do nấm Guignardia bidwellii gây hại nghiêm trọng cho nho.",
+      "symptoms": [
+        "Đốm tròn màu nâu trên lá với các chấm đen nhỏ",
+        "Quả nho bị héo khô và đen cứng",
+        "Ảnh hưởng lớn đến thu hoạch"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vài đốm nâu nhỏ có viền sẫm màu trên lá.",
+          "action": "Cắt bỏ lá và chùm quả bị bệnh",
+          "product": "Dọn vệ sinh vườn"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh lan lên cuống quả, một số quả bắt đầu héo.",
+          "action": "Phun thuốc nấm từ khi chồi mới nhú",
+          "product": "Mancozeb"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Cả chùm nho bị thối đen và khô héo.",
+          "action": "Sử dụng thuốc nấm hệ thống mạnh",
+          "product": "Myclobutanil"
+        }
+      ]
+    },
+    "Grape Esca": {
+      "name": "Bệnh Esca nho (Sọc đen)",
+      "desc": "Phức hợp bệnh do nấm gây ra làm suy yếu cây nho lâu năm.",
+      "symptoms": [
+        "Vết cháy hình răng hổ trên lá",
+        "Đốm đen trên quả",
+        "Cây bị chết dần từ bên trong"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Lá có các vết vàng nhẹ giữa các gân lá.",
+          "action": "Khử trùng dụng cụ cắt tỉa",
+          "product": "Cồn 70 độ"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết cháy lá lan rộng rõ rệt màu đỏ nâu.",
+          "action": "Bôi thuốc bảo vệ vào các vết cắt tỉa",
+          "product": "Keo liền sẹo"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Cành bị chết khô, quả có đốm đen lấm tấm.",
+          "action": "Loại bỏ cây bị bệnh nặng để tránh lây lan",
+          "product": "Thay thế cây mới"
+        }
+      ]
+    },
+    "Grape Leaf Blight": {
+      "name": "Bệnh cháy lá nho",
+      "desc": "Bệnh do nấm Pseudocercospora vitis gây ra.",
+      "symptoms": [
+        "Các đốm nâu không đều trên lá",
+        "Lá bị khô cháy và rụng sớm",
+        "Thường xuất hiện vào cuối mùa"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vết đốm nâu nhỏ xuất hiện ở các lá già.",
+          "action": "Cải thiện độ thông thoáng cho giàn nho",
+          "product": "Tỉa lá chân"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh to ra và nối lại với nhau gây cháy mảng lớn.",
+          "action": "Phun thuốc gốc đồng",
+          "product": "Bordeaux 1%"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Lá rụng hàng loạt, ảnh hưởng đến việc chín của quả.",
+          "action": "Điều trị bằng thuốc nấm phổ rộng",
+          "product": "Azoxystrobin"
+        }
+      ]
+    },
+    "Grape Healthy": {
+      "name": "Lá nho khỏe mạnh",
+      "desc": "Cây nho phát triển bình thường.",
+      "symptoms": [
+        "Lá xanh, viền lá đều",
+        "Quả phát triển tốt, không có đốm"
+      ],
+      "treatments": [
+        {
+          "level": "Duy trì",
+          "identification_guide": "Lá bóng mượt, không có vết cháy hình răng hổ.",
+          "action": "Bón phân Kali để tăng chất lượng quả",
+          "product": "Kali Sulfate"
+        }
+      ]
+    },
+    "Orange Haunglongbing": {
+      "name": "Bệnh vàng lá gân xanh (Citrus Greening)",
+      "desc": "Bệnh do vi khuẩn Liberibacter gây ra qua rầy chổng cánh.",
+      "symptoms": [
+        "Lá vàng loang lổ không đối xứng",
+        "Gân lá bị xanh hoặc sưng",
+        "Quả nhỏ, méo mó, vị đắng"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vài lá có hiện tượng vàng loang lổ ở một vài cành.",
+          "action": "Tiêu diệt rầy chổng cánh triệt để",
+          "product": "Dầu khoáng"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Nhiều cành bị vàng, quả bắt đầu rụng.",
+          "action": "Bổ sung dinh dưỡng qua lá để duy trì sức cây",
+          "product": "Phân bón lá vi lượng"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Cây suy kiệt hoàn toàn, lá rụng, cành chết khô.",
+          "action": "Tiêu hủy cây để ngăn chặn lây lan vùng dịch",
+          "product": "Nhổ bỏ tận gốc"
+        }
+      ]
+    },
+    "Peach Bacterial Spot": {
+      "name": "Bệnh đốm vi khuẩn đào",
+      "desc": "Bệnh do vi khuẩn Xanthomonas gây ra trên đào và mận.",
+      "symptoms": [
+        "Các đốm nhỏ sũng nước trên lá, sau đó thủng lỗ",
+        "Quả có vết loét nứt nẻ",
+        "Rụng lá sớm"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Các chấm nhỏ màu nâu nhạt xuất hiện trên mặt lá.",
+          "action": "Chọn giống kháng bệnh khi trồng",
+          "product": "Vệ sinh vườn"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh khô lại và rơi ra tạo thành các lỗ thủng (shot-hole).",
+          "action": "Phun thuốc gốc đồng định kỳ",
+          "product": "Copper Hydroxide"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Lá vàng rụng nhiều, quả bị nứt nẻ sâu.",
+          "action": "Sử dụng kháng sinh thực vật",
+          "product": "Oxytetracycline"
+        }
+      ]
+    },
+    "Peach Healthy": {
+      "name": "Lá đào khỏe mạnh",
+      "desc": "Cây đào phát triển tốt.",
+      "symptoms": [
+        "Lá xanh dài, nhẵn",
+        "Cành lá sum suê"
+      ],
+      "treatments": [
+        {
+          "level": "Duy trì",
+          "identification_guide": "Lá khỏe, không có lỗ thủng li ti do vi khuẩn.",
+          "action": "Bón phân hữu cơ sau thu hoạch",
+          "product": "Phân chuồng ủ hoai"
+        }
+      ]
+    },
+    "Pepper Bell Bacterial Spot": {
+      "name": "Bệnh đốm vi khuẩn ớt chuông",
+      "desc": "Vi khuẩn Xanthomonas campestris gây ra các vết đốm trên lá.",
+      "symptoms": [
+        "Các đốm nhỏ sũng nước chuyển sang màu nâu",
+        "Lá bị vàng và rụng",
+        "Vết bệnh trên quả làm giảm giá trị"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vài đốm nhỏ màu xanh đen ở mặt sau lá.",
+          "action": "Sử dụng hạt giống sạch bệnh",
+          "product": "Xử lý hạt giống"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh lan rộng gây cháy mép lá.",
+          "action": "Phun hỗn hợp gốc đồng và Mancozeb",
+          "product": "Champ DP + Mancozeb"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Cây rụng lá hàng loạt, trơ cành.",
+          "action": "Loại bỏ cây bệnh, tránh tưới phun mưa",
+          "product": "Tiêu hủy cây bệnh"
+        }
+      ]
+    },
+    "Pepper Bell Healthy": {
+      "name": "Ớt chuông khỏe mạnh",
+      "desc": "Cây ớt phát triển bình thường.",
+      "symptoms": [
+        "Lá xanh mướt, không đốm",
+        "Quả to, bóng"
+      ],
+      "treatments": [
+        {
+          "level": "Duy trì",
+          "identification_guide": "Lá mướt, không có đốm sũng nước.",
+          "action": "Bón thêm Canxi để tránh thối đít quả",
+          "product": "Canxi Nitrate"
+        }
+      ]
+    },
+    "Potato Early Blight": {
+      "name": "Bệnh đốm vòng khoai tây",
+      "desc": "Bệnh do nấm Alternaria solani gây ra các vòng đồng tâm.",
+      "symptoms": [
+        "Đốm nâu đen có các vòng đồng tâm như hình bia",
+        "Lá già bị nhiễm đầu tiên",
+        "Giảm năng suất củ"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vài đốm nâu nhỏ có vòng đồng tâm ở lá gốc.",
+          "action": "Tưới nước ở gốc, tránh làm ướt lá",
+          "product": "Vệ sinh lá già"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh lan lên các tầng lá giữa.",
+          "action": "Phun thuốc nấm phòng ngừa",
+          "product": "Chlorothalonil"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Toàn bộ tán lá bị cháy khô.",
+          "action": "Điều trị bằng thuốc nấm mạnh",
+          "product": "Azoxystrobin"
+        }
+      ]
+    },
+    "Potato Late Blight": {
+      "name": "Bệnh mốc sương khoai tây",
+      "desc": "Bệnh cực kỳ nguy hiểm do nấm Phytophthora infestans gây ra.",
+      "symptoms": [
+        "Vết bệnh sũng nước màu xanh xám lan nhanh",
+        "Mốc trắng ở mặt dưới lá khi ẩm trời",
+        "Củ bị thối nhanh chóng"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vết sũng nước nhỏ ở mép lá hoặc ngọn lá.",
+          "action": "Theo dõi sát dự báo thời tiết ẩm mát",
+          "product": "Phun phòng gốc đồng"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh to ra, xuất hiện lớp mốc trắng mờ.",
+          "action": "Phun thuốc nấm hệ thống",
+          "product": "Ridomil Gold"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Toàn bộ ruộng khoai bị đen và gục ngã.",
+          "action": "Phun dập dịch khẩn cấp hoặc tiêu hủy",
+          "product": "Cymoxanil"
+        }
+      ]
+    },
+    "Potato Healthy": {
+      "name": "Lá khoai tây khỏe mạnh",
+      "desc": "Cây khoai tây phát triển tốt.",
+      "symptoms": [
+        "Lá xanh, không vết đốm",
+        "Cây cứng cáp"
+      ],
+      "treatments": [
+        {
+          "level": "Duy trì",
+          "identification_guide": "Lá sạch, không có các vòng đen đồng tâm.",
+          "action": "Vun gốc cao để bảo vệ củ",
+          "product": "Đất sạch"
+        }
+      ]
+    },
+    "Raspberry Healthy": {
+      "name": "Lá mâm xôi khỏe mạnh",
+      "desc": "Cây mâm xôi phát triển bình thường.",
+      "symptoms": [
+        "Lá xanh tươi, viền răng cưa đều",
+        "Không có dấu hiệu nấm hay sâu"
+      ],
+      "treatments": [
+        {
+          "level": "Duy trì",
+          "identification_guide": "Lá khỏe, không có hiện tượng vàng hay đốm nâu.",
+          "action": "Cắt tỉa cành sau thu hoạch",
+          "product": "Phân bón hữu cơ"
+        }
+      ]
+    },
+    "Soybean Healthy": {
+      "name": "Đậu nành khỏe mạnh",
+      "desc": "Cây đậu nành phát triển tốt.",
+      "symptoms": [
+        "Lá xanh đậm, mặt lá nhẵn",
+        "Cây ra hoa kết trái đều"
+      ],
+      "treatments": [
+        {
+          "level": "Duy trì",
+          "identification_guide": "Lá sạch, không bị sâu cuốn lá hay đốm vi khuẩn.",
+          "action": "Đảm bảo thoát nước tốt",
+          "product": "Lân vi sinh"
+        }
+      ]
+    },
+    "Squash Powdery Mildew": {
+      "name": "Bệnh phấn trắng bí ngòi",
+      "desc": "Nấm bao phủ lá bằng lớp bột trắng.",
+      "symptoms": [
+        "Lớp bột trắng bao phủ mặt lá",
+        "Lá vàng và khô chết",
+        "Quả nhỏ, chất lượng kém"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vết phấn trắng nhỏ rải rác trên bề mặt lá.",
+          "action": "Cắt bỏ các lá bị nhiễm nặng",
+          "product": "Dầu Neem"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Lớp phấn trắng lan rộng ra toàn bộ lá.",
+          "action": "Phun Kali Bicacbonat hoặc lưu huỳnh",
+          "product": "Lưu huỳnh nồng độ thấp"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Lá bị bao phủ hoàn toàn, giòn và chết cháy.",
+          "action": "Điều trị hóa chất tích cực",
+          "product": "Diniconazole"
+        }
+      ]
+    },
+    "Strawberry Leaf Scorch": {
+      "name": "Bệnh cháy lá dâu tây",
+      "desc": "Bệnh do nấm Diplocarpon earlianum gây ra.",
+      "symptoms": [
+        "Các đốm tím sẫm không đều",
+        "Lá bị cháy khô như bị lửa sém",
+        "Cây còi cọc"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vết đốm tím nhỏ xuất hiện đơn lẻ.",
+          "action": "Loại bỏ lá bệnh và tàn dư",
+          "product": "Dọn vườn sạch"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh lan rộng gây cháy khô mép lá.",
+          "action": "Phun thuốc nấm phổ rộng",
+          "product": "Captan"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Toàn bộ tán lá bị cháy xém, cây suy kiệt.",
+          "action": "Can thiệp bằng thuốc nấm mạnh",
+          "product": "Difenoconazole"
+        }
+      ]
+    },
+    "Strawberry Healthy": {
+      "name": "Dâu tây khỏe mạnh",
+      "desc": "Cây dâu tây phát triển tốt.",
+      "symptoms": [
+        "Lá xanh thẫm, hoa trắng đều",
+        "Quả mọng, không vết đốm"
+      ],
+      "treatments": [
+        {
+          "level": "Duy trì",
+          "identification_guide": "Lá mướt, không có vết cháy mép hay đốm tím.",
+          "action": "Tưới nước nhỏ giọt, tránh làm ướt quả",
+          "product": "Phân bón lá Canxi-Bo"
+        }
+      ]
+    },
+    "Tomato Early Blight": {
+      "name": "Bệnh đốm vòng cà chua",
+      "desc": "Bệnh do nấm Alternaria solani, tạo ra các vòng đồng tâm trên lá.",
+      "symptoms": [
+        "Đốm nâu đen có vòng đồng tâm rõ rệt",
+        "Lá già bị héo rụng trước",
+        "Lây lan nhanh trong thời tiết ẩm"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vài đốm vòng nhỏ ở các lá phía gốc.",
+          "action": "Tỉa bỏ lá chân để vườn thông thoáng",
+          "product": "Cắt tỉa lá già"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Nhiều vết đốm vòng lan lên các tầng lá giữa.",
+          "action": "Phun thuốc nấm phòng ngừa định kỳ",
+          "product": "Chlorothalonil"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Tán lá khô cháy hơn 50%, ảnh hưởng đến quả.",
+          "action": "Điều trị bằng thuốc nấm mạnh",
+          "product": "Mancozeb"
+        }
+      ]
+    },
+    "Tomato Late Blight": {
+      "name": "Bệnh mốc sương cà chua",
+      "desc": "Bệnh rất nguy hiểm, có thể làm chết cả ruộng cà chua sau vài ngày.",
+      "symptoms": [
+        "Vết bệnh sũng nước màu xanh xám, lan cực nhanh",
+        "Mặt dưới lá có lớp mốc trắng khi trời ẩm",
+        "Thối đen thân và quả"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vết sũng nước nhỏ bắt đầu xuất hiện ở mép lá.",
+          "action": "Hạn chế tưới nước, tăng cường thông gió",
+          "product": "Phun phòng gốc đồng"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết bệnh lan rộng ra thân và xuất hiện mốc trắng.",
+          "action": "Phun thuốc nấm đặc trị",
+          "product": "Metalaxyl (Ridomil Gold)"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Toàn bộ cây bị gục ngã, thối nhũn.",
+          "action": "Phun thuốc nấm khẩn cấp hoặc nhổ bỏ",
+          "product": "Cymoxanil"
+        }
+      ]
+    },
+    "Tomato Bacterial Spot": {
+      "name": "Bệnh đốm đen vi khuẩn cà chua",
+      "desc": "Vi khuẩn Xanthomonas vesicatoria gây ra.",
+      "symptoms": [
+        "Các đốm đen nhỏ, cứng, sần sùi trên lá và quả",
+        "Vết loét lan nhanh khi mưa nhiều",
+        "Lá vàng và khô"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Đốm đen nhỏ hơi sờn ở mặt sau lá, chưa lan đến bẹ lá.",
+          "action": "Sử dụng hạt giống sạch, ngâm nước ấm",
+          "product": "Dung dịch Nano Đồng"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Vết đốm dày đặc, cháy mép lá, cây hơi héo.",
+          "action": "Phun thuốc diệt khuẩn sinh học",
+          "product": "Kasumin (Kasugamycin)"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Bệnh lan vào cành và quả non, thân cây thối đen, hoại tử nặng.",
+          "action": "Phun hỗn hợp Đồng và Mancozeb",
+          "product": "Kocide + Mancozeb"
+        }
+      ]
+    },
+    "Tomato Septoria Leaf Spot": {
+      "name": "Bệnh đốm lá Septoria cà chua",
+      "desc": "Nấm gây ra nhiều đốm nhỏ, tâm xám viền nâu.",
+      "symptoms": [
+        "Nhiều đốm tròn nhỏ màu xám trắng viền đen",
+        "Đốm dày đặc làm lá chết khô",
+        "Lá rụng từ gốc lên ngọn"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Chỉ có vài đốm xám mờ rải rác ở một vài lá đơn lẻ.",
+          "action": "Tránh tưới nước lên lá vào ban đêm",
+          "product": "Tinh dầu quế"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Cả lá lấm tấm hàng chục đốm nhỏ, mép lá bắt đầu xoăn khô.",
+          "action": "Vệ sinh kỹ lớp rơm rạ phủ gốc",
+          "product": "Antracol (Propineb)"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Lá gốc rụng hết, bệnh lan sát ngọn, cây gầy yếu.",
+          "action": "Sử dụng thuốc trị nấm mốc chuyên dụng",
+          "product": "Daconil (Chlorothalonil)"
+        }
+      ]
+    },
+    "Tomato Mosaic Virus": {
+      "name": "Virus khảm cà chua (ToMV)",
+      "desc": "Virus lây lan qua hạt giống, công cụ và côn trùng.",
+      "symptoms": [
+        "Lá có màu xanh vàng loang lổ (khảm)",
+        "Lá bị biến dạng, nhỏ li ti như sợi chỉ",
+        "Cây còi cọc, quả kém phát triển"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Một phần nhỏ lá non có vết loang xanh nhạt - xanh đậm.",
+          "action": "Rửa tay bằng xà phòng sau khi chạm vào cây bệnh",
+          "product": "Sữa gầy (để ngăn virus)"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Lá mọc ra bị vặn xoắn, có đốm vàng loang lổ khắp tán.",
+          "action": "Tiêu diệt côn trùng truyền bệnh rầy, rệp",
+          "product": "Actara (Thiamethoxam)"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Cây biến dạng hoàn toàn, lá hình sợi, không thể ra hoa đậu quả.",
+          "action": "Nhổ bỏ toàn bộ cây bệnh, khử trùng công cụ",
+          "product": "Ngừng canh tác cây họ Cà một mùa"
+        }
+      ]
+    },
+    "Tomato Yellow Leaf Curl Virus": {
+      "name": "Virus vàng lá cà chua (TYLCV)",
+      "desc": "Virus do bọ phấn trắng truyền, làm lá cuốn và vàng.",
+      "symptoms": [
+        "Vàng rõ rệt ở ngọn, lá non trở nên nhỏ bé",
+        "Mép lá cuốn ngược lên trên",
+        "Cây ngừng sinh trưởng"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Ngọn cây bắt đầu chuyển màu vàng chanh, lá hơi dày lên.",
+          "action": "Sử dụng lưới chắn bọ phấn",
+          "product": "Lưới cước mịn"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Lá non xoắn chặt, mép cuốn lên như hình chén, cây ngừng phát triển chiều cao.",
+          "action": "Phun dầu khoáng để bọ phấn không đậu",
+          "product": "Dầu khoáng SK Enspray"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Ngọn bí bết lại không phát triển được, toàn bộ tán lá vàng rực.",
+          "action": "Khống chế bọ phấn triệt để bằng thuốc mạnh",
+          "product": "Pymetrozine (Chess)"
+        }
+      ]
+    },
+    "Tomato Leaf Mold": {
+      "name": "Nấm mốc lá cà chua",
+      "desc": "Bệnh do nấm Fulvia fulva gây ra trong môi trường độ ẩm cực cao.",
+      "symptoms": [
+        "Đốm vàng nhạt mặt trên lá, lớp mốc xanh/xám mặt dưới",
+        "Lá khô và rụng nhưng không héo",
+        "Thường xuất hiện trong nhà kính"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Vài vệt vàng nhạt mờ ở mặt trên lá, lật mặt dưới thấy lớp lông mịn màu xám.",
+          "action": "Tăng cường thông gió nhà kính",
+          "product": "Quạt thông gió"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Lớp mốc bám dày như nhung xám ở mặt dưới hầu hết các lá già.",
+          "action": "Sử dụng thuốc diệt nấm phổ rộng",
+          "product": "Chlorothalonil"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Lá khô đen và rụng hàng loạt, bệnh lan tận lá non trên ngọn.",
+          "action": "Cần can thiệp thuốc hóa học đặc trị",
+          "product": "Azoxystrobin kết hợp Cyproconazole"
+        }
+      ]
+    },
+    "Tomato Two Spotted Spider Mites": {
+      "name": "Nhện đỏ cà chua",
+      "desc": "Nhện chích hút làm lá biến màu và khô.",
+      "symptoms": [
+        "Các đốm trắng li ti trên lá",
+        "Lá bạc màu, có tơ nhện mỏng mặt dưới",
+        "Lá bị cháy vàng cả ruộng"
+      ],
+      "treatments": [
+        {
+          "level": "Nhẹ",
+          "identification_guide": "Lá có vài đốm trắng nhỏ mờ, soi kỹ thấy nhện nhỏ di chuyển mặt sau.",
+          "action": "Phun nước mạnh vào mặt dưới lá",
+          "product": "Nước sạch"
+        },
+        {
+          "level": "Trung bình",
+          "identification_guide": "Lá bạc trắng rõ rệt, có tơ ở mặt sau, lá hơi xoăn.",
+          "action": "Sử dụng các loại dầu thảo mộc hoặc xà phòng",
+          "product": "Dầu Neem hoặc Axit Salicylic"
+        },
+        {
+          "level": "Nặng",
+          "identification_guide": "Cả ruộng bị cháy vàng, lá khô chết, nhện bám kín ngọn cây.",
+          "action": "Sử dụng các loại thuốc trừ nhện đặc hiệu",
+          "product": "Abamectin hoặc Spiromesifen"
+        }
+      ]
+    }
+  }
+}

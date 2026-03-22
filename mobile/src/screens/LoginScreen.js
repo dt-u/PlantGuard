@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Mail, Lock, Eye, EyeOff, User, ArrowLeft, CheckSquare, Square } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -23,6 +24,7 @@ const LoginScreen = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const { login } = useAuth();
+    const { t } = useLanguage();
 
     // Load saved credentials on mount
     useEffect(() => {
@@ -46,7 +48,7 @@ const LoginScreen = ({ navigation }) => {
 
     const handleLogin = async () => {
         if (!email || !password) {
-            Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ email và mật khẩu');
+            Alert.alert(t('common.error'), t('auth.fill_all'));
             return;
         }
 
@@ -70,13 +72,13 @@ const LoginScreen = ({ navigation }) => {
                 console.error('Error saving credentials:', e);
             }
 
-            if (navigation.canGoBack()) {
-                navigation.goBack();
-            } else {
-                navigation.navigate('MainTabs');
-            }
+            // Reset navigation to clear stack
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'MainTabs', params: { screen: t('tabs.profile') } }],
+            });
         } else {
-            Alert.alert('Đăng nhập thất bại', result.error);
+            Alert.alert(t('auth.login_failed'), result.error);
         }
     };
 
@@ -87,7 +89,7 @@ const LoginScreen = ({ navigation }) => {
         >
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <TouchableOpacity 
-                    onPress={() => navigation.goBack()} 
+                    onPress={() => navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })} 
                     style={styles.backButton}
                 >
                     <ArrowLeft color="#2E7D32" size={24} />
@@ -97,13 +99,13 @@ const LoginScreen = ({ navigation }) => {
                     <View style={styles.iconContainer}>
                         <User color="#2E7D32" size={40} />
                     </View>
-                    <Text style={styles.title}>Chào mừng trở lại</Text>
-                    <Text style={styles.subtitle}>Đăng nhập để tiếp tục bảo vệ khu vườn của bạn</Text>
+                    <Text style={styles.title}>{t('auth.welcome_back')}</Text>
+                    <Text style={styles.subtitle}>{t('auth.login_subtitle')}</Text>
                 </View>
 
                 <View style={styles.form}>
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>EMAIL</Text>
+                        <Text style={styles.label}>{t('common.email')}</Text>
                         <View style={styles.inputWrapper}>
                             <Mail color="#94A3B8" size={20} style={styles.inputIcon} />
                             <TextInput
@@ -118,7 +120,7 @@ const LoginScreen = ({ navigation }) => {
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>MẬT KHẨU</Text>
+                        <Text style={styles.label}>{t('common.password')}</Text>
                         <View style={styles.inputWrapper}>
                             <Lock color="#94A3B8" size={20} style={styles.inputIcon} />
                             <TextInput
@@ -148,7 +150,7 @@ const LoginScreen = ({ navigation }) => {
                             <Square color="#94A3B8" size={20} />
                         )}
                         <Text style={[styles.rememberMeText, rememberMe && styles.rememberMeActive]}>
-                            Ghi nhớ đăng nhập
+                            {t('common.remember_me')}
                         </Text>
                     </TouchableOpacity>
 
@@ -166,15 +168,15 @@ const LoginScreen = ({ navigation }) => {
                             {loading ? (
                                 <ActivityIndicator color="#FFFFFF" size="small" />
                             ) : (
-                                <Text style={styles.loginButtonText}>Đăng nhập ngay</Text>
+                                <Text style={styles.loginButtonText}>{t('common.login')}</Text>
                             )}
                         </LinearGradient>
                     </TouchableOpacity>
 
                     <View style={styles.footer}>
-                        <Text style={styles.footerText}>Chưa có tài khoản? </Text>
-                        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                            <Text style={styles.linkText}>Tạo tài khoản mới</Text>
+                        <Text style={styles.footerText}>{t('auth.no_account')} </Text>
+                        <TouchableOpacity onPress={() => navigation.replace('Register')}>
+                            <Text style={styles.linkText}>{t('auth.create_new')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

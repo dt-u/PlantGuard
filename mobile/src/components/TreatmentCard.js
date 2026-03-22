@@ -1,85 +1,115 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
-import { ChevronDown, ChevronUp, CheckCircle, AlertTriangle, XCircle, Info } from 'lucide-react-native';
+import { AlertCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Beaker, ShieldCheck, Zap } from 'lucide-react-native';
+import { useLanguage } from '../contexts/LanguageContext';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const TreatmentCard = ({ treatments }) => {
+const TreatmentCard = ({ treatments = [], diseaseKey }) => {
+    const { t, language } = useLanguage();
     const [expandedIndex, setExpandedIndex] = useState(null);
-
-    if (!treatments || !Array.isArray(treatments)) return null;
 
     const toggleExpand = (index) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
-    const getLevelInfo = (level) => {
-        switch (level.toLowerCase()) {
-            case 'mild': return { label: 'Nhẹ', color: '#10B981', icon: <CheckCircle size={18} color="#10B981" /> };
-            case 'moderate': return { label: 'Trung Bình', color: '#F59E0B', icon: <AlertTriangle size={18} color="#F59E0B" /> };
-            case 'severe': return { label: 'Nặng', color: '#EF4444', icon: <XCircle size={18} color="#EF4444" /> };
-            case 'maintenance': return { label: 'Chăm Sóc', color: '#2E7D32', icon: <CheckCircle size={18} color="#2E7D32" /> };
-            default: return { label: level, color: '#6B7280', icon: <Info size={18} color="#6B7280" /> };
+    const getSeverityStyles = (level) => {
+        const lowerLevel = (level || '').toLowerCase();
+        if (lowerLevel.includes('nhẹ') || lowerLevel.includes('mild') || lowerLevel.includes('duy trì') || lowerLevel.includes('maintenance')) {
+            return { color: '#10B981', bg: '#F0FDF4', icon: <CheckCircle2 size={18} color="#10B981" />, label: t('treatment.mild') };
         }
+        if (lowerLevel.includes('trung bình') || lowerLevel.includes('moderate')) {
+            return { color: '#F59E0B', bg: '#FFFBEB', icon: <AlertCircle size={18} color="#F59E0B" />, label: t('treatment.moderate') };
+        }
+        if (lowerLevel.includes('nặng') || lowerLevel.includes('severe')) {
+            return { color: '#EF4444', bg: '#FEF2F2', icon: <XCircle size={18} color="#EF4444" />, label: t('treatment.severe') };
+        }
+        return { color: '#6B7280', bg: '#F3F4F6', icon: <Zap size={18} color="#6B7280" />, label: level };
+    };
+
+    // Helper to get translated treatment item
+    const getTranslatedTreatment = (item, index) => {
+        if (language === 'vi') return item;
+
+        const diseaseDetails = t(`disease_details.${diseaseKey}`);
+        if (typeof diseaseDetails === 'object' && diseaseDetails.treatments) {
+            // Find corresponding treatment by level index or level name
+            const translatedItem = diseaseDetails.treatments[index] || 
+                                 diseaseDetails.treatments.find(tr => tr.level.toLowerCase() === (item.level || '').toLowerCase());
+            
+            if (translatedItem) {
+                return {
+                    ...item,
+                    identification_guide: translatedItem.identification_guide || item.identification_guide,
+                    action: translatedItem.action || item.action,
+                    product: translatedItem.product || item.product,
+                    level: translatedItem.level || item.level
+                };
+            }
+        }
+        return item;
     };
 
     return (
         <View style={styles.container}>
-            {treatments.map((item, index) => {
-                const info = getLevelInfo(item.level);
+            {treatments.map((rawItem, index) => {
+                const item = getTranslatedTreatment(rawItem, index);
                 const isExpanded = expandedIndex === index;
+                const severity = getSeverityStyles(item.level || item.severity);
 
                 return (
-                    <TouchableOpacity
-                        key={index}
-                        activeOpacity={0.7}
-                        onPress={() => toggleExpand(index)}
-                        style={[
-                            styles.card,
-                            { borderLeftColor: info.color },
-                            isExpanded && styles.expandedCard
-                        ]}
-                    >
-                        <View style={styles.header}>
-                            <View style={styles.badgeRow}>
-                                <View style={[styles.badge, { backgroundColor: info.color + '15' }]}>
-                                    {info.icon}
-                                    <Text style={[styles.badgeText, { color: info.color }]}>{info.label}</Text>
-                                </View>
+                    <View key={index} style={[styles.card, isExpanded && styles.expandedCard]}>
+                        <TouchableOpacity 
+                            style={[styles.header, { backgroundColor: severity.bg }]} 
+                            onPress={() => toggleExpand(index)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.headerLeft}>
+                                {severity.icon}
+                                <Text style={[styles.levelText, { color: severity.color }]}>
+                                    {severity.label}
+                                </Text>
                             </View>
                             {isExpanded ? <ChevronUp size={20} color="#9CA3AF" /> : <ChevronDown size={20} color="#9CA3AF" />}
+                        </TouchableOpacity>
+
+                        <View style={styles.content}>
+                            <Text style={styles.actionText} numberOfLines={isExpanded ? 0 : 2}>
+                                {item.action || item.name}
+                            </Text>
+                            
+                            {isExpanded && (
+                                <View style={styles.details}>
+                                    <View style={styles.divider} />
+                                    
+                                    <View style={styles.detailItem}>
+                                        <View style={styles.detailHeader}>
+                                            <ShieldCheck size={14} color="#6B7280" />
+                                            <Text style={styles.detailLabel}>{t('treatment.id_guide')}</Text>
+                                        </View>
+                                        <Text style={styles.detailText}>{item.identification_guide || item.description}</Text>
+                                    </View>
+
+                                    <View style={styles.detailItem}>
+                                        <View style={styles.detailHeader}>
+                                            <Beaker size={14} color="#6B7280" />
+                                            <Text style={styles.detailLabel}>{t('treatment.product')}</Text>
+                                        </View>
+                                        <View style={styles.productBadge}>
+                                            <Text style={styles.productText}>{item.product}</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            )}
+
+                            {!isExpanded && (
+                                <Text style={styles.clickHint}>{t('treatment.click_detail')}</Text>
+                            )}
                         </View>
-
-                        <Text style={styles.mainAction} numberOfLines={isExpanded ? 0 : 2}>
-                            {item.action}
-                        </Text>
-
-                        {isExpanded && (
-                            <View style={styles.expandedContent}>
-                                <View style={styles.section}>
-                                    <View style={styles.sectionHeader}>
-                                        <View style={[styles.dot, { backgroundColor: '#3B82F6' }]} />
-                                        <Text style={styles.sectionTitle}>Cách nhận biết</Text>
-                                    </View>
-                                    <Text style={styles.guideText}>"{item.identification_guide}"</Text>
-                                </View>
-
-                                <View style={styles.section}>
-                                    <Text style={styles.sectionTitleSmall}>Sản phẩm khuyên dùng</Text>
-                                    <View style={styles.productBox}>
-                                        <Text style={styles.productName}>{item.product || 'N/A'}</Text>
-                                    </View>
-                                </View>
-                            </View>
-                        )}
-                        
-                        {!isExpanded && (
-                            <Text style={styles.tapHint}>Nhấn để xem chi tiết</Text>
-                        )}
-                    </TouchableOpacity>
+                    </View>
                 );
             })}
         </View>
@@ -87,118 +117,101 @@ const TreatmentCard = ({ treatments }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        gap: 12,
-        marginTop: 10,
-    },
+    container: { gap: 12 },
     card: {
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
-        padding: 16,
-        borderLeftWidth: 5,
+        overflow: 'hidden',
         borderWidth: 1,
         borderColor: '#F3F4F6',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
-        shadowRadius: 8,
+        shadowRadius: 4,
         elevation: 2,
     },
     expandedCard: {
         borderColor: '#E5E7EB',
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
         elevation: 4,
     },
     header: {
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
     },
-    badgeRow: {
-        flexDirection: 'row',
-    },
-    badge: {
+    headerLeft: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 8,
-        gap: 6,
+        gap: 8,
     },
-    badgeText: {
-        fontSize: 12,
+    levelText: {
+        fontSize: 13,
         fontFamily: 'Vietnam-Bold',
-        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
-    mainAction: {
+    content: {
+        padding: 16,
+    },
+    actionText: {
         fontSize: 15,
+        fontFamily: 'Vietnam-Bold',
         color: '#1F2937',
-        fontFamily: 'Vietnam-SemiBold',
         lineHeight: 22,
     },
-    expandedContent: {
-        marginTop: 15,
-        paddingTop: 15,
-        borderTopWidth: 1,
-        borderTopColor: '#F3F4F6',
-        gap: 15,
+    clickHint: {
+        fontSize: 11,
+        fontFamily: 'Vietnam-Medium',
+        color: '#9CA3AF',
+        textAlign: 'center',
+        marginTop: 12,
     },
-    section: {
-        gap: 6,
+    details: {
+        marginTop: 12,
     },
-    sectionHeader: {
+    divider: {
+        height: 1,
+        backgroundColor: '#F3F4F6',
+        marginBottom: 16,
+    },
+    detailItem: {
+        marginBottom: 16,
+    },
+    detailHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
+        marginBottom: 6,
     },
-    dot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-    },
-    sectionTitle: {
+    detailLabel: {
         fontSize: 11,
         fontFamily: 'Vietnam-Bold',
         color: '#6B7280',
         textTransform: 'uppercase',
         letterSpacing: 0.5,
     },
-    sectionTitleSmall: {
-        fontSize: 11,
-        fontFamily: 'Vietnam-Bold',
-        color: '#9CA3AF',
-        textTransform: 'uppercase',
-    },
-    guideText: {
-        fontSize: 14,
-        color: '#4B5563',
+    detailText: {
+        fontSize: 13,
         fontFamily: 'Vietnam-Regular',
-        fontStyle: 'italic',
-        lineHeight: 20,
-        backgroundColor: '#F9FAFB',
-        padding: 10,
-        borderRadius: 8,
+        color: '#4B5563',
+        lineHeight: 18,
+        paddingLeft: 20,
     },
-    productBox: {
-        backgroundColor: '#F0FDF4',
-        padding: 10,
-        borderRadius: 8,
+    productBadge: {
+        backgroundColor: '#ECFDF5',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 10,
+        marginLeft: 20,
+        alignSelf: 'flex-start',
         borderWidth: 1,
-        borderColor: '#DCFCE7',
+        borderColor: '#D1FAE5',
     },
-    productName: {
-        fontSize: 14,
-        color: '#166534',
+    productText: {
+        fontSize: 13,
         fontFamily: 'Vietnam-Bold',
-    },
-    tapHint: {
-        fontSize: 11,
-        color: '#9CA3AF',
-        textAlign: 'center',
-        marginTop: 10,
-        fontFamily: 'Vietnam-Medium',
+        color: '#065F46',
     }
 });
 

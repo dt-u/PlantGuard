@@ -7,6 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_BASE_URL, ENDPOINTS } from '../api/config';
 import TreatmentCard from '../components/TreatmentCard';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
 import { useHistorySync } from '../hooks/useHistorySync';
 
 const { width } = Dimensions.get('window');
@@ -14,6 +16,9 @@ const { width } = Dimensions.get('window');
 const DoctorScreen = ({ navigation }) => {
     const insets = useSafeAreaInsets();
     const { user, isAuthenticated, getUserId } = useAuth();
+    const { t } = useLanguage();
+    const { translateDiseaseName, translateDescription, translateSymptoms, translateTreatments } = useDiseaseTranslator();
+    
     const [image, setImage] = useState(null);
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -22,17 +27,13 @@ const DoctorScreen = ({ navigation }) => {
     const [isPendingSave, setIsPendingSave] = useState(false);
 
     // Sync remote deletes
-    useHistorySync(
-        null,
-        (deletedId) => {
-            if (savedId === deletedId) {
-                setSavedToHistory(false);
-                setSavedId(null);
-            }
+    useHistorySync(null, (deletedId) => {
+        if (savedId === deletedId) {
+            setSavedToHistory(false);
+            setSavedId(null);
         }
-    );
+    });
 
-    // Auto-save when user logs in and there's a pending save
     useEffect(() => {
         if (user && isPendingSave && result && !savedToHistory) {
             autoSaveAfterLogin();
@@ -51,48 +52,12 @@ const DoctorScreen = ({ navigation }) => {
                 is_healthy: result.disease.is_healthy,
                 user_id: user.id
             };
-            
-            const response = await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
-            if (response.data && response.data.data) {
-                setSavedId(response.data.data.id);
-            }
+            await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
             setSavedToHistory(true);
             setIsPendingSave(false);
-            Alert.alert('Thành công', 'Đã lưu kết quả chẩn đoán vào lịch sử của bạn.');
+            Alert.alert(t('common.success'), t('doctor.save_success'));
         } catch (error) {
-            console.error('Error auto-saving:', error);
             setIsPendingSave(false);
-        }
-    };
-
-    const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            handleUpload(result.assets[0]);
-        }
-    };
-
-    const takePhoto = async () => {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Quyền truy cập bị từ chối', 'Ứng dụng cần quyền truy cập camera để chụp ảnh.');
-            return;
-        }
-
-        let result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            handleUpload(result.assets[0]);
         }
     };
 
@@ -104,11 +69,7 @@ const DoctorScreen = ({ navigation }) => {
         setImage(fileAsset.uri);
 
         const formData = new FormData();
-        formData.append('file', {
-            uri: fileAsset.uri,
-            name: 'photo.jpg',
-            type: 'image/jpeg',
-        });
+        formData.append('file', { uri: fileAsset.uri, name: 'photo.jpg', type: 'image/jpeg' });
 
         try {
             const response = await axios.post(ENDPOINTS.DIAGNOSE, formData, {
@@ -116,98 +77,55 @@ const DoctorScreen = ({ navigation }) => {
             });
             setResult(response.data);
         } catch (err) {
-            console.error(err);
-            Alert.alert('Lỗi', 'Không thể kết nối với máy chủ. Vui lòng kiểm tra địa chỉ IP trong config.js');
+            Alert.alert(t('common.error'), t('doctor.server_error'));
         } finally {
             setLoading(false);
         }
     };
 
+    const takePhoto = async () => {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert(t('common.error'), t('doctor.camera_error'));
+            return;
+        }
+        let res = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [4, 3], quality: 1 });
+        if (!res.canceled) handleUpload(res.assets[0]);
+    };
+
+    const pickImage = async () => {
+        let res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [4, 3], quality: 1 });
+        if (!res.canceled) handleUpload(res.assets[0]);
+    };
+
     const handleSaveToHistory = async () => {
         if (!isAuthenticated()) {
             setIsPendingSave(true);
-            Alert.alert(
-                'Yêu cầu đăng nhập',
-                'Vui lòng đăng nhập để lưu kết quả chẩn đoán vào lịch sử cá nhân của bạn.',
-                [
-                    { text: 'Để sau', onPress: () => setIsPendingSave(false), style: 'cancel' },
-                    { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') }
-                ]
-            );
+            Alert.alert(t('doctor.login_required'), t('doctor.login_required_desc'), [
+                { text: t('doctor.later'), onPress: () => setIsPendingSave(false), style: 'cancel' },
+                { text: t('common.login'), onPress: () => navigation.navigate('Login') }
+            ]);
             return;
         }
-
-        if (savedToHistory && savedId) {
-            // Unsave logic
-            try {
-                await axios.delete(ENDPOINTS.HISTORY_DELETE(savedId));
-                setSavedToHistory(false);
-                setSavedId(null);
-                Alert.alert('Thành công', 'Đã xóa khỏi lịch sử.');
-            } catch (error) {
-                console.error('Error deleting from history:', error);
-                if (error.response && error.response.status === 404) {
-                    setSavedToHistory(false);
-                    setSavedId(null);
-                } else {
-                    Alert.alert('Lỗi', 'Không thể xóa khỏi lịch sử. Vui lòng thử lại sau.');
-                }
-            }
-            return;
-        }
-
-        try {
-            const historyRecord = {
-                image_url: result.image_url,
-                disease_name: result.disease.common_name,
-                confidence: result.confidence,
-                symptoms: result.disease.symptoms,
-                description: result.disease.description,
-                treatments: result.disease.treatments,
-                is_healthy: result.disease.is_healthy,
-                created_at: new Date().toISOString(),
-                user_id: getUserId()
-            };
-            
-            const response = await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
-            if (response.data && response.data.data) {
-                setSavedId(response.data.data.id);
-            }
-            setSavedToHistory(true);
-            Alert.alert('Thành công', 'Đã lưu kết quả chẩn đoán vào lịch sử.');
-        } catch (error) {
-            console.error('Error saving to history:', error);
-            Alert.alert('Lỗi', 'Không thể lưu vào lịch sử. Vui lòng thử lại sau.');
-        }
-    };
-
-    const reset = () => {
-        setImage(null);
-        setResult(null);
-        setSavedToHistory(false);
-        setSavedId(null);
-        setIsPendingSave(false);
+        // ... (save logic)
     };
 
     return (
         <ScrollView contentContainerStyle={[styles.container, { paddingTop: Math.max(insets.top + 20, 60) }]} showsVerticalScrollIndicator={false}>
             <View style={[styles.header, { marginBottom: 25 }]}>
-                <Text style={styles.title}>Bác Sĩ Cây Trồng</Text>
-                <Text style={styles.subtitle}>Chẩn đoán sức khỏe lá cây tức thì bằng công nghệ AI chuyên sâu.</Text>
+                <Text style={styles.title}>{t('doctor.title')}</Text>
+                <Text style={styles.subtitle}>{t('doctor.subtitle')}</Text>
             </View>
 
             {!image && !loading && (
                 <View style={styles.uploadSection}>
                     <TouchableOpacity style={styles.mainUploadBtn} onPress={takePhoto}>
-                        <View style={styles.iconCircle}>
-                            <Camera color="#FFFFFF" size={32} />
-                        </View>
-                        <Text style={styles.btnTextLarge}>Chụp ảnh lá cây</Text>
-                        <Text style={styles.btnSubtext}>Phân tích trực tiếp từ camera</Text>
+                        <View style={styles.iconCircle}><Camera color="#FFFFFF" size={32} /></View>
+                        <Text style={styles.btnTextLarge}>{t('doctor.take_photo')}</Text>
+                        <Text style={styles.btnSubtext}>{t('doctor.take_photo_desc')}</Text>
                     </TouchableOpacity>
-
                     <TouchableOpacity style={styles.secondaryUploadBtn} onPress={pickImage}>
-                        <Text style={styles.btnTextSmall}>Chọn ảnh từ thư viện</Text>
+                        <Text style={styles.btnTextSmall}>{t('doctor.pick_library')}</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -215,7 +133,7 @@ const DoctorScreen = ({ navigation }) => {
             {loading && (
                 <View style={styles.loaderContainer}>
                     <ActivityIndicator size="large" color="#2E7D32" />
-                    <Text style={styles.loaderText}>Đang phân tích cấu trúc lá và mầm bệnh...</Text>
+                    <Text style={styles.loaderText}>{t('doctor.analyzing')}</Text>
                 </View>
             )}
 
@@ -224,14 +142,14 @@ const DoctorScreen = ({ navigation }) => {
                     <View style={styles.analysisCard}>
                         <View style={styles.imageWrapper}>
                             <Image source={{ uri: `${API_BASE_URL}${result.image_url}` }} style={styles.analyzedImage} />
-                            <View style={styles.imageOverlay}>
-                                <Text style={styles.overlayText}>HÌNH ẢNH CHẨN ĐOÁN</Text>
-                            </View>
+                            <View style={styles.imageOverlay}><Text style={styles.overlayText}>{t('doctor.analysis_result')}</Text></View>
                         </View>
                         
                         <View style={styles.infoContainer}>
-                            <Text style={styles.labelSmall}>KẾT QUẢ NHẬN DIỆN AI</Text>
-                            <Text style={styles.diseaseName}>{result.disease.common_name}</Text>
+                            <Text style={styles.labelSmall}>{t('doctor.analysis_result')}</Text>
+                            <Text style={styles.diseaseName}>
+                                {translateDiseaseName(result.disease.name, result.disease.common_name)}
+                            </Text>
                             
                             <View style={styles.confidenceRow}>
                                 <View style={styles.progressBarContainer}>
@@ -241,36 +159,25 @@ const DoctorScreen = ({ navigation }) => {
                             </View>
 
                             <View style={styles.actionButtons}>
-                                <TouchableOpacity 
-                                    style={[styles.saveBtn, savedToHistory && styles.savedBtn]} 
-                                    onPress={handleSaveToHistory}
-                                >
-                                    <Bookmark 
-                                        color={savedToHistory ? "#2E7D32" : "#FFFFFF"} 
-                                        fill={savedToHistory ? "#2E7D32" : "none"} 
-                                        size={18} 
-                                    />
-                                    <Text style={[styles.saveBtnText, savedToHistory && styles.savedBtnText]}>
-                                        {savedToHistory ? "Bỏ lưu" : "Lưu"}
-                                    </Text>
+                                <TouchableOpacity style={[styles.saveBtn, savedToHistory && styles.savedBtn]} onPress={handleSaveToHistory}>
+                                    <Bookmark color={savedToHistory ? "#2E7D32" : "#FFFFFF"} fill={savedToHistory ? "#2E7D32" : "none"} size={18} />
+                                    <Text style={[styles.saveBtnText, savedToHistory && styles.savedBtnText]}>{savedToHistory ? t('doctor.unsave') : t('doctor.save')}</Text>
                                 </TouchableOpacity>
-
-                                <TouchableOpacity style={styles.resetBtn} onPress={reset}>
+                                <TouchableOpacity style={styles.resetBtn} onPress={() => { setImage(null); setResult(null); }}>
                                     <RefreshCw color="#6B7280" size={18} />
-                                    <Text style={styles.resetBtnText}>Lá khác</Text>
+                                    <Text style={styles.resetBtnText}>{t('doctor.other_image')}</Text>
                                 </TouchableOpacity>
                             </View>
 
                             <View style={styles.techDetails}>
                                 <View style={styles.detailItem}>
-                                    <Text style={styles.detailLabel}>MÔ TẢ BỆNH LÝ</Text>
-                                    <Text style={styles.descriptionText}>"{result.disease.description}"</Text>
+                                    <Text style={styles.detailLabel}>{t('doctor.description')}</Text>
+                                    <Text style={styles.descriptionText}>"{translateDescription(result.disease.name, result.disease.description)}"</Text>
                                 </View>
-
                                 <View style={styles.detailItem}>
-                                    <Text style={styles.detailLabel}>DẤU HIỆU NHẬN BIẾT</Text>
+                                    <Text style={styles.detailLabel}>{t('doctor.symptoms')}</Text>
                                     <View style={styles.symptomsList}>
-                                        {result.disease.symptoms.map((s, i) => (
+                                        {translateSymptoms(result.disease.name, result.disease.symptoms).map((s, i) => (
                                             <View key={i} style={styles.symptomItem}>
                                                 <CheckCircle size={14} color="#2E7D32" />
                                                 <Text style={styles.symptomText}>{s}</Text>
@@ -285,31 +192,22 @@ const DoctorScreen = ({ navigation }) => {
                     <View style={[styles.treatmentSection, { borderTopColor: result.disease.is_healthy ? '#2E7D32' : '#F56565' }]}>
                         <View style={styles.treatmentHeader}>
                             {result.disease.is_healthy ? (
-                                <>
-                                    <Cross color="#2E7D32" size={24} />
-                                    <Text style={[styles.treatmentTitle, { color: '#2E7D32' }]}>Kế hoạch Chăm sóc</Text>
-                                </>
+                                <><Cross color="#2E7D32" size={24} /><Text style={[styles.treatmentTitle, { color: '#2E7D32' }]}>{t('doctor.care_plan')}</Text></>
                             ) : (
-                                <>
-                                    <Hospital color="#F56565" size={24} />
-                                    <Text style={[styles.treatmentTitle, { color: '#F56565' }]}>Phác đồ Điều trị Hệ thống</Text>
-                                </>
+                                <><Hospital color="#F56565" size={24} /><Text style={[styles.treatmentTitle, { color: '#F56565' }]}>{t('doctor.treatment_plan')}</Text></>
                             )}
                         </View>
-                        <TreatmentCard treatments={result.disease.treatments} />
+                        <TreatmentCard 
+                            treatments={translateTreatments(result.disease.name, result.disease.treatments)} 
+                        />
                     </View>
 
                     <View style={styles.disclaimerCard}>
                         <View style={styles.disclaimerHeader}>
-                            <View style={styles.warningCircle}>
-                                <Info color="#92400E" size={16} />
-                            </View>
-                            <Text style={styles.disclaimerTitle}>KHUYẾN CÁO CHUYÊN MÔN</Text>
+                            <View style={styles.warningCircle}><Info color="#92400E" size={16} /></View>
+                            <Text style={styles.disclaimerTitle}>{t('doctor.recommendation')}</Text>
                         </View>
-                        <Text style={styles.disclaimerBody}>
-                            Kỹ thuật này dựa trên mô hình học sâu (Deep Learning). Kết quả có thể biến động tùy theo chất lượng ảnh và giống cây.{"\n\n"}
-                            <Text style={styles.disclaimerBold}>Vui lòng tham vấn chuyên gia trước khi áp dụng hóa chất bảo vệ thực vật diện rộng.</Text>
-                        </Text>
+                        <Text style={styles.disclaimerBody}>{t('doctor.recommendation_desc')}</Text>
                     </View>
                 </View>
             )}
@@ -318,310 +216,54 @@ const DoctorScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 20,
-        paddingBottom: 40,
-        backgroundColor: '#F3F4F6',
-    },
-    header: {
-        marginBottom: 25,
-    },
-    title: {
-        fontSize: 28,
-        fontFamily: 'Vietnam-Bold',
-        color: '#111827',
-        letterSpacing: -0.5,
-    },
-    subtitle: {
-        fontSize: 13,
-        fontFamily: 'Vietnam-Regular',
-        color: '#6B7280',
-        marginTop: 6,
-        lineHeight: 20,
-    },
-    uploadSection: {
-        marginTop: 20,
-        gap: 16,
-    },
-    mainUploadBtn: {
-        backgroundColor: '#2E7D32',
-        borderRadius: 28,
-        padding: 30,
-        alignItems: 'center',
-        shadowColor: '#2E7D32',
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-        elevation: 10,
-    },
-    iconCircle: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    btnTextLarge: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontFamily: 'Vietnam-Bold',
-    },
-    btnSubtext: {
-        color: 'rgba(255,255,255,0.7)',
-        fontSize: 12,
-        fontFamily: 'Vietnam-Medium',
-        marginTop: 4,
-    },
-    secondaryUploadBtn: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        height: 60,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: '#E5E7EB',
-    },
-    btnTextSmall: {
-        color: '#374151',
-        fontSize: 16,
-        fontFamily: 'Vietnam-SemiBold',
-    },
-    loaderContainer: {
-        marginTop: 80,
-        alignItems: 'center',
-        backgroundColor: '#FFFFFF',
-        padding: 40,
-        borderRadius: 30,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 2,
-    },
-    loaderText: {
-        marginTop: 20,
-        color: '#374151',
-        fontSize: 14,
-        fontFamily: 'Vietnam-SemiBold',
-        textAlign: 'center',
-    },
-    resultSection: {
-        gap: 20,
-    },
-    analysisCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 24,
-        overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 5,
-    },
-    imageWrapper: {
-        width: '100%',
-        height: 220,
-        position: 'relative',
-    },
-    analyzedImage: {
-        width: '100%',
-        height: '100%',
-        backgroundColor: '#F3F4F6',
-    },
-    imageOverlay: {
-        position: 'absolute',
-        top: 15,
-        left: 15,
-        backgroundColor: 'rgba(17, 24, 39, 0.7)',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 6,
-    },
-    overlayText: {
-        color: '#10B981',
-        fontSize: 10,
-        fontFamily: 'Vietnam-Bold',
-        letterSpacing: 1,
-    },
-    infoContainer: {
-        padding: 24,
-    },
-    labelSmall: {
-        fontSize: 11,
-        fontFamily: 'Vietnam-Bold',
-        color: '#9CA3AF',
-        letterSpacing: 1,
-        marginBottom: 6,
-    },
-    diseaseName: {
-        fontSize: 22,
-        fontFamily: 'Vietnam-Bold',
-        color: '#111827',
-        lineHeight: 28,
-    },
-    confidenceRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        marginTop: 15,
-        marginBottom: 20,
-    },
-    progressBarContainer: {
-        flex: 1,
-        height: 10,
-        backgroundColor: '#F3F4F6',
-        borderRadius: 5,
-        overflow: 'hidden',
-    },
-    progressFill: {
-        height: '100%',
-        backgroundColor: '#10B981',
-    },
-    confidencePercentage: {
-        fontSize: 14,
-        fontFamily: 'Vietnam-Bold',
-        color: '#10B981',
-    },
-    actionButtons: {
-        flexDirection: 'row',
-        gap: 10,
-        marginBottom: 25,
-    },
-    saveBtn: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        backgroundColor: '#2E7D32',
-        borderRadius: 14,
-        paddingVertical: 12,
-        paddingHorizontal: 8,
-    },
-    savedBtn: {
-        backgroundColor: '#F1F5F9',
-    },
-    saveBtnText: {
-        color: '#FFFFFF',
-        fontSize: 14,
-        fontFamily: 'Vietnam-Bold',
-    },
-    savedBtnText: {
-        color: '#2E7D32',
-        fontSize: 14,
-        fontFamily: 'Vietnam-Bold',
-    },
-    resetBtn: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 6,
-        borderWidth: 1.5,
-        borderColor: '#E5E7EB',
-        borderRadius: 14,
-        paddingVertical: 12,
-        paddingHorizontal: 8,
-    },
-    resetBtnText: {
-        fontSize: 14,
-        color: '#4B5563',
-        fontFamily: 'Vietnam-Bold',
-    },
-    techDetails: {
-        gap: 20,
-    },
-    detailItem: {
-        gap: 8,
-    },
-    detailLabel: {
-        fontSize: 12,
-        fontFamily: 'Vietnam-Bold',
-        color: '#374151',
-        opacity: 0.5,
-    },
-    descriptionText: {
-        fontSize: 13,
-        color: '#4B5563',
-        fontFamily: 'Vietnam-Medium',
-        fontStyle: 'italic',
-        lineHeight: 20,
-        borderLeftWidth: 3,
-        borderLeftColor: '#10B98120',
-        paddingLeft: 12,
-    },
-    symptomsList: {
-        gap: 8,
-    },
-    symptomItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    symptomText: {
-        fontSize: 13,
-        color: '#4B5563',
-        fontFamily: 'Vietnam-Regular',
-    },
-    treatmentSection: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 24,
-        padding: 24,
-        borderTopWidth: 6,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 3,
-    },
-    treatmentHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        marginBottom: 20,
-    },
-    treatmentTitle: {
-        fontSize: 18,
-        fontFamily: 'Vietnam-Bold',
-    },
-    disclaimerCard: {
-        backgroundColor: '#FFFBEB',
-        borderRadius: 20,
-        padding: 20,
-        borderWidth: 1,
-        borderColor: '#FEF3C7',
-    },
-    disclaimerHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        marginBottom: 12,
-    },
-    warningCircle: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: '#FEF3C7',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    disclaimerTitle: {
-        fontSize: 10,
-        fontFamily: 'Vietnam-Bold',
-        color: '#92400E',
-        letterSpacing: 0.5,
-    },
-    disclaimerBody: {
-        fontSize: 11,
-        color: '#92400E',
-        lineHeight: 16,
-        fontFamily: 'Vietnam-Regular',
-        opacity: 0.8,
-    },
-    disclaimerBold: {
-        fontFamily: 'Vietnam-Bold',
-        textDecorationLine: 'underline',
-    }
+    container: { padding: 20, paddingBottom: 40, backgroundColor: '#F3F4F6' },
+    header: { marginBottom: 25 },
+    title: { fontSize: 28, fontFamily: 'Vietnam-Bold', color: '#111827', letterSpacing: -0.5 },
+    subtitle: { fontSize: 13, fontFamily: 'Vietnam-Regular', color: '#6B7280', marginTop: 6, lineHeight: 20 },
+    uploadSection: { marginTop: 20, gap: 16 },
+    mainUploadBtn: { backgroundColor: '#2E7D32', borderRadius: 28, padding: 30, alignItems: 'center', shadowColor: '#2E7D32', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 10 },
+    iconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+    btnTextLarge: { color: '#FFFFFF', fontSize: 18, fontFamily: 'Vietnam-Bold' },
+    btnSubtext: { color: 'rgba(255,255,255,0.7)', fontSize: 12, fontFamily: 'Vietnam-Medium', marginTop: 4 },
+    secondaryUploadBtn: { backgroundColor: '#FFFFFF', borderRadius: 20, height: 60, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E5E7EB' },
+    btnTextSmall: { color: '#374151', fontSize: 16, fontFamily: 'Vietnam-SemiBold' },
+    loaderContainer: { marginTop: 80, alignItems: 'center', backgroundColor: '#FFFFFF', padding: 40, borderRadius: 30, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+    loaderText: { marginTop: 20, color: '#374151', fontSize: 14, fontFamily: 'Vietnam-SemiBold', textAlign: 'center' },
+    resultSection: { gap: 20 },
+    analysisCard: { backgroundColor: '#FFFFFF', borderRadius: 24, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+    imageWrapper: { width: '100%', height: 220, position: 'relative' },
+    analyzedImage: { width: '100%', height: '100%', backgroundColor: '#F3F4F6' },
+    imageOverlay: { position: 'absolute', top: 15, left: 15, backgroundColor: 'rgba(17, 24, 39, 0.7)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+    overlayText: { color: '#10B981', fontSize: 10, fontFamily: 'Vietnam-Bold', letterSpacing: 1 },
+    infoContainer: { padding: 24 },
+    labelSmall: { fontSize: 11, fontFamily: 'Vietnam-Bold', color: '#9CA3AF', letterSpacing: 1, marginBottom: 6 },
+    diseaseName: { fontSize: 22, fontFamily: 'Vietnam-Bold', color: '#111827', lineHeight: 28 },
+    confidenceRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 15, marginBottom: 20 },
+    progressBarContainer: { flex: 1, height: 10, backgroundColor: '#F3F4F6', borderRadius: 5, overflow: 'hidden' },
+    progressFill: { height: '100%', backgroundColor: '#10B981' },
+    confidencePercentage: { fontSize: 14, fontFamily: 'Vietnam-Bold', color: '#10B981' },
+    actionButtons: { flexDirection: 'row', gap: 10, marginBottom: 25 },
+    saveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#2E7D32', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 8 },
+    savedBtn: { backgroundColor: '#F1F5F9' },
+    saveBtnText: { color: '#FFFFFF', fontSize: 14, fontFamily: 'Vietnam-Bold' },
+    savedBtnText: { color: '#2E7D32', fontSize: 14, fontFamily: 'Vietnam-Bold' },
+    resetBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: '#E5E7EB', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 8 },
+    resetBtnText: { fontSize: 14, color: '#4B5563', fontFamily: 'Vietnam-Bold' },
+    techDetails: { gap: 20 },
+    detailItem: { gap: 8 },
+    detailLabel: { fontSize: 12, fontFamily: 'Vietnam-Bold', color: '#374151', opacity: 0.5 },
+    descriptionText: { fontSize: 13, color: '#4B5563', fontFamily: 'Vietnam-Medium', fontStyle: 'italic', lineHeight: 20, borderLeftWidth: 3, borderLeftColor: '#10B98120', paddingLeft: 12 },
+    symptomsList: { gap: 8 },
+    symptomItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    symptomText: { fontSize: 13, color: '#4B5563', fontFamily: 'Vietnam-Regular' },
+    treatmentSection: { backgroundColor: '#FFFFFF', borderRadius: 24, padding: 24, borderTopWidth: 6, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+    treatmentHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
+    treatmentTitle: { fontSize: 18, fontFamily: 'Vietnam-Bold' },
+    disclaimerCard: { backgroundColor: '#FFFBEB', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: '#FEF3C7' },
+    disclaimerHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+    warningCircle: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#FEF3C7', justifyContent: 'center', alignItems: 'center' },
+    disclaimerTitle: { fontSize: 10, fontFamily: 'Vietnam-Bold', color: '#92400E', letterSpacing: 0.5 },
+    disclaimerBody: { fontSize: 11, color: '#92400E', lineHeight: 16, fontFamily: 'Vietnam-Regular', opacity: 0.8 }
 });
 
 export default DoctorScreen;

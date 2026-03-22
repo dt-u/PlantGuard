@@ -12,6 +12,7 @@ import {
     Alert
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Mail, Lock, Eye, EyeOff, UserPlus, ArrowLeft, User } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -23,20 +24,21 @@ const RegisterScreen = ({ navigation }) => {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const { register } = useAuth();
+    const { t } = useLanguage();
 
     const handleRegister = async () => {
         if (!name || !email || !password || !confirmPassword) {
-            Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin');
+            Alert.alert(t('common.error'), t('auth.fill_all'));
             return;
         }
 
         if (password !== confirmPassword) {
-            Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp');
+            Alert.alert(t('common.error'), t('auth.confirm_mismatch'));
             return;
         }
 
         if (password.length < 6) {
-            Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự');
+            Alert.alert(t('common.error'), t('auth.pass_too_short'));
             return;
         }
 
@@ -46,12 +48,12 @@ const RegisterScreen = ({ navigation }) => {
 
         if (result.success) {
             Alert.alert(
-                'Thành công', 
-                'Tài khoản của bạn đã được tạo. Vui lòng đăng nhập.',
-                [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+                t('common.success'), 
+                t('auth.register_success_desc'),
+                [{ text: t('common.ok'), onPress: () => navigation.replace('Login') }]
             );
         } else {
-            Alert.alert('Đăng ký thất bại', result.error);
+            Alert.alert(t('auth.register_failed'), result.error);
         }
     };
 
@@ -62,7 +64,7 @@ const RegisterScreen = ({ navigation }) => {
         >
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <TouchableOpacity 
-                    onPress={() => navigation.goBack()} 
+                    onPress={() => navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })} 
                     style={styles.backButton}
                 >
                     <ArrowLeft color="#3B82F6" size={24} />
@@ -72,13 +74,13 @@ const RegisterScreen = ({ navigation }) => {
                     <View style={styles.iconContainer}>
                         <UserPlus color="#3B82F6" size={40} />
                     </View>
-                    <Text style={styles.title}>Tạo tài khoản mới</Text>
-                    <Text style={styles.subtitle}>Bắt đầu hành trình chăm sóc cây trồng chuyên nghiệp</Text>
+                    <Text style={styles.title}>{t('auth.register_title')}</Text>
+                    <Text style={styles.subtitle}>{t('auth.register_subtitle')}</Text>
                 </View>
 
                 <View style={styles.form}>
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>HỌ VÀ TÊN</Text>
+                        <Text style={styles.label}>{t('common.full_name')}</Text>
                         <View style={styles.inputWrapper}>
                             <User color="#94A3B8" size={20} style={styles.inputIcon} />
                             <TextInput
@@ -91,7 +93,7 @@ const RegisterScreen = ({ navigation }) => {
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>EMAIL</Text>
+                        <Text style={styles.label}>{t('common.email')}</Text>
                         <View style={styles.inputWrapper}>
                             <Mail color="#94A3B8" size={20} style={styles.inputIcon} />
                             <TextInput
@@ -106,7 +108,7 @@ const RegisterScreen = ({ navigation }) => {
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>MẬT KHẨU</Text>
+                        <Text style={styles.label}>{t('common.password')}</Text>
                         <View style={styles.inputWrapper}>
                             <Lock color="#94A3B8" size={20} style={styles.inputIcon} />
                             <TextInput
@@ -123,11 +125,11 @@ const RegisterScreen = ({ navigation }) => {
                                 {showPassword ? <EyeOff color="#94A3B8" size={20} /> : <Eye color="#94A3B8" size={20} />}
                             </TouchableOpacity>
                         </View>
-                        <Text style={styles.hint}>Tối thiểu 6 ký tự, bao gồm chữ và số</Text>
+                        <Text style={styles.hint}>{t('auth.password_hint')}</Text>
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>XÁC NHẬN MẬT KHẨU</Text>
+                        <Text style={styles.label}>{t('common.confirm_password')}</Text>
                         <View style={styles.inputWrapper}>
                             <Lock color="#94A3B8" size={20} style={styles.inputIcon} />
                             <TextInput
@@ -154,15 +156,15 @@ const RegisterScreen = ({ navigation }) => {
                             {loading ? (
                                 <ActivityIndicator color="#FFFFFF" size="small" />
                             ) : (
-                                <Text style={styles.registerButtonText}>Đăng ký ngay</Text>
+                                <Text style={styles.registerButtonText}>{t('common.register')}</Text>
                             )}
                         </LinearGradient>
                     </TouchableOpacity>
 
                     <View style={styles.footer}>
-                        <Text style={styles.footerText}>Đã có tài khoản? </Text>
-                        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                            <Text style={styles.linkText}>Đăng nhập ngay</Text>
+                        <Text style={styles.footerText}>{t('auth.already_account')} </Text>
+                        <TouchableOpacity onPress={() => navigation.replace('Login')}>
+                            <Text style={styles.linkText}>{t('common.login')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

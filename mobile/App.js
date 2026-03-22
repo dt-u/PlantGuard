@@ -14,6 +14,7 @@ import {
 
 // Context
 import { AuthProvider } from './src/contexts/AuthContext';
+import { LanguageProvider, useLanguage } from './src/contexts/LanguageContext';
 
 // Screens
 import HomeScreen from './src/screens/HomeScreen';
@@ -31,16 +32,18 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 function TabNavigator() {
+  const { t } = useLanguage();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
-          if (route.name === 'Trang chủ') return <Home color={color} size={size} />;
-          if (route.name === 'Giám sát') return <Activity color={color} size={size} />;
-          if (route.name === 'Bác sĩ') return <Stethoscope color={color} size={size} />;
-          if (route.name === 'Tài khoản') return <User color={color} size={size} />;
+          if (route.name === 'Trang chủ' || route.name === 'Home') return <Home color={color} size={size} />;
+          if (route.name === 'Giám sát' || route.name === 'Monitor') return <Activity color={color} size={size} />;
+          if (route.name === 'Bác sĩ' || route.name === 'Doctor') return <Stethoscope color={color} size={size} />;
+          if (route.name === 'Tài khoản' || route.name === 'Account') return <User color={color} size={size} />;
         },
-        tabBarActiveTintColor: route.name === 'Giám sát' ? '#3B82F6' : '#2E7D32',
+        tabBarActiveTintColor: (route.name === 'Giám sát' || route.name === 'Monitor') ? '#3B82F6' : '#2E7D32',
         tabBarInactiveTintColor: '#94A3B8',
         headerShown: false,
         tabBarStyle: {
@@ -57,10 +60,26 @@ function TabNavigator() {
         }
       })}
     >
-      <Tab.Screen name="Trang chủ" component={HomeScreen} />
-      <Tab.Screen name="Giám sát" component={MonitorScreen} />
-      <Tab.Screen name="Bác sĩ" component={DoctorScreen} />
-      <Tab.Screen name="Tài khoản" component={ProfileScreen} />
+      <Tab.Screen 
+        name="Trang chủ" 
+        component={HomeScreen} 
+        options={{ tabBarLabel: t('tabs.home') }}
+      />
+      <Tab.Screen 
+        name="Giám sát" 
+        component={MonitorScreen} 
+        options={{ tabBarLabel: t('tabs.monitor') }}
+      />
+      <Tab.Screen 
+        name="Bác sĩ" 
+        component={DoctorScreen} 
+        options={{ tabBarLabel: t('tabs.doctor') }}
+      />
+      <Tab.Screen 
+        name="Tài khoản" 
+        component={ProfileScreen} 
+        options={{ tabBarLabel: t('tabs.profile') }}
+      />
     </Tab.Navigator>
   );
 }
@@ -84,16 +103,18 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <NavigationContainer onReady={onLayoutRootView}>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="MainTabs" component={TabNavigator} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="History" component={HistoryScreen} />
-          <Stack.Screen name="DiagnosisDetail" component={DiagnosisDetailScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <NavigationContainer onReady={onLayoutRootView}>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="History" component={HistoryScreen} />
+            <Stack.Screen name="DiagnosisDetail" component={DiagnosisDetailScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image, ActivityIndicator, Alert, Modal, StatusBar, Keyboard } from 'react-native';
 import { Radio, Upload, Play, Square, AlertTriangle, Activity, Maximize, Minimize, Trash2, Download, Video as VideoIcon, FileText, Archive, ChevronRight, Zap } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLanguage } from '../contexts/LanguageContext';
 import * as ImagePicker from 'expo-image-picker';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as FileSystem from 'expo-file-system';
@@ -31,6 +32,7 @@ const LiveClock = memo(() => {
 });
 
 const SimpleBadge = memo(({ status, hasFrame }) => {
+    const { t } = useLanguage();
     const isConnected = status === 'connected' && hasFrame;
     return (
         <View style={styles.statusBanner}>
@@ -38,9 +40,9 @@ const SimpleBadge = memo(({ status, hasFrame }) => {
                 <View style={[styles.dot, { backgroundColor: isConnected ? '#3B82F6' : '#9CA3AF' }]} />
             </View>
             <View style={styles.statusInfo}>
-                <Text style={styles.statusLabel}>Trạng thái vườn:</Text>
+                <Text style={styles.statusLabel}>{t('monitor.garden_status')}</Text>
                 <Text style={[styles.statusValue, { color: isConnected ? '#3B82F6' : '#9CA3AF' }]}>
-                    {isConnected ? "ỔN ĐỊNH" : "CHƯA KẾT NỐI"}
+                    {isConnected ? t('monitor.stable') : t('monitor.not_connected')}
                 </Text>
             </View>
         </View>
@@ -57,10 +59,11 @@ const LiveCameraView = memo(({ imageRef, isFullscreen }) => {
             fadeDuration={0}
         />
     );
-}, () => true); // Never re-render via props
+}, () => true);
 
 const MonitorScreen = () => {
     const insets = useSafeAreaInsets();
+    const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState('live');
     const [cameraUrl, setCameraUrl] = useState("http://192.168.5.100:4747/video");
     const [isStreaming, setIsStreaming] = useState(false);
@@ -94,7 +97,6 @@ const MonitorScreen = () => {
         };
     }, []);
 
-    // Auto-rotate logic for Fullscreen
     useEffect(() => {
         async function changeOrientation() {
             try {
@@ -109,6 +111,40 @@ const MonitorScreen = () => {
         }
         changeOrientation();
     }, [isFullscreen]);
+
+    const translateDiseaseLabel = (label) => {
+        const translated = t(`diseases.${label}`);
+        if (typeof translated === 'object') {
+            return translated.name || label;
+        }
+        return translated || label;
+    };
+
+    const translateLogMsg = (msg) => {
+        // Match: "Tại 00:05: phát hiện rủi ro [Corn Common Rust]"
+        const droneRegex = /(?:Tại|At) ([\d:]+):?\s*(?:phát hiện rủi ro|detected risk) \[(.+)\]/;
+        const droneMatch = msg.match(droneRegex);
+        if (droneMatch) {
+            const time = droneMatch[1];
+            const label = droneMatch[2];
+            return t('logs.detected_at')
+                .replace('{{time}}', time)
+                .replace('{{label}}', translateDiseaseLabel(label));
+        }
+
+        // Match: "Cảnh báo: [Apple Scab] - 85%"
+        const liveRegex = /(?:Cảnh báo|Alert): \[(.+)\] - (\d+)%/;
+        const liveMatch = msg.match(liveRegex);
+        if (liveMatch) {
+            const label = liveMatch[1];
+            const confidence = liveMatch[2];
+            return t('logs.live_alert')
+                .replace('{{label}}', translateDiseaseLabel(label))
+                .replace('{{confidence}}', confidence);
+        }
+
+        return msg;
+    };
 
     const startStream = () => {
         Keyboard.dismiss();
@@ -129,14 +165,12 @@ const MonitorScreen = () => {
         ws.onmessage = (event) => {
             try {
                 const now = Date.now();
-                // Throttle 16ms to keep CPU healthy while maintaining 30-60fps
                 if (now - lastFrameTimeRef.current < 16) return;
                 lastFrameTimeRef.current = now;
 
                 let frameData = null;
                 const rawData = event.data;
                 
-                // Fast check if it's JSON or raw string (raw string usually starts with base64 chars)
                 if (rawData.startsWith('{')) {
                     const data = JSON.parse(rawData);
                     if (data.image) frameData = data.image;
@@ -144,7 +178,7 @@ const MonitorScreen = () => {
                         const newLogs = data.detections.map(d => ({
                             id: Date.now() + Math.random(),
                             time: new Date().toLocaleTimeString(),
-                            msg: `Cảnh báo: [${d.label.toUpperCase()}] - ${Math.round(d.confidence*100)}%`,
+                            msg: `Cảnh báo: [${d.label}] - ${Math.round(d.confidence*100)}%`,
                             type: 'alert'
                         }));
                         setLiveAlertCount(prev => prev + data.detections.length);
@@ -156,7 +190,6 @@ const MonitorScreen = () => {
 
                 if (frameData) {
                     const uri = `data:image/jpeg;base64,${frameData}`;
-                    // FORCE update native views without triggering React render cycle
                     if (frameImageRef.current) frameImageRef.current.setNativeProps({ source: [{ uri }] });
                     if (fullscreenImageRef.current) fullscreenImageRef.current.setNativeProps({ source: [{ uri }] });
                     
@@ -236,7 +269,7 @@ const MonitorScreen = () => {
                     } else if (statusRes.data.status === 'failed') {
                         clearInterval(uploadJobIntervalRef.current);
                         setUploadLoading(false);
-                        Alert.alert("Lỗi", "Phân tích thất bại.");
+                        Alert.alert(t('common.error'), t('monitor.job_failed'));
                     } else {
                         setUploadProgress(statusRes.data.progress);
                     }
@@ -245,7 +278,7 @@ const MonitorScreen = () => {
             
         } catch (err) {
             console.error(err);
-            Alert.alert('Lỗi', 'Không thể gửi video.');
+            Alert.alert(t('common.error'), t('monitor.upload_error'));
             setUploadLoading(false);
         }
     };
@@ -276,11 +309,11 @@ const MonitorScreen = () => {
             if (downloadRes.status === 200) {
                 await Sharing.shareAsync(downloadRes.uri);
             } else {
-                Alert.alert("Lỗi", "Không thể tải xuống tệp.");
+                Alert.alert(t('common.error'), t('monitor.download_error'));
             }
         } catch (error) {
             console.error(error);
-            Alert.alert("Lỗi", "Quá trình tải xuống gặp sự cố.");
+            Alert.alert(t('common.error'), t('monitor.sharing_error'));
         }
     };
 
@@ -302,8 +335,8 @@ const MonitorScreen = () => {
         <View style={[styles.container, { paddingTop: Math.max(insets.top + 20, 60) }]}>
             <View style={[styles.header, { marginBottom: 25 }]}>
                 <View>
-                    <Text style={styles.title}>Giám Sát Vườn</Text>
-                    <Text style={styles.subtitle}>Theo dõi sức khỏe cây trồng thực địa</Text>
+                    <Text style={styles.title}>{t('monitor.title')}</Text>
+                    <Text style={styles.subtitle}>{t('monitor.subtitle')}</Text>
                 </View>
             </View>
 
@@ -314,11 +347,11 @@ const MonitorScreen = () => {
             <View style={styles.tabBar}>
                 <TouchableOpacity style={[styles.tab, activeTab === 'live' && styles.activeTab]} onPress={() => setActiveTab('live')}>
                     <Radio color={activeTab === 'live' ? '#FFFFFF' : '#6B7280'} size={18} />
-                    <Text style={[styles.tabText, activeTab === 'live' && styles.activeTabText]}>Live Cam</Text>
+                    <Text style={[styles.tabText, activeTab === 'live' && styles.activeTabText]}>{t('monitor.live_cam')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.tab, activeTab === 'upload' && styles.activeTab]} onPress={() => setActiveTab('upload')}>
                     <Upload color={activeTab === 'upload' ? '#FFFFFF' : '#6B7280'} size={18} />
-                    <Text style={[styles.tabText, activeTab === 'upload' && styles.activeTabText]}>Tải lên</Text>
+                    <Text style={[styles.tabText, activeTab === 'upload' && styles.activeTabText]}>{t('monitor.upload')}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -326,7 +359,7 @@ const MonitorScreen = () => {
                 {activeTab === 'live' ? (
                     <View style={styles.liveSection}>
                         <View style={styles.configBox}>
-                            <Text style={styles.inputLabel}>URL Camera (IP / DroidCam)</Text>
+                            <Text style={styles.inputLabel}>{t('monitor.url_label')}</Text>
                             <TextInput 
                                 style={styles.input}
                                 value={cameraUrl}
@@ -337,12 +370,12 @@ const MonitorScreen = () => {
                             {!isStreaming ? (
                                 <TouchableOpacity style={styles.startBtn} onPress={startStream}>
                                     <Play color="#FFFFFF" size={20} />
-                                    <Text style={styles.btnText}>Bắt đầu Giám sát</Text>
+                                    <Text style={styles.btnText}>{t('monitor.start_monitor')}</Text>
                                 </TouchableOpacity>
                             ) : (
                                 <TouchableOpacity style={styles.stopBtn} onPress={stopStream}>
                                     <Square color="#FFFFFF" size={20} />
-                                    <Text style={styles.btnText}>Dừng Luồng</Text>
+                                    <Text style={styles.btnText}>{t('monitor.stop_stream')}</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -360,7 +393,7 @@ const MonitorScreen = () => {
                                 <View style={{ position: 'absolute', top: 40, left: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: '#000000AA', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, gap: 12, zIndex: 100 }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#EF4444', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 6 }}>
                                         <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} />
-                                        <Text style={{ color: '#FFFFFF', fontSize: 11, fontFamily: 'Vietnam-Bold' }}>TRỰC TIẾP</Text>
+                                        <Text style={{ color: '#FFFFFF', fontSize: 11, fontFamily: 'Vietnam-Bold' }}>{t('monitor.live')}</Text>
                                     </View>
                                     <LiveClock />
                                 </View>
@@ -373,7 +406,7 @@ const MonitorScreen = () => {
                             {!hasFrame && (
                                 <View style={styles.placeholderContainer}>
                                     {status === 'connecting' ? <ActivityIndicator color="#3B82F6" size="large" /> : <Activity color="#D1D5DB" size={64} />}
-                                    <Text style={styles.placeholderText}>{status === 'connecting' ? "Đang kết nối..." : "Chưa có tín hiệu"}</Text>
+                                    <Text style={styles.placeholderText}>{status === 'connecting' ? t('monitor.connecting') : t('monitor.no_signal')}</Text>
                                 </View>
                             )}
 
@@ -381,7 +414,7 @@ const MonitorScreen = () => {
                                 <View style={styles.liveOverlayBadge}>
                                     <View style={styles.liveIndicator}>
                                         <View style={styles.liveDot} />
-                                        <Text style={styles.liveLabel}>TRỰC TIẾP</Text>
+                                        <Text style={styles.liveLabel}>{t('monitor.live')}</Text>
                                     </View>
                                 </View>
                             )}
@@ -395,38 +428,39 @@ const MonitorScreen = () => {
                     </View>
                 ) : (
                     <View style={styles.uploadSection}>
-                        {/* Render Upload logic remains the same to focus on Cam flicker fix */}
                         {!uploadLoading && !uploadResult ? (
                             <TouchableOpacity style={styles.mockUpload} onPress={pickVideo}>
                                 <Upload color="#3B82F6" size={48} />
-                                <Text style={styles.placeholderText}>Chọn Video từ máy</Text>
+                                <Text style={styles.placeholderText}>{t('monitor.pick_video')}</Text>
                             </TouchableOpacity>
                         ) : uploadLoading ? (
                             <View style={styles.mockUpload}>
                                 <ActivityIndicator size="large" color="#3B82F6" />
-                                <Text>Đang xử lý... {uploadProgress}%</Text>
+                                <Text>{t('monitor.analyzing_video')} {uploadProgress}%</Text>
                             </View>
                         ) : (
                             <View style={styles.resultCard}>
                                 <View style={styles.resultHeader}>
                                     <View style={styles.resultStatus}>
                                         <View style={styles.successDot} />
-                                        <Text style={styles.resultLabel}>HOÀN TẤT PHÂN TÍCH</Text>
+                                        <Text style={styles.resultLabel}>{t('monitor.analysis_complete')}</Text>
                                     </View>
                                     <TouchableOpacity style={styles.mainDownloadBtn} onPress={() => setShowDownloadModal(true)}>
                                         <Download color="#FFFFFF" size={14} />
-                                        <Text style={styles.mainDownloadText}>Tải về</Text>
+                                        <Text style={styles.mainDownloadText}>{t('monitor.download')}</Text>
                                     </TouchableOpacity>
                                 </View>
                                 
                                 {uploadResult?.video_url && (
                                     <View style={styles.mobileVideoContainer}>
                                         <Video
+                                            key={`${API_BASE_URL}${uploadResult.video_url}`}
                                             ref={videoRef}
                                             source={{ uri: `${API_BASE_URL}${uploadResult.video_url}` }}
                                             useNativeControls
                                             resizeMode="contain"
                                             isLooping={false}
+                                            shouldPlay={false}
                                             style={styles.mobileVideo}
                                         />
                                     </View>
@@ -435,11 +469,11 @@ const MonitorScreen = () => {
                                 <View style={styles.resultSummary}>
                                     <View style={styles.summaryItem}>
                                         <Text style={styles.summaryValue}>{uploadResult?.alert_count || 0}</Text>
-                                        <Text style={styles.summaryLabel}>Cảnh báo</Text>
+                                        <Text style={styles.summaryLabel}>{t('monitor.alerts')}</Text>
                                     </View>
                                     <View style={styles.summaryDivider} />
                                     <TouchableOpacity onPress={() => setUploadResult(null)} style={styles.summaryAction}>
-                                        <Text style={styles.reuploadText}>Thử lại</Text>
+                                        <Text style={styles.reuploadText}>{t('common.retry')}</Text>
                                         <ChevronRight color="#3B82F6" size={16} />
                                     </TouchableOpacity>
                                 </View>
@@ -453,15 +487,15 @@ const MonitorScreen = () => {
                     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowDownloadModal(false)}>
                         <View style={styles.bottomSheet}>
                             <View style={styles.sheetHandle} />
-                            <Text style={styles.sheetTitle}>Tùy chọn tải xuống</Text>
+                            <Text style={styles.sheetTitle}>{t('monitor.download_options')}</Text>
                             
                             <TouchableOpacity style={styles.sheetItem} onPress={() => downloadFile('video')}>
                                 <View style={[styles.sheetIconBox, { backgroundColor: '#DBEAFE' }]}>
                                     <VideoIcon color="#3B82F6" size={20} />
                                 </View>
                                 <View style={styles.sheetItemText}>
-                                    <Text style={styles.sheetItemTitle}>Chỉ tải Video</Text>
-                                    <Text style={styles.sheetItemDesc}>Định dạng .mp4 đã xử lý</Text>
+                                    <Text style={styles.sheetItemTitle}>{t('monitor.video_only')}</Text>
+                                    <Text style={styles.sheetItemDesc}>{t('monitor.video_desc')}</Text>
                                 </View>
                                 <ChevronRight color="#D1D5DB" size={18} />
                             </TouchableOpacity>
@@ -471,8 +505,8 @@ const MonitorScreen = () => {
                                     <FileText color="#10B981" size={20} />
                                 </View>
                                 <View style={styles.sheetItemText}>
-                                    <Text style={styles.sheetItemTitle}>Chỉ Nhật ký Phân tích</Text>
-                                    <Text style={styles.sheetItemDesc}>Định dạng Excel .xlsx</Text>
+                                    <Text style={styles.sheetItemTitle}>{t('monitor.logs_only')}</Text>
+                                    <Text style={styles.sheetItemDesc}>{t('monitor.logs_desc')}</Text>
                                 </View>
                                 <ChevronRight color="#D1D5DB" size={18} />
                             </TouchableOpacity>
@@ -482,14 +516,14 @@ const MonitorScreen = () => {
                                     <Archive color="#8B5CF6" size={20} />
                                 </View>
                                 <View style={styles.sheetItemText}>
-                                    <Text style={styles.sheetItemTitle}>Tải trọn bộ Kết quả</Text>
-                                    <Text style={styles.sheetItemDesc}>Bao gồm Video + Nhật ký (.zip)</Text>
+                                    <Text style={styles.sheetItemTitle}>{t('monitor.full_set')}</Text>
+                                    <Text style={styles.sheetItemDesc}>{t('monitor.full_set_desc')}</Text>
                                 </View>
                                 <ChevronRight color="#D1D5DB" size={18} />
                             </TouchableOpacity>
 
                             <TouchableOpacity style={styles.closeSheetBtn} onPress={() => setShowDownloadModal(false)}>
-                                <Text style={styles.closeSheetText}>Hủy</Text>
+                                <Text style={styles.closeSheetText}>{t('common.cancel')}</Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableOpacity>
@@ -497,7 +531,7 @@ const MonitorScreen = () => {
 
                 <View style={styles.logSection}>
                     <View style={styles.logHeader}>
-                        <Text style={styles.logTitle}>Nhật ký sự kiện</Text>
+                        <Text style={styles.logTitle}>{t('monitor.event_logs')}</Text>
                         {currentLogs.length > 0 && (
                             <TouchableOpacity onPress={handleClearLogs}>
                                 <Trash2 color="#9CA3AF" size={16} />
@@ -520,12 +554,12 @@ const MonitorScreen = () => {
                                     <Text style={styles.badgeText}>{(log.type || 'info').toUpperCase()}</Text>
                                 </View>
                             </View>
-                            <Text style={styles.logMsg}>{log.msg}</Text>
+                            <Text style={styles.logMsg}>{translateLogMsg(log.msg)}</Text>
                         </TouchableOpacity>
                     ))}
                     {currentLogs.length === 0 && (
                         <Text style={styles.emptyLogsText}>
-                            {activeTab === 'live' ? "Chưa có sự kiện nào được ghi nhận." : "Hiển thị lịch sử quét tại đây sau khi hoàn tất."}
+                            {activeTab === 'live' ? t('monitor.empty_logs') : t('monitor.empty_upload_logs')}
                         </Text>
                     )}
                 </View>
@@ -537,13 +571,10 @@ const MonitorScreen = () => {
                             <View style={styles.warningCircle}>
                                 <Activity color="#92400E" size={14} />
                             </View>
-                            <Text style={styles.disclaimerTitle}>KHUYẾN CÁO CÔNG NGHỆ</Text>
+                            <Text style={styles.disclaimerTitle}>{t('monitor.tech_disclaimer')}</Text>
                         </View>
                         <Text style={styles.disclaimerBody}>
-                            Kỹ thuật giám sát từ xa dựa trên mô hình học sâu. Kết quả có thể biến động tùy theo chất lượng camera và mạng.{"\n\n"}
-                            <Text style={{ fontFamily: 'Vietnam-Bold', textDecorationLine: 'underline' }}>
-                                Vui lòng đối chiếu với 'Bác Sĩ Cây Trồng' để đạt hiệu quả cao nhất.
-                            </Text>
+                            {t('monitor.tech_desc')}
                         </Text>
                     </View>
                 </View>

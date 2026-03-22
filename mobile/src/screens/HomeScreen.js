@@ -3,11 +3,13 @@ import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, Statu
 import { Leaf, Eye, ArrowRight, Sprout, LogIn } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
     const { user, isAuthenticated } = useAuth();
+    const { t } = useLanguage();
     const insets = useSafeAreaInsets();
 
     const handleProfilePress = () => {
@@ -43,7 +45,7 @@ const HomeScreen = ({ navigation }) => {
                     ) : (
                         <View style={styles.loginBadge}>
                             <LogIn color="#2E7D32" size={16} />
-                            <Text style={styles.loginTextMini}>Đăng nhập</Text>
+                            <Text style={styles.loginTextMini}>{t('common.login')}</Text>
                         </View>
                     )}
                 </TouchableOpacity>
@@ -53,12 +55,12 @@ const HomeScreen = ({ navigation }) => {
                 {/* Hero Section */}
                 <View style={styles.heroSection}>
                     <Text style={styles.title}>
-                        Nông Nghiệp{"\n"}
-                        <Text style={styles.highlightText}>Thông Minh</Text>
+                        {t('home.smart_agri')}{"\n"}
+                        <Text style={styles.highlightText}>{t('home.smart_start')}</Text>
                     </Text>
-                    <Text style={styles.subtitle}>Khởi Đầu Đơn Giản</Text>
+                    <Text style={styles.subtitle}>{t('home.start_simple')}</Text>
                     <Text style={styles.description}>
-                        Bảo vệ mùa màng của bạn bằng AI tiên tiến. Phát hiện sớm bệnh lý và giám sát sức khỏe đồng ruộng.
+                        {t('home.desc')}
                     </Text>
                 </View>
 
@@ -72,13 +74,13 @@ const HomeScreen = ({ navigation }) => {
                             <View style={[styles.iconBox, { backgroundColor: '#DBEAFE' }]}>
                                 <Eye color="#3B82F6" size={24} />
                             </View>
-                            <Text style={styles.cardTitle}>Chế độ Giám sát</Text>
+                            <Text style={styles.cardTitle}>{t('home.monitor_mode')}</Text>
                         </View>
                         <Text style={styles.cardDesc}>
-                            Phân tích dữ liệu từ Drone và Camera để phát hiện sớm các vùng cây bị stress trên diện rộng.
+                            {t('home.monitor_desc')}
                         </Text>
                         <View style={styles.cardFooter}>
-                            <Text style={[styles.actionText, { color: '#3B82F6' }]}>Bắt đầu ngay</Text>
+                            <Text style={[styles.actionText, { color: '#3B82F6' }]}>{t('home.start_now')}</Text>
                             <ArrowRight color="#3B82F6" size={16} />
                         </View>
                     </TouchableOpacity>
@@ -91,19 +93,19 @@ const HomeScreen = ({ navigation }) => {
                             <View style={[styles.iconBox, { backgroundColor: '#DCFCE7' }]}>
                                 <Leaf color="#2E7D32" size={24} />
                             </View>
-                            <Text style={styles.cardTitle}>Bác sĩ Cây trồng</Text>
+                            <Text style={styles.cardTitle}>{t('home.doctor_mode')}</Text>
                         </View>
                         <Text style={styles.cardDesc}>
-                            Chẩn đoán chính xác các loại bệnh trên lá và nhận phác đồ điều trị tức thì từ chuyên gia AI.
+                            {t('home.doctor_desc')}
                         </Text>
                         <View style={styles.cardFooter}>
-                            <Text style={[styles.actionText, { color: '#2E7D32' }]}>Chẩn đoán ngay</Text>
+                            <Text style={[styles.actionText, { color: '#2E7D32' }]}>{t('home.diagnose_now')}</Text>
                             <ArrowRight color="#2E7D32" size={16} />
                         </View>
                     </TouchableOpacity>
                 </View>
 
-                <Text style={styles.footerText}>© 2026 PlantGuard AI • Giải pháp thông minh</Text>
+                <Text style={styles.footerText}>{t('home.footer')}</Text>
             </ScrollView>
         </View>
     );
@@ -122,8 +124,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 24,
-        paddingTop: 60,
-        paddingBottom: 15,
         backgroundColor: '#F8FAFC',
     },
     logoContainer: {
