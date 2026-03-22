@@ -7,6 +7,8 @@ import { AlertCircle, Bookmark } from 'lucide-react';
 import RequireAuthDialog from '../components/RequireAuthDialog';
 import { useAuth } from '../contexts/AuthContext';
 import { useHistorySync } from '../hooks/useHistorySync';
+import { useTranslation } from 'react-i18next';
+import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
 
 const Cross = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -25,6 +27,8 @@ const Hospital = ({ className }) => (
 );
 
 const DoctorPage = () => {
+    const { t } = useTranslation();
+    const { translateDiseaseName, translateDescription, translateSymptoms, translateTreatments } = useDiseaseTranslator();
     const { user, isAuthenticated, openLogin, openRegister, getUserId } = useAuth();
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -79,7 +83,7 @@ const DoctorPage = () => {
             } else if (err.response && err.response.data && err.response.data.detail) {
                 setError(err.response.data.detail);
             } else {
-                setError("Máy chủ gặp sự cố khi xử lý hình ảnh. Vui lòng thử lại sau.");
+                setError(t('doctor.server_error'));
             }
         } finally {
             setLoading(false);
@@ -94,6 +98,7 @@ const DoctorPage = () => {
             const historyRecord = {
                 image_url: dataToSave.image_url,
                 disease_name: dataToSave.disease.common_name,
+                disease_slug: dataToSave.disease.name,
                 confidence: dataToSave.confidence,
                 symptoms: dataToSave.disease.symptoms,
                 description: dataToSave.disease.description,
@@ -159,20 +164,20 @@ const DoctorPage = () => {
                 {!result && !loading && (
                     <div className="max-w-2xl mx-auto text-center animate-in fade-in zoom-in duration-700">
                         <h1 className="text-4xl md:text-5xl font-black text-agri-dark mb-4 font-vietnam tracking-tight">
-                            Bác Sĩ Cây Trồng
+                            {t('doctor.title')}
                         </h1>
                         <p className="text-gray-500 text-lg md:text-xl font-medium mb-10">
-                            Chẩn đoán mầm bệnh thông qua trí tuệ nhân tạo.
+                            {t('doctor.subtitle')}
                         </p>
                         <div className="glass-panel p-2 shadow-2xl hover:shadow-green-900/10 transition-shadow duration-500">
-                            <FileUpload onFileSelect={handleUpload} accept={{ 'image/*': [] }} label="ảnh lá cây" />
+                            <FileUpload onFileSelect={handleUpload} accept={{ 'image/*': [] }} label={t('doctor.upload_label')} />
                         </div>
                     </div>
                 )}
 
                 {loading && (
                     <div className="max-w-2xl mx-auto animate-pulse">
-                        <Loader text="Đang phân tích cấu trúc lá và mầm bệnh..." />
+                        <Loader text={t('doctor.analyzing')} />
                     </div>
                 )}
 
@@ -181,14 +186,14 @@ const DoctorPage = () => {
                         <div className="p-6 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-2xl shadow-sm">
                             <div className="flex items-center mb-4">
                                 <AlertCircle className="w-6 h-6 mr-3 text-red-500" />
-                                <h3 className="text-lg font-bold">Xảy ra lỗi xử lý</h3>
+                                <h3 className="text-lg font-bold">{t('doctor.error_title')}</h3>
                             </div>
                             <p className="mb-6 text-sm">{error}</p>
                             <button
                                 onClick={resetPage}
                                 className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-xl transition-colors w-full md:w-auto text-sm"
                             >
-                                Thử lại bằng ảnh khác
+                                {t('doctor.try_again')}
                             </button>
                         </div>
                     </div>
@@ -212,8 +217,10 @@ const DoctorPage = () => {
                                         </div>
                                         <div className="w-full md:w-1/2 p-6 flex flex-col justify-center bg-white">
                                             <div className="mb-6">
-                                                <span className="text-xs font-bold text-gray-400 uppercase">Kết quả nhận diện:</span>
-                                                <h2 className="text-3xl font-bold text-agri-dark mt-1 leading-tight">{result.disease.common_name}</h2>
+                                                <span className="text-xs font-bold text-gray-400 uppercase">{t('doctor.analysis_result')}:</span>
+                                                <h2 className="text-3xl font-bold text-agri-dark mt-1 leading-tight">
+                                                    {translateDiseaseName(result.disease.common_name, result.disease.name)}
+                                                </h2>
 
                                                 <div className="mt-4 flex items-center gap-3">
                                                     <div className="h-2.5 flex-1 bg-gray-100 rounded-full overflow-hidden">
@@ -239,13 +246,13 @@ const DoctorPage = () => {
                                                         className="w-4 h-4" 
                                                         fill={savedToHistory ? "currentColor" : "none"} 
                                                     />
-                                                    {savedToHistory ? 'Bỏ lưu' : 'Lưu'}
+                                                    {savedToHistory ? t('doctor.unsave') : t('doctor.save')}
                                                 </button>
                                                 <button
                                                     onClick={resetPage}
                                                     className="flex-1 h-[48px] btn-primary rounded-xl text-sm bg-agri-dark hover:bg-black transition-all active:scale-95 flex items-center justify-center border border-transparent"
                                                 >
-                                                    Ảnh khác
+                                                    {t('doctor.other_image')}
                                                 </button>
                                             </div>
                                         </div>
@@ -259,18 +266,18 @@ const DoctorPage = () => {
                                             {result.disease.is_healthy ? (
                                                 <>
                                                     <Cross className="w-7 h-7 text-green-500" />
-                                                    <span>Kế hoạch Chăm sóc</span>
+                                                    <span>{t('doctor.care_plan')}</span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <Hospital className="w-7 h-7" style={{ color: '#F56565' }} />
-                                                    <span>Phác đồ Điều trị</span>
+                                                    <span>{t('doctor.treatment_plan')}</span>
                                                 </>
                                             )}
                                         </h3>
                                     </div>
 
-                                    <TreatmentCard treatments={result.disease.treatments} />
+                                    <TreatmentCard treatments={translateTreatments(result.disease.name, result.disease.treatments)} />
                                 </div>
                             </div>
 
@@ -278,19 +285,19 @@ const DoctorPage = () => {
                             <div className="lg:col-span-4 space-y-6">
                                 <div className="glass-panel p-6 bg-white">
                                     <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                        <AlertCircle className="w-3 h-3 text-agri-green" /> Chi tiết kỹ thuật
+                                        <AlertCircle className="w-3 h-3 text-agri-green" /> {t('doctor.tech_details')}
                                     </h4>
                                     <div className="space-y-4">
                                         <div>
-                                            <p className="text-[11px] font-bold text-agri-dark uppercase mb-1 opacity-50">Mô tả bệnh lý:</p>
+                                            <p className="text-[11px] font-bold text-agri-dark uppercase mb-1 opacity-50">{t('doctor.description')}:</p>
                                             <p className="text-sm text-gray-600 leading-relaxed italic border-l-2 border-agri-green/20 pl-3">
-                                                "{result.disease.description}"
+                                                "{translateDescription(result.disease.name, result.disease.description)}"
                                             </p>
                                         </div>
                                         <div className="pt-4 border-t border-gray-50">
-                                            <p className="text-[11px] font-bold text-agri-dark uppercase mb-2 opacity-50">Dấu hiệu nhận biết:</p>
+                                            <p className="text-[11px] font-bold text-agri-dark uppercase mb-2 opacity-50">{t('doctor.symptoms')}:</p>
                                             <ul className="space-y-2">
-                                                {result.disease.symptoms.map((s, i) => (
+                                                {translateSymptoms(result.disease.name, result.disease.symptoms).map((s, i) => (
                                                     <li key={i} className="text-xs text-gray-500 flex items-start gap-2">
                                                         <span className="text-agri-green mt-0.5">✓</span> {s}
                                                     </li>
@@ -305,11 +312,10 @@ const DoctorPage = () => {
                                         <div className="w-6 h-6 rounded-full bg-amber-200 flex items-center justify-center">
                                             <AlertCircle className="w-3.5 h-3.5 text-amber-700" />
                                         </div>
-                                        <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">Khuyến cáo chuyên môn</span>
+                                        <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">{t('doctor.recommendation')}</span>
                                     </div>
                                     <p className="text-[11px] text-amber-900/70 leading-relaxed">
-                                        Kỹ thuật này dựa trên mô hình học sâu. Kết quả có thể biến động tùy theo chất lượng ảnh.
-                                        <span className="font-bold underline decoration-amber-400/50 ml-1">Vui lòng tham vấn chuyên gia trước khi áp dụng hóa chất bảo vệ thực vật diện rộng.</span>
+                                        {t('doctor.recommendation_desc')}
                                     </p>
                                 </div>
                             </div>

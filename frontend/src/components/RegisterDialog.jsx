@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { UserPlus, Mail, Lock, X, User, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -49,27 +51,27 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
         try {
             // Validation
             if (!email || !password || !confirmPassword || !name) {
-                setError('Vui lòng điền đầy đủ thông tin');
+                setError(t('auth.error_required'));
                 return;
             }
 
             if (!validateEmail(email)) {
-                setError('Email không hợp lệ. Vui lòng nhập email đúng định dạng.');
+                setError(t('auth.error_email_invalid'));
                 return;
             }
 
             if (!validatePassword(password)) {
-                setError('Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ và số.');
+                setError(t('auth.error_password_invalid'));
                 return;
             }
 
             if (password !== confirmPassword) {
-                setError('Mật khẩu xác nhận không khớp');
+                setError(t('auth.error_password_mismatch'));
                 return;
             }
 
             if (name.trim().length < 2) {
-                setError('Họ và tên phải có ít nhất 2 ký tự');
+                setError(t('auth.error_name_short'));
                 return;
             }
 
@@ -90,7 +92,7 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
             } catch (apiError) {
                 // Handle specific backend errors
                 if (apiError.response && apiError.response.status === 400) {
-                    const errorMessage = apiError.response.data.detail || 'Email này đã được sử dụng. Vui lòng chọn email khác.';
+                    const errorMessage = apiError.response.data.detail || t('auth.error_email_exists');
                     setError(errorMessage);
                     return;
                 }
@@ -101,7 +103,7 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
                 // Check if email already exists in localStorage
                 const users = JSON.parse(localStorage.getItem('plantguard_users') || '[]');
                 if (users.find(u => u.email === email.toLowerCase())) {
-                    setError('Email này đã được sử dụng. Vui lòng chọn email khác.');
+                    setError(t('auth.error_email_exists'));
                     return;
                 }
                 
@@ -127,10 +129,10 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
                 setConfirmPassword('');
                 setName('');
             } else {
-                setError('Đăng ký thất bại');
+                setError(t('auth.error_register_failed'));
             }
         } catch (err) {
-            setError('Đăng ký thất bại. Vui lòng thử lại.');
+            setError(t('auth.error_register_failed'));
         } finally {
             setLoading(false);
         }
@@ -161,9 +163,9 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
 
                         {/* Success Text */}
                         <div className="text-center mb-8">
-                            <h3 className="text-2xl font-bold text-gray-900 mb-2 font-vietnam tracking-tight">Đăng ký thành công!</h3>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2 font-vietnam tracking-tight">{t('auth.register_success')}</h3>
                             <p className="text-gray-500 text-sm">
-                                Chào mừng bạn gia nhập cộng đồng PlantGuard
+                                {t('auth.register_success_desc')}
                             </p>
                         </div>
 
@@ -173,7 +175,7 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
                                 onClick={handleClose}
                                 className="flex-1 px-6 py-4 bg-gray-50 text-gray-600 rounded-2xl font-semibold hover:bg-gray-100 transition-all active:scale-95"
                             >
-                                Đóng
+                                {t('auth.close')}
                             </button>
                             <button
                                 onClick={() => {
@@ -183,7 +185,7 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
                                 className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"
                             >
                                 <User className="w-5 h-5" />
-                                Đăng nhập ngay
+                                {t('auth.login_now')}
                             </button>
                         </div>
                     </div>
@@ -222,8 +224,8 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
 
                     {/* Header */}
                     <div className="text-center mb-4">
-                        <h3 className="text-xl font-bold text-gray-900 mb-0.5 font-vietnam tracking-tight">Tạo tài khoản mới</h3>
-                        <p className="text-gray-400 text-[11px]">Bắt đầu hành trình chăm sóc cây trồng chuyên nghiệp</p>
+                        <h3 className="text-xl font-bold text-gray-900 mb-0.5 font-vietnam tracking-tight">{t('auth.register_title')}</h3>
+                        <p className="text-gray-400 text-[11px]">{t('auth.register_desc')}</p>
                     </div>
 
                     {/* Form */}
@@ -237,7 +239,7 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
 
                         <div className="space-y-0.5">
                             <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider ml-1">
-                                Họ và tên *
+                                {t('auth.fullname')} *
                             </label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600">
@@ -256,7 +258,7 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
 
                         <div className="space-y-0.5">
                             <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider ml-1">
-                                Email *
+                                {t('auth.email')} *
                             </label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600">
@@ -275,7 +277,7 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
 
                         <div className="space-y-0.5">
                             <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider ml-1">
-                                Mật khẩu *
+                                {t('auth.password')} *
                             </label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600">
@@ -301,7 +303,7 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
 
                         <div className="space-y-0.5">
                             <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider ml-1">
-                                Xác nhận mật khẩu *
+                                {t('auth.password_confirm')} *
                             </label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600">
@@ -335,10 +337,10 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
                                 {loading ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        <span>Đang tạo tài khoản...</span>
+                                        <span>{t('auth.registering')}</span>
                                     </>
                                 ) : (
-                                    'Đăng ký ngay'
+                                    t('auth.register_btn')
                                 )}
                             </button>
                         </div>
@@ -347,12 +349,12 @@ const RegisterDialog = ({ isOpen, onClose, onRegister, onSwitchToLogin }) => {
                     {/* Footer */}
                     <div className="mt-4 text-center pt-3 border-t border-gray-50">
                         <p className="text-[11px] text-gray-500">
-                            Đã có tài khoản? 
+                            {t('auth.have_account')} 
                             <button
                                 onClick={onSwitchToLogin}
                                 className="text-blue-600 hover:text-blue-700 font-bold ml-1 transition-colors underline-offset-4 hover:underline"
                             >
-                                Đăng nhập ngay
+                                {t('auth.login_now')}
                             </button>
                         </p>
                     </div>

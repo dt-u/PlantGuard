@@ -6,8 +6,12 @@ import { Link } from 'react-router-dom';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useAuth } from '../contexts/AuthContext';
 import { useHistorySync } from '../hooks/useHistorySync';
+import { useTranslation } from 'react-i18next';
+import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
 
 const HistoryPage = () => {
+    const { t, i18n } = useTranslation();
+    const { translateDiseaseName, translateDescription } = useDiseaseTranslator();
     const navigate = useNavigate();
     const { isAuthenticated, login, getUserId } = useAuth();
     const [history, setHistory] = useState([]);
@@ -58,7 +62,7 @@ const HistoryPage = () => {
             setHistory(response.data.data);
             setPagination(prev => ({ ...prev, total: response.data.total }));
         } catch (err) {
-            setError("Không thể tải lịch sử chẩn đoán");
+            setError(t('history.error_load'));
         } finally {
             setLoading(false);
         }
@@ -78,7 +82,7 @@ const HistoryPage = () => {
             setDeleteDialog({ isOpen: false, recordId: null });
             fetchHistory(); // Refresh
         } catch (err) {
-            setError("Không thể xóa bản ghi");
+            setError(t('history.error_delete'));
         }
     };
 
@@ -93,7 +97,7 @@ const HistoryPage = () => {
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
-        return date.toLocaleString('vi-VN', {
+        return date.toLocaleString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
@@ -111,7 +115,7 @@ const HistoryPage = () => {
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Đang tải lịch sử...</p>
+                    <p className="text-gray-600">{t('history.loading')}</p>
                 </div>
             </div>
         );
@@ -127,7 +131,7 @@ const HistoryPage = () => {
                         onClick={fetchHistory}
                         className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                     >
-                        Thử lại
+                        {t('common.retry')}
                     </button>
                 </div>
             </div>
@@ -139,8 +143,8 @@ const HistoryPage = () => {
             <div className="max-w-6xl mx-auto px-4 py-6">
                 {/* Header */}
                 <div className="text-center mb-4">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Lịch Sử Chẩn Đoán</h1>
-                    <p className="text-gray-600">Xem lại tất cả các lần chẩn đoán bệnh cây trồng của bạn</p>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('history.title')}</h1>
+                    <p className="text-gray-600">{t('history.subtitle')}</p>
                 </div>
 
                 {/* Filters */}
@@ -152,7 +156,7 @@ const HistoryPage = () => {
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                 <input
                                     type="text"
-                                    placeholder="Tìm kiếm theo tên bệnh, triệu chứng..."
+                                    placeholder={t('history.search_placeholder')}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -170,7 +174,7 @@ const HistoryPage = () => {
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                             >
-                                Tất cả
+                                {t('history.filter_all')}
                             </button>
                             <button
                                 onClick={() => setFilter('disease')}
@@ -180,7 +184,7 @@ const HistoryPage = () => {
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                             >
-                                Bệnh
+                                {t('history.filter_disease')}
                             </button>
                             <button
                                 onClick={() => setFilter('healthy')}
@@ -190,7 +194,7 @@ const HistoryPage = () => {
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                             >
-                                Lành mạnh
+                                {t('history.filter_healthy')}
                             </button>
                         </div>
                     </div>
@@ -200,8 +204,8 @@ const HistoryPage = () => {
                 {filteredHistory.length === 0 ? (
                     <div className="text-center py-12">
                         <Clock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg">Chưa có lịch sử chẩn đoán nào</p>
-                        <p className="text-gray-400 mt-2">Hãy bắt đầu bằng cách chẩn đoán lá cây đầu tiên</p>
+                        <p className="text-gray-500 text-lg">{t('history.no_history')}</p>
+                        <p className="text-gray-400 mt-2">{t('history.start_first')}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -226,7 +230,7 @@ const HistoryPage = () => {
                                                     className="block hover:text-green-600 transition-colors"
                                                 >
                                                     <h3 className="text-lg font-semibold text-gray-900 hover:text-green-600 transition-colors">
-                                                        {record.disease_name}
+                                                        {translateDiseaseName(record.disease_name, record.disease_slug || record.disease_name)}
                                                     </h3>
                                                 </Link>
                                                 <div className="flex items-center gap-3 mt-1">
@@ -235,10 +239,10 @@ const HistoryPage = () => {
                                                             ? 'bg-green-100 text-green-800' 
                                                             : 'bg-red-100 text-red-800'
                                                     }`}>
-                                                        {record.is_healthy ? 'Lành mạnh' : 'Bệnh'}
+                                                        {record.is_healthy ? t('history.healthy_tag') : t('history.disease_tag')}
                                                     </span>
                                                     <span className="text-sm text-gray-500">
-                                                        Độ tin cậy: {(record.confidence * 100).toFixed(1)}%
+                                                        {t('history.confidence')}: {(record.confidence * 100).toFixed(1)}%
                                                     </span>
                                                 </div>
                                             </div>
@@ -246,14 +250,14 @@ const HistoryPage = () => {
                                                 <Link
                                                     to={`/history/${record.id}`}
                                                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Xem chi tiết"
+                                                    title={t('history.view_detail')}
                                                 >
                                                     <Eye className="w-4 h-4" />
                                                 </Link>
                                                 <button
                                                     onClick={() => deleteRecord(record.id)}
                                                     className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Xóa bản ghi"
+                                                    title={t('history.delete')}
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
@@ -261,7 +265,9 @@ const HistoryPage = () => {
                                         </div>
 
                                         <div className="mb-3">
-                                            <p className="text-sm text-gray-600 line-clamp-2">{record.description}</p>
+                                            <p className="text-sm text-gray-600 line-clamp-2">
+                                                {translateDescription(record.disease_slug || record.disease_name, record.description)}
+                                            </p>
                                         </div>
 
                                         <div className="flex flex-wrap gap-1 mb-3">
@@ -296,11 +302,11 @@ const HistoryPage = () => {
                             disabled={pagination.page === 1}
                             className="px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                         >
-                            Trước
+                            {t('history.prev')}
                         </button>
                         
                         <span className="text-sm text-gray-600">
-                            Trang {pagination.page} / {totalPages}
+                            {t('history.page')} {pagination.page} / {totalPages}
                         </span>
                         
                         <button
@@ -308,7 +314,7 @@ const HistoryPage = () => {
                             disabled={pagination.page === totalPages}
                             className="px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                         >
-                            Sau
+                            {t('history.next')}
                         </button>
                     </div>
                 )}
@@ -319,10 +325,10 @@ const HistoryPage = () => {
                 isOpen={deleteDialog.isOpen}
                 onClose={cancelDelete}
                 onConfirm={confirmDelete}
-                title="Xóa bản ghi chẩn đoán"
-                message="Bạn có chắc muốn xóa bản ghi chẩn đoán này? Hành động này không thể hoàn tác."
-                confirmText="Xóa"
-                cancelText="Hủy"
+                title={t('history.delete_confirm_title')}
+                message={t('history.delete_confirm_msg')}
+                confirmText={t('common.delete')}
+                cancelText={t('common.cancel')}
             />
         </div>
     );

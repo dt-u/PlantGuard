@@ -5,8 +5,12 @@ import Loader from '../components/Loader';
 import LiveCamera from '../components/LiveCamera';
 import { Video, AlertTriangle, Upload, Radio, Download, Trash2, Zap } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
 
 const MonitorPage = ({ jobState, setJobState }) => {
+    const { t } = useTranslation();
+    const { translateDiseaseName } = useDiseaseTranslator();
     const location = useLocation();
     
     // Tab State: 'upload' or 'live'
@@ -65,7 +69,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
             setJobState(prev => ({ ...prev, jobId: response.data.job_id, status: 'processing', progress: 0, result: null }));
         } catch (err) {
             console.error(err);
-            setUploadError("Lỗi khi phân tích video. Vui lòng thử lại.");
+            setUploadError(t('monitor.error_upload'));
         }
     };
 
@@ -92,7 +96,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
     const isNoData = currentLogs.length === 0 && (activeTab === 'live' ? true : !result);
     const hasIssues = currentAlertCount > 0;
     
-    const gardenStatus = isNoData ? "Chưa kết nối" : (hasIssues ? "Có rủi ro" : "Ổn định");
+    const gardenStatus = isNoData ? t('monitor.status.disconnected') : (hasIssues ? t('monitor.status.risk') : t('monitor.status.stable'));
     const statusColor = isNoData ? "text-gray-400" : (hasIssues ? "text-red-500" : "text-[#3B82F6]");
     const dotColor = isNoData ? "bg-gray-400" : (hasIssues ? "bg-red-500" : "bg-[#3B82F6]");
 
@@ -106,8 +110,8 @@ const MonitorPage = ({ jobState, setJobState }) => {
                             <Video className="w-6 h-6 text-[#3B82F6]" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-agri-dark">Giám Sát Vườn</h1>
-                            <p className="text-xs text-gray-500 max-w-sm hidden md:block">Phân tích dữ liệu Live Cam & Drone thời gian thực.</p>
+                            <h1 className="text-xl font-bold text-agri-dark">{t('monitor.title')}</h1>
+                            <p className="text-xs text-gray-500 max-w-sm hidden md:block">{t('monitor.subtitle')}</p>
                         </div>
                     </div>
 
@@ -118,20 +122,20 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                 onClick={() => setActiveTab('live')}
                                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'live' ? 'bg-[#3B82F6] text-white shadow-sm' : 'text-gray-500'}`}
                             >
-                                <Radio className="w-3 h-3 inline mr-1" /> Live Cam
+                                <Radio className="w-3 h-3 inline mr-1" /> {t('monitor.live_cam')}
                             </button>
                             <button
                                 onClick={() => setActiveTab('upload')}
                                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'upload' ? 'bg-[#3B82F6] text-white shadow-sm' : 'text-gray-500'}`}
                             >
-                                <Upload className="w-3 h-3 inline mr-1" /> Drone
+                                <Upload className="w-3 h-3 inline mr-1" /> {t('monitor.drone')}
                             </button>
                         </div>
 
                         <div className="h-8 w-px bg-gray-200 hidden lg:block"></div>
 
                         <div className="flex items-center gap-3 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 ml-auto lg:ml-0">
-                            <span className="text-[10px] text-gray-400 font-bold uppercase">Trạng thái vườn:</span>
+                            <span className="text-[10px] text-gray-400 font-bold uppercase">{t('monitor.garden_status')}:</span>
                             <span className={`text-xs font-bold ${statusColor} uppercase`}>{gardenStatus}</span>
                             <div className={`w-2 h-2 ${dotColor} rounded-full animate-pulse`}></div>
                         </div>
@@ -146,35 +150,35 @@ const MonitorPage = ({ jobState, setJobState }) => {
                             <div className="animate-in fade-in zoom-in-95 duration-300">
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-bold text-agri-dark text-sm uppercase tracking-wider flex items-center gap-2">
-                                        <Video className="w-4 h-4" /> Dữ liệu Drone
+                                        <Video className="w-4 h-4" /> {t('monitor.drone_data')}
                                     </h3>
                                     {result && (
                                         <div className="bg-red-100 text-red-800 px-3 py-1 rounded-full flex items-center font-bold animate-pulse text-[10px] uppercase">
                                             <AlertTriangle className="w-3 h-3 mr-1.5" />
-                                            {result.alert_count} Vùng Stress
+                                            {result.alert_count} {t('monitor.stress_zones')}
                                         </div>
                                     )}
                                 </div>
 
                                 {!video && !loading && !result && (
                                     <div className="glass-panel p-12 border-dashed border-2 border-[#3B82F6]/20">
-                                        <FileUpload onFileSelect={handleUpload} accept={{ 'video/*': [] }} label="video drone/cctv" theme="blue" />
+                                        <FileUpload onFileSelect={handleUpload} accept={{ 'video/*': [] }} label={t('monitor.upload_label')} theme="blue" />
                                     </div>
                                 )}
 
                                 {loading && (
                                     <div className="glass-panel p-8 text-center animate-in fade-in zoom-in-95">
                                         <div className="w-10 h-10 border-4 border-blue-200 border-t-[#3B82F6] rounded-full animate-spin mx-auto mb-4"></div>
-                                        <h4 className="text-sm font-bold text-gray-700 mb-2">Đang xử lý... {jobState?.progress || 0}%</h4>
+                                        <h4 className="text-sm font-bold text-gray-700 mb-2">{t('monitor.processing')} {jobState?.progress || 0}%</h4>
                                         <div className="w-full max-w-sm mx-auto bg-gray-200 rounded-full h-2.5 mb-2">
                                             <div className="bg-[#3B82F6] h-2.5 rounded-full transition-all duration-500" style={{ width: `${jobState?.progress || 0}%` }}></div>
                                         </div>
-                                        <p className="text-[10px] text-gray-400 italic mt-2">Hệ thống đang quét dữ liệu. Bạn có thể sang trang khác trong lúc chờ.</p>
+                                        <p className="text-[10px] text-gray-400 italic mt-2">{t('monitor.processing_desc')}</p>
                                         <button
                                             onClick={handleCancel}
                                             className="mt-4 text-xs font-bold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 px-4 py-1.5 rounded-lg transition-all"
                                         >
-                                            Hủy phân tích
+                                            {t('monitor.cancel_btn')}
                                         </button>
                                     </div>
                                 )}
@@ -184,7 +188,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                         <div className="glass-panel p-3 border-2 border-[#3B82F6]/30">
                                             <div className="flex justify-between items-center mb-3 px-1">
                                                 <h4 className="text-xs font-bold text-[#3B82F6] uppercase flex items-center gap-2">
-                                                    <Video className="w-4 h-4" /> AI Phân tích Hoàn tất
+                                                    <Video className="w-4 h-4" /> {t('monitor.analysis_complete')}
                                                 </h4>
                                                 
                                                 <div className="relative">
@@ -192,7 +196,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                                         onClick={() => setShowDownloadDropdown(!showDownloadDropdown)}
                                                         className="text-[10px] font-bold text-white bg-[#3B82F6] hover:bg-blue-600 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all shadow-md shadow-blue-500/20"
                                                     >
-                                                        <Download className="w-3.5 h-3.5" /> Tải xuống
+                                                        <Download className="w-3.5 h-3.5" /> {t('monitor.download')}
                                                     </button>
                                                     
                                                     {showDownloadDropdown && (
@@ -203,7 +207,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                                             ></div>
                                                             <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                                                                 <div className="px-3 py-1 mb-1 border-b border-gray-50">
-                                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Tùy chọn tải xuống</span>
+                                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t('monitor.download_options')}</span>
                                                                 </div>
                                                                 <button
                                                                     onClick={async () => {
@@ -220,7 +224,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                                                     }}
                                                                     className="w-full text-left px-4 py-2 text-[11px] font-medium text-gray-700 hover:bg-blue-50 hover:text-[#3B82F6] transition-colors flex items-center gap-2"
                                                                 >
-                                                                    <Video className="w-3.5 h-3.5" /> Chỉ tải Video (.mp4)
+                                                                    <Video className="w-3.5 h-3.5" /> {t('monitor.download_video')}
                                                                 </button>
                                                                 <button
                                                                     onClick={async () => {
@@ -230,7 +234,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                                                     className="w-full text-left px-4 py-2 text-[11px] font-medium text-gray-700 hover:bg-blue-50 hover:text-[#3B82F6] transition-colors flex items-center gap-2"
                                                                 >
                                                                     <div className="w-3.5 h-3.5 bg-green-100 rounded text-green-600 flex items-center justify-center text-[8px] font-bold">X</div>
-                                                                    Chỉ tải Nhật ký (.xlsx)
+                                                                    {t('monitor.download_logs')}
                                                                 </button>
                                                                 <div className="h-px bg-gray-50 my-1"></div>
                                                                 <button
@@ -240,7 +244,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                                                     }}
                                                                     className="w-full text-left px-4 py-2 text-[11px] font-bold text-[#3B82F6] hover:bg-blue-50 transition-colors flex items-center gap-2"
                                                                 >
-                                                                    <Download className="w-3.5 h-3.5" /> Tải trọn bộ (.zip)
+                                                                    <Download className="w-3.5 h-3.5" /> {t('monitor.download_all')}
                                                                 </button>
                                                             </div>
                                                         </>
@@ -256,7 +260,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                                 key={result.video_url}
                                             />
                                             <div className="flex justify-end items-center mt-2 px-1">
-                                                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">{result.alert_count} Cảnh Báo Phát Hiện</span>
+                                                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">{result.alert_count} {t('monitor.alerts_detected')}</span>
                                             </div>
                                         </div>
 
@@ -265,7 +269,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                                 onClick={() => { setVideo(null); setJobState({status: 'idle', jobId: null, result: null, progress: 0}); }}
                                                 className="text-sm font-bold bg-[#3B82F6] hover:bg-blue-600 text-white px-8 py-3 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2"
                                             >
-                                                <Upload className="w-4 h-4" /> Phân tích bản ghi khác
+                                                <Upload className="w-4 h-4" /> {t('monitor.analyze_another')}
                                             </button>
                                         </div>
                                     </div>
@@ -284,7 +288,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                         <div className="mt-8 bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex items-start gap-3">
                             <AlertTriangle className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
                             <p className="text-[11px] text-blue-800 leading-relaxed italic">
-                                <span className="font-bold">Ghi chú:</span> Kết quả phân tích dựa trên hình ảnh từ xa. Trong điều kiện ánh sáng yếu hoặc camera bị rung, độ chính xác có thể giảm. Vui lòng đối chiếu với dữ liệu từ <span className="font-bold underline">Bác Sĩ Cây Trồng</span> để có kết quả chính xác nhất.
+                                {t('monitor.disclaimer')}
                             </p>
                         </div>
                     </div>
@@ -295,7 +299,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-[#3B82F6] flex items-center gap-2">
                                     <Radio className={`w-3 h-3 ${activeTab === 'live' ? 'animate-pulse' : ''}`} /> 
-                                    {activeTab === 'live' ? "Nhật ký Live" : "Nhật ký Phân tích"}
+                                    {activeTab === 'live' ? t('monitor.logs_live') : t('monitor.logs_analysis')}
                                 </h3>
                                 {currentLogs.length > 0 && (
                                     <button 
@@ -325,16 +329,23 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                                 {(log.type || '').toUpperCase()}
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-gray-300 leading-snug">{log.msg}</p>
+                                        <p className="text-[11px] text-gray-300 leading-snug">
+                                            {log.type === 'alert' && (log.msg.includes('Tại') || log.msg.includes('At'))
+                                                ? t('logs.detected_at', { 
+                                                    time: log.time, 
+                                                    label: translateDiseaseName(log.label || log.msg.split('[')[1]?.split(']')[0] || '', log.label || log.msg.split('[')[1]?.split(']')[0] || '') 
+                                                  })
+                                                : log.msg}
+                                        </p>
                                     </div>
                                 ))}
                                 {currentLogs.length === 0 && (
-                                     <p className="text-[10px] text-gray-500 text-center mt-10 italic">Chưa có dữ liệu ghi nhận.</p>
+                                     <p className="text-[10px] text-gray-500 text-center mt-10 italic">{t('monitor.no_data')}</p>
                                 )}
                             </div>
                             {activeTab === 'live' && (
                                 <div className="mt-4 pt-4 border-t border-white/5 text-[9px] text-gray-600 italic">
-                                    Cập nhật tự động...
+                                    {t('monitor.auto_update')}
                                 </div>
                             )}
                         </div>

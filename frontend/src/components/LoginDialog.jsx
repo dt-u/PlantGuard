@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { User, Mail, Lock, X, UserPlus, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const LoginDialog = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -57,10 +59,10 @@ const LoginDialog = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
                     setShowPassword(false);
                 }, 500); 
             } else {
-                setError('Email hoặc mật khẩu không đúng. Vui lòng thử lại.');
+                setError(t('auth.error_login_failed'));
             }
         } catch (err) {
-            setError('Đăng nhập thất bại. Vui lòng thử lại.');
+            setError(t('auth.error_login_failed'));
         } finally {
             setLoading(false);
         }
@@ -98,8 +100,8 @@ const LoginDialog = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
 
                     {/* Header */}
                     <div className="text-center mb-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-1 font-vietnam tracking-tight">Chào mừng trở lại</h3>
-                        <p className="text-gray-400 text-xs">Đăng nhập để tiếp tục bảo vệ khu vườn của bạn</p>
+                        <h3 className="text-xl font-bold text-gray-900 mb-1 font-vietnam tracking-tight">{t('auth.login_welcome')}</h3>
+                        <p className="text-gray-400 text-xs">{t('auth.login_desc')}</p>
                     </div>
 
                     {/* Form */}
@@ -113,7 +115,7 @@ const LoginDialog = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
 
                         <div className="space-y-1">
                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">
-                                Email
+                                {t('auth.email')}
                             </label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-green-600">
@@ -132,7 +134,7 @@ const LoginDialog = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
 
                         <div className="space-y-1">
                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">
-                                Mật khẩu
+                                {t('auth.password')}
                             </label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-green-600">
@@ -166,10 +168,10 @@ const LoginDialog = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
                                 {loading ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        <span>Đang xác thực...</span>
+                                        <span>{t('auth.authenticating')}</span>
                                     </>
                                 ) : (
-                                    'Đăng nhập ngay'
+                                    t('auth.login_btn')
                                 )}
                             </button>
                         </div>
@@ -178,12 +180,12 @@ const LoginDialog = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
                     {/* Footer */}
                     <div className="mt-6 text-center pt-5 border-t border-gray-50">
                         <p className="text-xs text-gray-500">
-                            Chưa có tài khoản? 
+                            {t('auth.no_account')} 
                             <button
                                 onClick={onSwitchToRegister}
                                 className="text-green-600 hover:text-green-700 font-bold ml-2 transition-colors underline-offset-4 hover:underline"
                             >
-                                Tạo tài khoản mới
+                                {t('auth.create_account')}
                             </button>
                         </p>
                     </div>

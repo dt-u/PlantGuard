@@ -2,14 +2,20 @@ import { Link, useLocation } from 'react-router-dom';
 import { Sprout, Activity, Stethoscope, User, LogOut, History, LogIn } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const Navbar = () => {
     const location = useLocation();
     const { user, logout, openLogin } = useAuth();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const { t, i18n } = useTranslation();
 
     const isActive = (path) => {
         return location.pathname === path ? "bg-agri-green text-white" : "text-agri-dark hover:bg-green-100";
+    };
+
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
     };
 
     return (
@@ -22,14 +28,40 @@ const Navbar = () => {
             <div className="flex items-center space-x-4">
                 <Link to="/monitor" className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${isActive('/monitor')}`}>
                     <Activity className="w-4 h-4" />
-                    <span>Giám sát</span>
+                    <span>{t('navbar.monitor')}</span>
                 </Link>
                 <Link to="/doctor" className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${isActive('/doctor')}`}>
                     <Stethoscope className="w-4 h-4" />
-                    <span>Bác sĩ</span>
+                    <span>{t('navbar.doctor')}</span>
                 </Link>
 
                 <div className="h-6 w-px bg-gray-200 mx-2"></div>
+
+                {/* Language Switcher */}
+                <div className="flex items-center space-x-1.5 mr-2">
+                    <button
+                        onClick={() => changeLanguage('vi')}
+                        className={`transition-all duration-300 transform ${i18n.language.startsWith('vi') ? 'scale-110 opacity-100' : 'scale-90 opacity-40 hover:opacity-60'}`}
+                        title="Tiếng Việt"
+                    >
+                        <img 
+                            src="https://flagicons.lipis.dev/flags/4x3/vn.svg" 
+                            alt="Vietnamese" 
+                            className="w-7 h-5 object-cover rounded shadow-sm"
+                        />
+                    </button>
+                    <button
+                        onClick={() => changeLanguage('en')}
+                        className={`transition-all duration-300 transform ${i18n.language.startsWith('en') ? 'scale-110 opacity-100' : 'scale-90 opacity-40 hover:opacity-60'}`}
+                        title="English"
+                    >
+                        <img 
+                            src="https://flagicons.lipis.dev/flags/4x3/gb.svg" 
+                            alt="English" 
+                            className="w-7 h-5 object-cover rounded shadow-sm"
+                        />
+                    </button>
+                </div>
 
                 {user ? (
                     <div className="relative">
@@ -53,14 +85,14 @@ const Navbar = () => {
                                         onClick={() => setIsProfileOpen(false)}
                                     >
                                         <History className="w-4 h-4" />
-                                        <span>Lịch sử chẩn đoán</span>
+                                        <span>{t('navbar.history')}</span>
                                     </Link>
                                     <button
                                         onClick={() => { logout(); setIsProfileOpen(false); }}
                                         className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                                     >
                                         <LogOut className="w-4 h-4" />
-                                        <span>Đăng xuất</span>
+                                        <span>{t('navbar.logout')}</span>
                                     </button>
                                 </div>
                             </>
@@ -72,7 +104,7 @@ const Navbar = () => {
                         className="flex items-center space-x-2 px-4 py-2 rounded-lg font-bold bg-agri-green text-white hover:bg-green-700 transition-all shadow-md shadow-green-500/20"
                     >
                         <LogIn className="w-4 h-4" />
-                        <span>Đăng nhập</span>
+                        <span>{t('navbar.login')}</span>
                     </button>
                 )}
             </div>

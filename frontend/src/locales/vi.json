@@ -1,0 +1,367 @@
+{
+  "navbar": {
+    "monitor": "Giám sát",
+    "doctor": "Bác sĩ",
+    "login": "Đăng nhập",
+    "history": "Lịch sử chẩn đoán",
+    "logout": "Đăng xuất"
+  },
+  "home": {
+    "title": "Nông Nghiệp Thông Minh",
+    "subtitle": "Khởi Đầu Đơn Giản",
+    "description1": "PlantGuard bảo vệ mùa màng của bạn bằng AI tiên tiến.",
+    "description2": "Phát hiện sớm bệnh lý và giám sát sức khỏe đồng ruộng theo thời gian thực.",
+    "monitor_title": "Chế độ Giám sát",
+    "monitor_desc": "Phân tích dữ liệu từ Drone/Camera để phát hiện sớm các vùng cây bị stress trên diện rộng.",
+    "monitor_btn": "Bắt đầu Giám sát",
+    "doctor_title": "Bác sĩ Cây trồng",
+    "doctor_desc": "Chẩn đoán chính xác các loại bệnh trên lá và nhận phác đồ điều trị tức thì.",
+    "doctor_btn": "Chẩn đoán ngay",
+    "register": "Đăng ký",
+    "account": "Tài khoản",
+    "footer": "© 2026 PlantGuard AI • Giải pháp bảo vệ cây trồng thông minh"
+  },
+  "monitor": {
+    "title": "Giám Sát Vườn",
+    "subtitle": "Phân tích dữ liệu Live Cam & Drone thời gian thực.",
+    "live_cam": "Live Cam",
+    "drone": "Drone",
+    "garden_status": "Trạng thái vườn",
+    "status": {
+      "disconnected": "Chưa kết nối",
+      "risk": "Có rủi ro",
+      "stable": "Ổn định",
+      "connecting": "Đang kết nối",
+      "online": "Trực tuyến",
+      "offline": "Ngoại tuyến"
+    },
+    "drone_data": "Dữ liệu Drone",
+    "stress_zones": "Vùng Stress",
+    "upload_label": "video drone/cctv",
+    "processing": "Đang xử lý...",
+    "processing_desc": "Hệ thống đang quét dữ liệu. Bạn có thể sang trang khác trong lúc chờ.",
+    "cancel_btn": "Hủy phân tích",
+    "analysis_complete": "AI Phân tích Hoàn tất",
+    "download": "Tải xuống",
+    "download_options": "Tùy chọn tải xuống",
+    "download_video": "Chỉ tải Video (.mp4)",
+    "download_logs": "Chỉ tải Nhật ký (.xlsx)",
+    "download_all": "Tải trọn bộ (.zip)",
+    "alerts_detected": "Cảnh Báo Phát Hiện",
+    "analyze_another": "Phân tích bản ghi khác",
+    "disclaimer": "Ghi chú: Kết quả phân tích dựa trên hình ảnh từ xa. Trong điều kiện ánh sáng yếu hoặc camera bị rung, độ chính xác có thể giảm. Vui lòng đối chiếu với dữ liệu từ Bác Sĩ Cây Trồng để có kết quả chính xác nhất.",
+    "logs_live": "Nhật ký Live",
+    "logs_analysis": "Nhật ký Phân tích",
+    "no_data": "Chưa có dữ liệu ghi nhận.",
+    "auto_update": "Cập nhật tự động...",
+    "camera_url": "Đường dẫn Camera (IP/DroidCam)",
+    "camera_placeholder": "Ví dụ: http://192.168.1.100:4747/video",
+    "start_btn": "Bắt đầu Giám sát",
+    "stop_btn": "Dừng Luồng",
+    "camera_disconnected": "Camera chưa kết nối",
+    "camera_desc": "Nhập URL và nhấn Bắt đầu để quét thực địa",
+    "fullscreen": "Toàn màn hình",
+    "exit_fullscreen": "Thoát toàn màn hình",
+    "error_upload": "Lỗi khi phân tích video. Vui lòng thử lại.",
+    "error_connection": "Lỗi kết nối tín hiệu video...",
+    "error_reconnecting": "Kết nối bị ngắt quãng. Đang thử tự động kết nối lại...",
+    "global_progress": {
+      "title": "Phân Tích Drone Footage",
+      "processing": "Đang xử lý...",
+      "complete": "Phân tích hoàn tất!",
+      "view_result": "Xem Kết Quả",
+      "close": "Đóng",
+      "error": "Có lỗi xảy ra khi phân tích."
+    }
+  },
+  "doctor": {
+    "title": "Bác Sĩ Cây Trồng",
+    "subtitle": "Chẩn đoán mầm bệnh thông qua trí tuệ nhân tạo.",
+    "upload_label": "ảnh lá cây",
+    "analyzing": "Đang phân tích cấu trúc lá và mầm bệnh...",
+    "error_title": "Xảy ra lỗi xử lý",
+    "try_again": "Thử lại bằng ảnh khác",
+    "analysis_result": "Kết quả nhận diện",
+    "save": "Lưu",
+    "unsave": "Bỏ lưu",
+    "other_image": "Ảnh khác",
+    "care_plan": "Kế hoạch Chăm sóc",
+    "treatment_plan": "Phác đồ Điều trị",
+    "tech_details": "Chi tiết kỹ thuật",
+    "description": "Mô tả bệnh lý",
+    "symptoms": "Dấu hiệu nhận biết",
+    "recommendation": "Khuyến cáo chuyên môn",
+    "recommendation_desc": "Kỹ thuật này dựa trên mô hình học sâu. Kết quả có thể biến động tùy theo chất lượng ảnh. Vui lòng tham vấn chuyên gia trước khi áp dụng hóa chất bảo vệ thực vật diện rộng.",
+    "server_error": "Máy chủ gặp sự cố khi xử lý hình ảnh. Vui lòng thử lại sau."
+  },
+  "history": {
+    "title": "Lịch Sử Chẩn Đoán",
+    "subtitle": "Xem lại tất cả các lần chẩn đoán bệnh cây trồng của bạn",
+    "search_placeholder": "Tìm kiếm theo tên bệnh, triệu chứng...",
+    "filter_all": "Tất cả",
+    "filter_disease": "Bệnh",
+    "filter_healthy": "Lành mạnh",
+    "no_history": "Chưa có lịch sử chẩn đoán nào",
+    "start_first": "Hãy bắt đầu bằng cách chẩn đoán lá cây đầu tiên",
+    "confidence": "Độ tin cậy",
+    "view_detail": "Xem chi tiết",
+    "delete": "Xóa bản ghi",
+    "prev": "Trước",
+    "next": "Sau",
+    "page": "Trang",
+    "loading": "Đang tải lịch sử...",
+    "error_load": "Không thể tải lịch sử chẩn đoán",
+    "error_delete": "Không thể xóa bản ghi",
+    "delete_confirm_title": "Xóa bản ghi chẩn đoán",
+    "delete_confirm_msg": "Bạn có chắc muốn xóa bản ghi chẩn đoán này? Hành động này không thể hoàn tác.",
+    "healthy_tag": "Lành mạnh",
+    "disease_tag": "Bệnh"
+  },
+  "detail": {
+    "title": "Chi Tiết Chẩn Đoán",
+    "subtitle": "Thông tin chi tiết về lần chẩn đoán bệnh cây trồng",
+    "image_label": "Hình ảnh chẩn đoán",
+    "ai_confidence": "Độ tin cậy AI",
+    "storage_info": "Thông tin lưu trữ",
+    "time_saved": "Thời gian lưu",
+    "diagnostician": "Người chẩn đoán",
+    "anonymous": "Người dùng ẩn danh",
+    "category": "Phân loại",
+    "healthy_plant": "Cây khỏe mạnh",
+    "need_intervention": "Cần can thiệp",
+    "recommended_plan": "Phác đồ khuyến nghị",
+    "no_additional_plan": "Không có phác đồ điều trị bổ sung",
+    "expert_note": "Lưu ý chuyên môn",
+    "expert_note_desc": "Kết quả được lưu trữ từ phiên làm việc trước đó. Tình trạng bệnh có thể đã thay đổi theo thời gian.",
+    "loading": "Đang tải chi tiết chẩn đoán...",
+    "error_load": "Không thể tải chi tiết chẩn đoán",
+    "not_found": "Không tìm thấy bản ghi chẩn đoán",
+    "product_label": "Sản phẩm khuyến dùng",
+    "action_label": "Hướng dẫn thực hiện"
+  },
+  "auth": {
+    "login_welcome": "Chào mừng trở lại",
+    "login_desc": "Đăng nhập để tiếp tục bảo vệ khu vườn của bạn",
+    "login_required": "Yêu cầu đăng nhập",
+    "login_required_desc": "Vui lòng đăng nhập để lưu kết quả chẩn đoán vào lịch sử cá nhân của bạn.",
+    "later": "Để sau",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "password_confirm": "Xác nhận mật khẩu",
+    "login_btn": "Đăng nhập ngay",
+    "authenticating": "Đang xác thực...",
+    "no_account": "Chưa có tài khoản?",
+    "create_account": "Tạo tài khoản mới",
+    "register_title": "Tạo tài khoản mới",
+    "register_desc": "Bắt đầu hành trình chăm sóc cây trồng chuyên nghiệp",
+    "fullname": "Họ và tên",
+    "register_btn": "Đăng ký ngay",
+    "registering": "Đang tạo tài khoản...",
+    "have_account": "Đã có tài khoản?",
+    "register_success": "Đăng ký thành công!",
+    "register_success_desc": "Chào mừng bạn gia nhập cộng đồng PlantGuard",
+    "close": "Đóng",
+    "login_now": "Đăng nhập ngay",
+    "error_required": "Vui lòng điền đầy đủ thông tin",
+    "error_email_invalid": "Email không hợp lệ. Vui lòng nhập email đúng định dạng.",
+    "error_password_invalid": "Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ và số.",
+    "error_password_mismatch": "Mật khẩu xác nhận không khớp",
+    "error_name_short": "Họ và tên phải có ít nhất 2 ký tự",
+    "error_email_exists": "Email này đã được sử dụng. Vui lòng chọn email khác.",
+    "error_login_failed": "Email hoặc mật khẩu không đúng. Vui lòng thử lại.",
+    "error_register_failed": "Đăng ký thất bại. Vui lòng thử lại."
+  },
+  "treatment": {
+    "mild": "Nhẹ",
+    "moderate": "Trung Bình",
+    "severe": "Nặng",
+    "maintenance": "Gợi ý chăm sóc",
+    "level_prefix": "Cấp độ: ",
+    "suggestion": "Gợi ý",
+    "id_guide": "Cách nhận biết",
+    "action": "Biện pháp xử lý",
+    "product": "Sản phẩm khuyên dùng",
+    "click_detail": "Nhấn để xem chi tiết"
+  },
+  "common": {
+    "retry": "Thử lại",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "ok": "Đồng ý",
+    "delete": "Xóa",
+    "drop": "Thả",
+    "here": "vào đây",
+    "drag_drop": "Kéo & thả",
+    "or_click": "hoặc click để chọn file"
+  },
+  "logs": {
+    "detected_at": "Tại {{time}} phát hiện rủi ro: [{{label}}]",
+    "live_alert": "Cảnh báo đối tượng: [{{label}}] - Độ tin cậy: {{confidence}}%"
+  },
+  "diseases": {
+    "Apple Healthy": {
+      "name": "Lá táo khỏe mạnh",
+      "desc": "Lá táo ở trạng thái phát triển tốt nhất."
+    },
+    "Apple Scab": {
+      "name": "Bệnh ghẻ lá táo",
+      "desc": "Bệnh do nấm Venturia inaequalis gây ra, ảnh hưởng nặng đến năng suất táo."
+    },
+    "Apple Rust": {
+      "name": "Bệnh gỉ sắt táo",
+      "desc": "Nấm Gymnosporangium juniperi-virginianae gây ra các vết cam nổi bật."
+    },
+    "Bell Pepper Healthy": {
+      "name": "Lá ớt chuông khỏe mạnh",
+      "desc": "Cây ớt chuông phát triển ổn định."
+    },
+    "Bell Pepper Leaf Spot": {
+      "name": "Đốm lá ớt chuông",
+      "desc": "Thường do vi khuẩn Xanthomonas gây ra trong môi trường nóng ẩm."
+    },
+    "Blueberry Healthy": {
+      "name": "Lá việt quất",
+      "desc": "Phân tích trạng thái lá cây việt quất khỏe mạnh."
+    },
+    "Cherry Healthy": {
+      "name": "Lá anh đào",
+      "desc": "Lá cây anh đào khỏe mạnh."
+    },
+    "Corn Healthy": {
+      "name": "Lá ngô khỏe mạnh",
+      "desc": "Lá cây ngô trong trạng thái phát triển tốt nhất."
+    },
+    "Corn Common Rust": {
+      "name": "Gỉ sắt ngô",
+      "desc": "Bệnh do nấm Puccinia sorghi gây ra, thường xuất hiện trong điều kiện ẩm ướt."
+    },
+    "Corn Gray Leaf Spot": {
+      "name": "Đốm xám ngô",
+      "desc": "Bệnh do nấm Cercospora zeae-maydis, rất phổ biến ở vùng canh tác ngô."
+    },
+    "Corn Northern Leaf Blight": {
+      "name": "Bệnh cháy lá ngô",
+      "desc": "Bệnh do nấm Exserohilum turcicum gây ra trong thời tiết mát và ẩm."
+    },
+    "Corn Fall Army Worm": {
+      "name": "Sâu keo mùa thu",
+      "desc": "Loài sâu hại nguy hiểm có khả năng tàn phá diện rộng cây lương thực."
+    },
+    "Corn Lethal Necrotic": {
+      "name": "Bệnh hoại tử ngô",
+      "desc": "Bệnh cực kỳ nguy hiểm do sự kết hợp của hai loại virus (MCMV và SCMV)."
+    },
+    "Corn Magnesium Deficiency": {
+      "name": "Thiếu Magie",
+      "desc": "Rối loạn dinh dưỡng làm giảm khả năng quang hợp của cây."
+    },
+    "Corn Aphids": {
+      "name": "Rệp ngô",
+      "desc": "Côn trùng chích hút dịch cây và truyền bệnh virus."
+    },
+    "Corn Phosphorus Deficiency": {
+      "name": "Thiếu Phốt pho",
+      "desc": "Thiếu hụt lân làm cây sinh trưởng kém, rễ yếu."
+    },
+    "Corn Physoderma Brown Spot": {
+      "name": "Đốm nâu Physoderma",
+      "desc": "Bệnh thường thấy trên thân và gân lá ngô dưới tác động của độ ẩm cao."
+    },
+    "Corn Streak Virus": {
+      "name": "Virus sọc lá",
+      "desc": "Bệnh do virus lây truyền bởi rầy xanh (Leafhoppers)."
+    },
+    "Grape Healthy": {
+      "name": "Lá nho khỏe mạnh",
+      "desc": "Lá nho ở trạng thái phát triển tốt."
+    },
+    "Grape Black Rot": {
+      "name": "Bệnh thối đen lá nho",
+      "desc": "Nấm Guignardia bidwellii gây hại cho cả lá và quả nho."
+    },
+    "Grape Esca": {
+      "name": "Bệnh Esca nho",
+      "desc": "Bệnh do một phức hợp nấm gây ra, làm tổn thương mạch dẫn trong thân và cành nho."
+    },
+    "Grape Leaf Blight": {
+      "name": "Bệnh cháy lá nho",
+      "desc": "Bệnh do nấm Pseudocercospora vitis gây ra, phổ biến ở vùng nhiệt đới."
+    },
+    "Peach Healthy": {
+      "name": "Lá đào khỏe mạnh",
+      "desc": "Trạng thái lá đào sinh trưởng bình thường."
+    },
+    "Peach Bacterial Spot": {
+      "name": "Đốm vi khuẩn lá đào",
+      "desc": "Bệnh do vi khuẩn Xanthomonas arboricola pv. pruni gây ra trên lá và quả đào."
+    },
+    "Potato Healthy": {
+      "name": "Lá khoai tây khỏe mạnh",
+      "desc": "Lá khoai tây phát triển bình thường."
+    },
+    "Potato Early Blight": {
+      "name": "Bệnh lở cổ rễ/Đốm vòng khoai tây",
+      "desc": "Do nấm Alternaria solani gây ra, tấn công các lá già trước."
+    },
+    "Potato Late Blight": {
+      "name": "Bệnh mốc sương khoai tây",
+      "desc": "Bệnh nguy hiểm nhất trên khoai tây do Phytophthora infestans gây ra."
+    },
+    "Raspberry Healthy": {
+      "name": "Lá mâm xôi",
+      "desc": "Trạng thái lá mâm xôi khỏe mạnh."
+    },
+    "Soybean Healthy": {
+      "name": "Lá đậu nành",
+      "desc": "Sức khỏe lá cây đậu tương/đậu nành ổn định."
+    },
+    "Squash Powdery Mildew": {
+      "name": "Phấn trắng bí ngô",
+      "desc": "Lớp bột trắng như phấn phủ lên lá bí, làm giảm năng suất."
+    },
+    "Strawberry Healthy": {
+      "name": "Lá dâu tây khỏe mạnh",
+      "desc": "Lá dâu tây trong trạng thái xanh tốt."
+    },
+    "Strawberry Leaf Scorch": {
+      "name": "Cháy lá dâu tây",
+      "desc": "Bệnh do nấm Diplocarpon earlianum gây ra, làm lá dâu tây bị cháy khô."
+    },
+    "Tomato Healthy": {
+      "name": "Lá cà chua khỏe mạnh",
+      "desc": "Lá cà chua bình thường, sinh trưởng tốt."
+    },
+    "Tomato Early Blight": {
+      "name": "Đốm vòng cà chua",
+      "desc": "Do nấm Alternaria solani, tạo vết đen đồng tâm."
+    },
+    "Tomato Late Blight": {
+      "name": "Bệnh mốc sương cà chua",
+      "desc": "Bệnh rất nguy hiểm, có thể làm chết cả ruộng cà chua sau vài ngày."
+    },
+    "Tomato Bacterial Spot": {
+      "name": "Đốm đen vi khuẩn cà chua",
+      "desc": "Vi khuẩn Xanthomonas vesicatoria gây ra."
+    },
+    "Tomato Septoria Leaf Spot": {
+      "name": "Đốm lá Septoria cà chua",
+      "desc": "Nấm gây ra nhiều đốm nhỏ, tâm xám viền nâu."
+    },
+    "Tomato Mosaic Virus": {
+      "name": "Virus khảm cà chua",
+      "desc": "Virus lây lan qua hạt giống, công cụ và côn trùng."
+    },
+    "Tomato Yellow Leaf Curl Virus": {
+      "name": "Virus vàng lá cà chua",
+      "desc": "Virus do bọ phấn trắng truyền, làm lá cuốn và vàng."
+    },
+    "Tomato Leaf Mold": {
+      "name": "Nấm mốc lá cà chua",
+      "desc": "Bệnh do nấm Fulvia fulva gây ra trong môi trường độ ẩm cực cao."
+    },
+    "Tomato Two Spotted Spider Mites": {
+      "name": "Nhện đỏ cà chua",
+      "desc": "Nhện chích hút làm lá biến màu và khô."
+    }
+  }
+}

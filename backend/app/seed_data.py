@@ -261,10 +261,10 @@ DISEASES_SEED_DATA = [
     # --- Class 31: Strawberry Leaf Scorch ---
     {
         'name': 'Strawberry Leaf Scorch',
-        'common_name': 'Chay la dau tay (Strawberry Leaf Scorch)',
-        'description': 'Benh do nam Diplocarpon earlianum gay ra, lam la dau tay bi chay kho.',
-        'symptoms': ['Cac vet dom nho mau tim den tren la', 'Vet benh lon dan lam la bi chay kho', 'La non bi anh huong nang'],
-        'treatments': [{'level': 'Mild', 'identification_guide': 'Vai vet dom tim nho xuat hien rai rac tren la gia.', 'action': 'Don dep la benh, giu vuon thong thoang', 'product': 'Phan huu co tang suc de khang'}, {'level': 'Moderate', 'identification_guide': 'Vet benh lan rong, la bat dau bi kho mep va cuon lai.', 'action': 'Phun thuoc khang nam dinh ky', 'product': 'Captan hoac Myclobutanil'}, {'level': 'Severe', 'identification_guide': 'Phan lon la bi chay kho va rung, cay con yeu ot.', 'action': 'Cat bo toan bo la benh, phun thuoc dac tri', 'product': 'Pristine (Pyraclostrobin + Boscalid)'}],
+        'common_name': 'Cháy lá dâu tây (Strawberry Leaf Scorch)',
+        'description': 'Bệnh do nấm Diplocarpon earlianum gây ra, làm lá dâu tây bị cháy khô.',
+        'symptoms': ['Các vết đốm nhỏ màu tím đen trên lá', 'Vết bệnh lớn dần làm lá bị cháy khô', 'Lá non bị ảnh hưởng nặng'],
+        'treatments': [{'level': 'Mild', 'identification_guide': 'Vài vết đốm tím nhỏ xuất hiện rải rác trên lá già.', 'action': 'Dọn dẹp lá bệnh, giữ vườn thông thoáng', 'product': 'Phân hữu cơ tăng sức đề kháng'}, {'level': 'Moderate', 'identification_guide': 'Vết bệnh lan rộng, lá bắt đầu bị khô mép và cuộn lại.', 'action': 'Phun thuốc kháng nấm định kỳ', 'product': 'Captan hoặc Myclobutanil'}, {'level': 'Severe', 'identification_guide': 'Phần lớn lá bị cháy khô và rụng, cây còn yếu ớt.', 'action': 'Cắt bỏ toàn bộ lá bệnh, phun thuốc đặc trị', 'product': 'Pristine (Pyraclostrobin + Boscalid)'}],
     },
     # --- Class 32: Tomato Healthy ---
     {

@@ -9,14 +9,17 @@ async def seed_db():
     
     # 2. Seed diseases
     try:
-        count = await diseases_collection.count_documents({})
-        if count == 0:
-            if DISEASES_SEED_DATA:
-                await diseases_collection.insert_many(DISEASES_SEED_DATA)
-                print(f"✅ Database seeded with {len(DISEASES_SEED_DATA)} diseases.")
-            else:
-                print("⚠️ No disease seed data found.")
+        if DISEASES_SEED_DATA:
+            # We use a more aggressive seeding strategy to ensure translations are updated
+            # For each disease in seed data, update or insert
+            for disease in DISEASES_SEED_DATA:
+                await diseases_collection.update_one(
+                    {"name": disease["name"]},
+                    {"$set": disease},
+                    upsert=True
+                )
+            print(f"✅ Database seeded/updated with {len(DISEASES_SEED_DATA)} diseases.")
         else:
-            print(f"✅ Database already contains {count} diseases.")
+            print("⚠️ No disease seed data found.")
     except Exception as e:
         print(f"❌ Error seeding diseases: {e}")

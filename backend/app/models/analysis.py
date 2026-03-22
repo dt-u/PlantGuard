@@ -6,6 +6,7 @@ class DiagnosisRecord(BaseModel):
     id: Optional[str] = None
     image_url: str
     disease_name: str
+    disease_slug: Optional[str] = None
     confidence: float
     symptoms: List[str]
     description: str

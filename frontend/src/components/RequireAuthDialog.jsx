@@ -1,7 +1,9 @@
 import React from 'react';
 import { User, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const RequireAuthDialog = ({ isOpen, onClose, onLogin }) => {
+    const { t } = useTranslation();
     if (!isOpen) return null;
 
     return (
@@ -26,9 +28,9 @@ const RequireAuthDialog = ({ isOpen, onClose, onLogin }) => {
 
                     {/* Text */}
                     <div className="text-center mb-8">
-                        <h3 className="text-2xl font-bold text-gray-900 mb-3 font-vietnam tracking-tight">Yêu cầu đăng nhập</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3 font-vietnam tracking-tight">{t('auth.login_required')}</h3>
                         <p className="text-gray-500 leading-relaxed">
-                            Vui lòng đăng nhập để lưu kết quả chẩn đoán vào lịch sử cá nhân của bạn.
+                            {t('auth.login_required_desc')}
                         </p>
                     </div>
 
@@ -38,14 +40,14 @@ const RequireAuthDialog = ({ isOpen, onClose, onLogin }) => {
                             onClick={onClose}
                             className="flex-1 px-6 py-4 bg-gray-50 text-gray-600 rounded-2xl font-semibold hover:bg-gray-100 transition-all active:scale-95"
                         >
-                            Để sau
+                            {t('auth.later')}
                         </button>
                         <button
                             onClick={onLogin}
                             className="flex-1 px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-bold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-green-200/50 active:scale-95 flex items-center justify-center gap-2"
                         >
                             <User className="w-5 h-5" />
-                            Đăng nhập
+                            {t('navbar.login')}
                         </button>
                     </div>
                 </div>

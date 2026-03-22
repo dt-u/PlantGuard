@@ -2,10 +2,16 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Leaf, Eye, ArrowRight, Sprout, LogIn, UserPlus, User, History, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const Home = () => {
     const { user, logout, openLogin, openRegister } = useAuth();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const { t, i18n } = useTranslation();
+
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
+    };
 
     return (
         <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50">
@@ -17,6 +23,24 @@ const Home = () => {
                 </Link>
 
                 <div className="flex items-center space-x-4">
+                    {/* Language Switcher in Home Header */}
+                    <div className="flex items-center space-x-1 mr-2">
+                        <button
+                            onClick={() => changeLanguage('vi')}
+                            className={`transition-all duration-300 transform ${i18n.language.startsWith('vi') ? 'scale-110 opacity-100' : 'scale-90 opacity-40 hover:opacity-60'}`}
+                            title="Tiếng Việt"
+                        >
+                            <img src="https://flagicons.lipis.dev/flags/4x3/vn.svg" alt="Vietnamese" className="w-6 h-4 object-cover rounded shadow-sm" />
+                        </button>
+                        <button
+                            onClick={() => changeLanguage('en')}
+                            className={`transition-all duration-300 transform ${i18n.language.startsWith('en') ? 'scale-110 opacity-100' : 'scale-90 opacity-40 hover:opacity-60'}`}
+                            title="English"
+                        >
+                            <img src="https://flagicons.lipis.dev/flags/4x3/gb.svg" alt="English" className="w-6 h-4 object-cover rounded shadow-sm" />
+                        </button>
+                    </div>
+
                     {user ? (
                         <div className="relative">
                             <button
@@ -28,13 +52,12 @@ const Home = () => {
                                 </div>
                                 <span className="max-w-[120px] truncate font-bold text-sm">{user.name}</span>
                             </button>
-                            {/* Profile dropdown remains the same but with slightly smaller padding */}
                             {isProfileOpen && (
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)}></div>
                                     <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-1.5 z-50 animate-in fade-in slide-in-from-top-2">
                                         <div className="px-4 py-2 border-b border-gray-50 mb-1">
-                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Tài khoản</p>
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{t('home.account')}</p>
                                             <p className="text-xs font-bold text-agri-dark truncate">{user.email}</p>
                                         </div>
                                         <Link
@@ -43,14 +66,14 @@ const Home = () => {
                                             onClick={() => setIsProfileOpen(false)}
                                         >
                                             <History className="w-3.5 h-3.5" />
-                                            <span className="font-medium">Lịch sử chẩn đoán</span>
+                                            <span className="font-medium">{t('navbar.history')}</span>
                                         </Link>
                                         <button
                                             onClick={() => { logout(); setIsProfileOpen(false); }}
                                             className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs text-red-600 hover:bg-red-50 transition-colors"
                                         >
                                             <LogOut className="w-3.5 h-3.5" />
-                                            <span className="font-medium">Đăng xuất</span>
+                                            <span className="font-medium">{t('navbar.logout')}</span>
                                         </button>
                                     </div>
                                 </>
@@ -63,14 +86,14 @@ const Home = () => {
                                 className="flex items-center space-x-2 px-5 py-2 rounded-xl font-bold bg-agri-green text-white hover:bg-green-700 transition-all shadow-lg shadow-green-500/20 text-sm"
                             >
                                 <LogIn className="w-3.5 h-3.5" />
-                                <span>Đăng nhập</span>
+                                <span>{t('navbar.login')}</span>
                             </button>
                             <button
                                 onClick={openRegister}
                                 className="flex items-center space-x-2 px-5 py-2 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 text-sm"
                             >
                                 <UserPlus className="w-3.5 h-3.5" />
-                                <span>Đăng ký</span>
+                                <span>{t('home.register')}</span>
                             </button>
                         </div>
                     )}
@@ -81,12 +104,12 @@ const Home = () => {
             <main className="flex-1 flex flex-col items-center justify-center text-center px-4 pb-6">
                 <div className="mb-6">
                     <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-agri-dark tracking-tight leading-tight">
-                        Nông Nghiệp Thông Minh
-                        <span className="block text-agri-green mt-3">Khởi Đầu Đơn Giản</span>
+                        {t('home.title')}
+                        <span className="block text-agri-green mt-3">{t('home.subtitle')}</span>
                     </h1>
                     <p className="text-base text-gray-600 max-w-2xl mx-auto mt-4 leading-relaxed">
-                        PlantGuard bảo vệ mùa màng của bạn bằng AI tiên tiến. <br className="hidden md:block" />
-                        Phát hiện sớm bệnh lý và giám sát sức khỏe đồng ruộng theo thời gian thực.
+                        {t('home.description1')} <br className="hidden md:block" />
+                        {t('home.description2')}
                     </p>
                 </div>
 
@@ -98,10 +121,10 @@ const Home = () => {
                         <div className="bg-blue-100 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-500 shadow-inner">
                             <Eye className="w-7 h-7 text-blue-600" />
                         </div>
-                        <h2 className="text-xl font-bold text-agri-dark mb-2">Chế độ Giám sát</h2>
-                        <p className="text-gray-500 mb-6 text-xs leading-relaxed px-4">Phân tích dữ liệu từ Drone/Camera để phát hiện sớm các vùng cây bị stress trên diện rộng.</p>
+                        <h2 className="text-xl font-bold text-agri-dark mb-2">{t('home.monitor_title')}</h2>
+                        <p className="text-gray-500 mb-6 text-xs leading-relaxed px-4">{t('home.monitor_desc')}</p>
                         <div className="inline-flex items-center justify-center px-5 py-1.5 rounded-full bg-blue-50 text-blue-600 font-bold text-xs group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                            Bắt đầu Giám sát <ArrowRight className="w-3.5 h-3.5 ml-2 group-hover:translate-x-1 transition-transform" />
+                            {t('home.monitor_btn')} <ArrowRight className="w-3.5 h-3.5 ml-2 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </Link>
 
@@ -112,10 +135,10 @@ const Home = () => {
                         <div className="bg-green-100 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-500 shadow-inner">
                             <Leaf className="w-7 h-7 text-green-600" />
                         </div>
-                        <h2 className="text-xl font-bold text-agri-dark mb-2">Bác sĩ Cây trồng</h2>
-                        <p className="text-gray-500 mb-6 text-xs leading-relaxed px-4">Chẩn đoán chính xác các loại bệnh trên lá và nhận phác đồ điều trị tức thì.</p>
+                        <h2 className="text-xl font-bold text-agri-dark mb-2">{t('home.doctor_title')}</h2>
+                        <p className="text-gray-500 mb-6 text-xs leading-relaxed px-4">{t('home.doctor_desc')}</p>
                         <div className="inline-flex items-center justify-center px-5 py-1.5 rounded-full bg-green-50 text-green-600 font-bold text-xs group-hover:bg-agri-green group-hover:text-white transition-all duration-300">
-                            Chẩn đoán ngay <ArrowRight className="w-3.5 h-3.5 ml-2 group-hover:translate-x-1 transition-transform" />
+                            {t('home.doctor_btn')} <ArrowRight className="w-3.5 h-3.5 ml-2 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </Link>
                 </div>
@@ -123,7 +146,7 @@ const Home = () => {
 
             {/* Subtle Footer to anchor the view */}
             <footer className="py-4 text-center text-gray-400 text-[10px] font-medium">
-                © 2026 PlantGuard AI • Giải pháp bảo vệ cây trồng thông minh
+                {t('home.footer')}
             </footer>
         </div>
     );

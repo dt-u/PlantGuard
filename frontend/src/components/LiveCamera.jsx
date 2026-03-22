@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Unplug, Play, Square, AlertCircle, Radio, Maximize, Minimize } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
 
 const LiveCamera = ({ onLogEvent }) => {
+    const { t, i18n } = useTranslation();
+    const { translateDiseaseName } = useDiseaseTranslator();
     const [cameraUrl, setCameraUrl] = useState("http://192.168.5.100:4747/video");
     const [isStreaming, setIsStreaming] = useState(false);
     const [status, setStatus] = useState("disconnected"); // disconnected, connecting, connected
@@ -66,8 +70,12 @@ const LiveCamera = ({ onLogEvent }) => {
                     data.detections.forEach(d => {
                         onLogEvent({
                             id: Date.now() + Math.random(),
-                            time: new Date().toLocaleTimeString('vi-VN', { hour12: false }),
-                            msg: `Cảnh báo đối tượng: [${d.label.toUpperCase()}] - Confidence: ${(d.confidence * 100).toFixed(0)}%`,
+                            time: new Date().toLocaleTimeString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', { hour12: false }),
+                            msg: t('logs.live_alert', { 
+                                label: translateDiseaseName(d.label, d.label).toUpperCase(), 
+                                confidence: (d.confidence * 100).toFixed(0) 
+                            }),
+                            label: d.label,
                             type: 'alert'
                         });
                     });
@@ -82,14 +90,14 @@ const LiveCamera = ({ onLogEvent }) => {
             console.log("Disconnected from WebSocket", e);
             setStatus("disconnected");
             if (isStreamingRef.current) {
-                setWsError("Kết nối bị ngắt quãng. Đang thử tự động kết nối lại...");
+                setWsError(t('monitor.error_reconnecting'));
                 reconnectTimeoutRef.current = setTimeout(() => {
                     if (isStreamingRef.current) startStream();
                 }, 3000);
             } else {
                 setIsStreaming(false);
                 if (!e.wasClean) {
-                    setWsError("Kết nối bị ngắt. Hãy kiểm tra URL DroidCam.");
+                    setWsError(t('monitor.error_connection'));
                 }
             }
         };
@@ -97,7 +105,7 @@ const LiveCamera = ({ onLogEvent }) => {
         ws.onerror = (error) => {
             console.error("WebSocket Error:", error);
             setStatus("disconnected");
-            setWsError("Lỗi kết nối tín hiệu video...");
+            setWsError(t('monitor.error_connection'));
         };
     };
 
@@ -123,16 +131,22 @@ const LiveCamera = ({ onLogEvent }) => {
         }
     };
 
+    const getStatusText = () => {
+        if (status === 'connected') return t('monitor.status.online');
+        if (status === 'connecting') return t('monitor.status.connecting');
+        return t('monitor.status.offline');
+    };
+
     return (
         <div className="space-y-6">
             <div className="glass-panel p-6 flex flex-col md:flex-row items-center gap-4 bg-white/80">
                 <div className="flex-1 w-full">
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Đường dẫn Camera (IP/DroidCam)</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t('monitor.camera_url')}</label>
                     <input
                         type="text"
                         value={cameraUrl}
                         onChange={(e) => setCameraUrl(e.target.value)}
-                        placeholder="Ví dụ: http://192.168.1.100:4747/video"
+                        placeholder={t('monitor.camera_placeholder')}
                         className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent outline-none transition-all text-sm shadow-inner bg-gray-50"
                         disabled={isStreaming}
                     />
@@ -145,14 +159,14 @@ const LiveCamera = ({ onLogEvent }) => {
                             onClick={startStream}
                             className="btn-monitor flex items-center gap-2 whitespace-nowrap shadow-[#3B82F6]/20 shadow-lg"
                         >
-                            <Play className="w-4 h-4" /> Bắt đầu Giám sát
+                            <Play className="w-4 h-4" /> {t('monitor.start_btn')}
                         </button>
                     ) : (
                         <button
                             onClick={stopStream}
                             className="bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 px-6 rounded-xl transition-all duration-300 flex items-center gap-2 whitespace-nowrap shadow-red-200 shadow-lg"
                         >
-                            <Square className="w-4 h-4" /> Dừng Luồng
+                            <Square className="w-4 h-4" /> {t('monitor.stop_btn')}
                         </button>
                     )}
                 </div>
@@ -163,7 +177,9 @@ const LiveCamera = ({ onLogEvent }) => {
                 {status === "connected" && (
                     <>
                         <div className="absolute bottom-6 right-6 z-10">
-                            <span className="text-white/80 text-xs font-mono drop-shadow-md">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
+                            <span className="text-white/80 text-xs font-mono drop-shadow-md">
+                                {new Date().toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US')} {new Date().toLocaleTimeString(i18n.language === 'vi' ? 'vi-VN' : 'en-US')}
+                            </span>
                         </div>
                     </>
                 )}
@@ -175,13 +191,13 @@ const LiveCamera = ({ onLogEvent }) => {
                         {status === "connecting" ? (
                             <div className="animate-pulse flex flex-col items-center">
                                 <Radio className="w-16 h-16 mb-4 text-[#3B82F6]" />
-                                <p className="text-gray-400 font-medium">Đang thiết lập kết nối video...</p>
+                                <p className="text-gray-400 font-medium">{t('monitor.status.connecting')}</p>
                             </div>
                         ) : (
                             <>
                                 <Unplug className="w-16 h-16 mb-4 opacity-20" />
-                                <p className="text-gray-400 font-bold">Camera chưa kết nối</p>
-                                <p className="text-xs mt-2 opacity-50">Nhập URL và nhấn Bắt đầu để quét thực địa</p>
+                                <p className="text-gray-400 font-bold">{t('monitor.camera_disconnected')}</p>
+                                <p className="text-xs mt-2 opacity-50">{t('monitor.camera_desc')}</p>
                             </>
                         )}
                     </div>
@@ -192,13 +208,13 @@ const LiveCamera = ({ onLogEvent }) => {
                     <button
                         onClick={toggleFullscreen}
                         className="p-1.5 rounded-lg text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-md"
-                        title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                        title={isFullscreen ? t('monitor.exit_fullscreen') : t('monitor.fullscreen')}
                     >
                         {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
                     </button>
                     <div className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter shadow-md flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white">
                         <span className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-blue-400 animate-ping' : 'bg-red-500'}`}></span>
-                        {status === 'connected' ? 'Trực tuyến' : status === 'connecting' ? 'Đang kết nối' : 'Ngoại tuyến'}
+                        {getStatusText()}
                     </div>
                 </div>
             </div>

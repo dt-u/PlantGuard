@@ -8,8 +8,10 @@ import HistoryPage from './pages/HistoryPage';
 import DiagnosisDetailPage from './pages/DiagnosisDetailPage';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useTranslation } from 'react-i18next';
 
 function GlobalProgressIndicator({ jobState, setJobState }) {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     
@@ -45,25 +47,25 @@ function GlobalProgressIndicator({ jobState, setJobState }) {
 
     return (
         <div className="fixed bottom-6 right-6 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-gray-100 z-50 w-80 animate-in slide-in-from-bottom">
-            <h4 className="text-xs font-bold text-gray-700 mb-2">Phân Tích Drone Footage</h4>
+            <h4 className="text-xs font-bold text-gray-700 mb-2">{t('monitor.global_progress.title')}</h4>
             {jobState.status === 'processing' ? (
                  <>
                      <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                         <div className="bg-[#3B82F6] h-2.5 rounded-full transition-all duration-500" style={{ width: `${jobState.progress}%` }}></div>
                      </div>
-                     <p className="text-[10px] text-gray-500 text-center font-bold">Đang xử lý... {jobState.progress}%</p>
+                     <p className="text-[10px] text-gray-500 text-center font-bold">{t('monitor.global_progress.processing')} {jobState.progress}%</p>
                  </>
             ) : jobState.status === 'completed' ? (
                  <>
                      <div className="w-full bg-green-500 rounded-full h-2.5 mb-2"></div>
-                     <p className="text-[10px] text-green-700 font-bold text-center mb-3">Phân tích hoàn tất!</p>
+                     <p className="text-[10px] text-green-700 font-bold text-center mb-3">{t('monitor.global_progress.complete')}</p>
                      <div className="flex gap-2">
-                         <button onClick={() => navigate('/monitor', { state: { tab: 'upload', ts: Date.now() }})} className="flex-1 bg-[#3B82F6] text-white text-[10px] font-bold py-2 rounded-lg transition-transform hover:scale-105 shadow-md shadow-[#3B82F6]/30">Xem Kết Quả</button>
-                         <button onClick={() => setJobState(prev => ({ ...prev, status: 'idle', jobId: null }))} className="px-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-[10px] font-bold transition-all">Đóng</button>
+                         <button onClick={() => navigate('/monitor', { state: { tab: 'upload', ts: Date.now() }})} className="flex-1 bg-[#3B82F6] text-white text-[10px] font-bold py-2 rounded-lg transition-transform hover:scale-105 shadow-md shadow-[#3B82F6]/30">{t('monitor.global_progress.view_result')}</button>
+                         <button onClick={() => setJobState(prev => ({ ...prev, status: 'idle', jobId: null }))} className="px-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-[10px] font-bold transition-all">{t('monitor.global_progress.close')}</button>
                      </div>
                  </>
             ) : (
-                <p className="text-[10px] text-red-500 font-bold text-center mt-2">Có lỗi xảy ra khi phân tích.</p>
+                <p className="text-[10px] text-red-500 font-bold text-center mt-2">{t('monitor.global_progress.error')}</p>
             )}
         </div>
     );

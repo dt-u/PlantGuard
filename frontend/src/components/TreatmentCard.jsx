@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const TreatmentCard = ({ treatments = [] }) => {
+    const { t } = useTranslation();
     const [expandedId, setExpandedId] = useState(null);
 
     if (!treatments || treatments.length === 0) return null;
 
     const translateLevel = (level) => {
         switch (level.toLowerCase()) {
-            case 'mild': return 'Cấp độ: Nhẹ';
-            case 'moderate': return 'Cấp độ: Trung Bình';
-            case 'severe': return 'Cấp độ: Nặng';
-            case 'maintenance': return 'Gợi ý chăm sóc';
+            case 'mild': return t('treatment.mild');
+            case 'moderate': return t('treatment.moderate');
+            case 'severe': return t('treatment.severe');
+            case 'maintenance': return t('treatment.maintenance');
             default: return level;
         }
     };
@@ -48,13 +50,12 @@ const TreatmentCard = ({ treatments = [] }) => {
                     <div className={`flex items-center justify-between p-3 rounded-lg mb-2 ${getLevelColor(treatment.level)}`}>
                         <div className="flex flex-col">
                             {treatment.level.toLowerCase() === 'maintenance' ? (
-                                <span className="font-bold uppercase tracking-wide text-[14px] whitespace-nowrap">Gợi ý chăm sóc</span>
+                                <span className="font-bold uppercase tracking-wide text-[14px] whitespace-nowrap">{t('treatment.maintenance')}</span>
                             ) : (
                                 <>
-                                    <span className="text-[12px] opacity-70 font-semibold uppercase">Gợi ý</span>
+                                    <span className="text-[12px] opacity-70 font-semibold uppercase">{t('treatment.suggestion')}</span>
                                     <span className="font-bold uppercase tracking-wide text-lg -mt-1">
-                                        {treatment.level.toLowerCase() === 'mild' ? 'Nhẹ' :
-                                            treatment.level.toLowerCase() === 'moderate' ? 'Trung Bình' : 'Nặng'}
+                                        {translateLevel(treatment.level)}
                                     </span>
                                 </>
                             )}
@@ -67,22 +68,22 @@ const TreatmentCard = ({ treatments = [] }) => {
                         <div>
                             <p className="text-xs text-gray-500 uppercase font-semibold flex items-center gap-1 mb-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                                Cách nhận biết
+                                {t('treatment.id_guide')}
                             </p>
                             <p className="text-gray-700 text-sm leading-relaxed italic">"{treatment.identification_guide}"</p>
                         </div>
                         <div className="pt-2 border-t border-gray-100">
-                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Biện pháp xử lý</p>
+                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('treatment.action')}</p>
                             <p className="text-gray-800 text-sm">{treatment.action}</p>
                         </div>
                         <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Sản phẩm khuyên dùng</p>
+                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('treatment.product')}</p>
                             <p className="text-agri-green font-medium text-sm">{treatment.product}</p>
                         </div>
                     </div>
 
                     {expandedId !== index && (
-                        <p className="text-center text-sm text-gray-400 mt-2">Nhấn để xem chi tiết</p>
+                        <p className="text-center text-sm text-gray-400 mt-2">{t('treatment.click_detail')}</p>
                     )}
                 </div>
             ))}

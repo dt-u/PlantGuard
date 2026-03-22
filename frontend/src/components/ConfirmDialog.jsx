@@ -1,15 +1,17 @@
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const ConfirmDialog = ({
     isOpen,
     onClose,
     onConfirm,
-    title = "Xác nhận xóa",
-    message = "Bạn có chắc muốn xóa bản ghi này?",
-    confirmText = "Xóa",
-    cancelText = "Hủy"
+    title,
+    message,
+    confirmText,
+    cancelText
 }) => {
+    const { t } = useTranslation();
     if (!isOpen) return null;
 
     return (
@@ -39,7 +41,7 @@ const ConfirmDialog = ({
 
                     {/* Text */}
                     <div className="text-center mb-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{title || t('common.confirm')}</h3>
                         <p className="text-gray-600">{message}</p>
                     </div>
 
@@ -49,13 +51,13 @@ const ConfirmDialog = ({
                             onClick={onClose}
                             className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
                         >
-                            {cancelText}
+                            {cancelText || t('common.cancel')}
                         </button>
                         <button
                             onClick={onConfirm}
                             className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
                         >
-                            {confirmText}
+                            {confirmText || t('common.delete')}
                         </button>
                     </div>
                 </div>

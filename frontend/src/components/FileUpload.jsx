@@ -1,8 +1,10 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const FileUpload = ({ onFileSelect, accept, label, theme = "green" }) => {
+    const { t } = useTranslation();
     const onDrop = useCallback((acceptedFiles) => {
         if (acceptedFiles?.length > 0) {
             onFileSelect(acceptedFiles[0]);
@@ -31,11 +33,11 @@ const FileUpload = ({ onFileSelect, accept, label, theme = "green" }) => {
                 <UploadCloud className={`w-8 h-8 ${iconClass}`} />
             </div>
             {isDragActive ? (
-                <p className="text-agri-dark font-medium">Thả {label} vào đây ...</p>
+                <p className="text-agri-dark font-medium">{t('common.drop')} {label} {t('common.here')} ...</p>
             ) : (
                 <div className="text-center">
-                    <p className="text-lg font-medium text-agri-dark">Kéo & thả {label} vào đây</p>
-                    <p className="text-sm text-gray-500 mt-2">hoặc click để chọn file</p>
+                    <p className="text-lg font-medium text-agri-dark">{t('common.drag_drop')} {label} {t('common.here')}</p>
+                    <p className="text-sm text-gray-500 mt-2">{t('common.or_click')}</p>
                 </div>
             )}
         </div>
