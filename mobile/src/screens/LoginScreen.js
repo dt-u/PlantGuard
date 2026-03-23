@@ -72,11 +72,18 @@ const LoginScreen = ({ navigation }) => {
                 console.error('Error saving credentials:', e);
             }
 
-            // Reset navigation to clear stack
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'MainTabs', params: { screen: t('tabs.profile') } }],
-            });
+            // Check if we should return to a specific screen
+            const returnTo = navigation.getState().routes.find(r => r.name === 'Login')?.params?.returnTo;
+            
+            if (returnTo === 'Doctor') {
+                navigation.goBack();
+            } else {
+                // Default redirect to Profile
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'MainTabs', params: { screen: t('tabs.profile') } }],
+                });
+            }
         } else {
             Alert.alert(t('auth.login_failed'), result.error);
         }

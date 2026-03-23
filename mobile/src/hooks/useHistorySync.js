@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { API_BASE_URL } from '../api/config';
+import { WS_BASE_URL } from '../api/config';
 
 export const useHistorySync = (onSave, onDelete) => {
     const { user, isAuthenticated, getUserId } = useAuth();
@@ -10,12 +10,13 @@ export const useHistorySync = (onSave, onDelete) => {
         if (!isAuthenticated()) return;
 
         const userId = getUserId();
-        // Convert http:// to ws:// and https:// to wss://
-        const wsBaseUrl = API_BASE_URL.replace(/^http/, 'ws');
-        const wsUrl = `${wsBaseUrl}/ws/${userId}`;
-        
-        ws.current = new WebSocket(wsUrl);
+        if (!userId) return; // Không kết nối nếu chưa có userId
 
+        // Sử dụng WS_BASE_URL từ config thay vì tự tạo
+        const wsUrl = `${WS_BASE_URL}/ws/${userId}`;
+
+        console.log('Connecting to History Sync:', wsUrl);
+        ws.current = new WebSocket(wsUrl);
         ws.current.onopen = () => {
             console.log('Connected to History Sync WebSocket (Mobile)');
         };

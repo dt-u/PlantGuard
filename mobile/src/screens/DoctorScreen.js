@@ -45,6 +45,7 @@ const DoctorScreen = ({ navigation }) => {
             const historyRecord = {
                 image_url: result.image_url,
                 disease_name: result.disease.common_name,
+                disease_slug: result.disease.name,
                 confidence: result.confidence,
                 symptoms: result.disease.symptoms,
                 description: result.disease.description,
@@ -52,11 +53,15 @@ const DoctorScreen = ({ navigation }) => {
                 is_healthy: result.disease.is_healthy,
                 user_id: user.id
             };
-            await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
-            setSavedToHistory(true);
-            setIsPendingSave(false);
-            Alert.alert(t('common.success'), t('doctor.save_success'));
+            const response = await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
+            if (response.data && response.data.data) {
+                setSavedToHistory(true);
+                setSavedId(response.data.data.id || response.data.data._id);
+                setIsPendingSave(false);
+                Alert.alert(t('common.success'), t('doctor.save_success'));
+            }
         } catch (error) {
+            console.error('Auto save error:', error);
             setIsPendingSave(false);
         }
     };
@@ -103,11 +108,49 @@ const DoctorScreen = ({ navigation }) => {
             setIsPendingSave(true);
             Alert.alert(t('doctor.login_required'), t('doctor.login_required_desc'), [
                 { text: t('doctor.later'), onPress: () => setIsPendingSave(false), style: 'cancel' },
-                { text: t('common.login'), onPress: () => navigation.navigate('Login') }
+                { text: t('common.login'), onPress: () => navigation.navigate('Login', { returnTo: 'Doctor' }) }
             ]);
             return;
         }
-        // ... (save logic)
+
+        if (savedToHistory && savedId) {
+            // Unsave logic
+            try {
+                await axios.delete(ENDPOINTS.HISTORY_DELETE(savedId));
+                setSavedToHistory(false);
+                setSavedId(null);
+                Alert.alert(t('common.success'), t('doctor.unsave_success') || 'Removed from history');
+                return;
+            } catch (error) {
+                console.error('Unsave error:', error);
+                Alert.alert(t('common.error'), t('doctor.unsave_error') || 'Could not remove from history');
+                return;
+            }
+        }
+
+        try {
+            const historyRecord = {
+                image_url: result.image_url,
+                disease_name: result.disease.common_name,
+                disease_slug: result.disease.name,
+                confidence: result.confidence,
+                symptoms: result.disease.symptoms,
+                description: result.disease.description,
+                treatments: result.disease.treatments,
+                is_healthy: result.disease.is_healthy,
+                user_id: user.id
+            };
+
+            const response = await axios.post(ENDPOINTS.HISTORY_SAVE, historyRecord);
+            if (response.data && response.data.data) {
+                setSavedToHistory(true);
+                setSavedId(response.data.data.id || response.data.data._id);
+                Alert.alert(t('common.success'), t('doctor.save_success'));
+            }
+        } catch (error) {
+            console.error('Save to history error:', error);
+            Alert.alert(t('common.error'), t('doctor.save_error'));
+        }
     };
 
     return (
@@ -243,12 +286,12 @@ const styles = StyleSheet.create({
     progressFill: { height: '100%', backgroundColor: '#10B981' },
     confidencePercentage: { fontSize: 14, fontFamily: 'Vietnam-Bold', color: '#10B981' },
     actionButtons: { flexDirection: 'row', gap: 10, marginBottom: 25 },
-    saveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#2E7D32', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 8 },
+    saveBtn: { flex: 0.8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#2E7D32', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 4 },
     savedBtn: { backgroundColor: '#F1F5F9' },
-    saveBtnText: { color: '#FFFFFF', fontSize: 14, fontFamily: 'Vietnam-Bold' },
-    savedBtnText: { color: '#2E7D32', fontSize: 14, fontFamily: 'Vietnam-Bold' },
-    resetBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: '#E5E7EB', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 8 },
-    resetBtnText: { fontSize: 14, color: '#4B5563', fontFamily: 'Vietnam-Bold' },
+    saveBtnText: { color: '#FFFFFF', fontSize: 13, fontFamily: 'Vietnam-Bold' },
+    savedBtnText: { color: '#2E7D32', fontSize: 13, fontFamily: 'Vietnam-Bold' },
+    resetBtn: { flex: 1.2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: '#E5E7EB', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 4 },
+    resetBtnText: { fontSize: 13, color: '#4B5563', fontFamily: 'Vietnam-Bold' },
     techDetails: { gap: 20 },
     detailItem: { gap: 8 },
     detailLabel: { fontSize: 12, fontFamily: 'Vietnam-Bold', color: '#374151', opacity: 0.5 },

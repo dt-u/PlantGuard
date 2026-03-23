@@ -3,11 +3,15 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions
 import { ArrowLeft, Calendar, CheckCircle, Info, Cross, Hospital } from 'lucide-react-native';
 import { API_BASE_URL } from '../api/config';
 import TreatmentCard from '../components/TreatmentCard';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
 
 const { width } = Dimensions.get('window');
 
 const DiagnosisDetailScreen = ({ route, navigation }) => {
     const { diagnosis } = route.params;
+    const { t } = useLanguage();
+    const { translateDiseaseName, translateDescription, translateSymptoms, translateTreatments } = useDiseaseTranslator();
 
     if (!diagnosis) return null;
 
@@ -28,7 +32,7 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <ArrowLeft color="#1E293B" size={24} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Chi tiết chẩn đoán</Text>
+                <Text style={styles.headerTitle}>{t('history.detail_title') || 'Chi tiết chẩn đoán'}</Text>
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -41,7 +45,7 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
                                 style={styles.analyzedImage} 
                             />
                             <View style={styles.imageOverlay}>
-                                <Text style={styles.overlayText}>HÌNH ẢNH CHẨN ĐOÁN</Text>
+                                <Text style={styles.overlayText}>{t('doctor.analysis_result').toUpperCase()}</Text>
                             </View>
                         </View>
                         
@@ -51,8 +55,10 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
                                 <Text style={styles.dateText}>{formatDate(diagnosis.created_at)}</Text>
                             </View>
 
-                            <Text style={styles.labelSmall}>KẾT QUẢ NHẬN DIỆN AI</Text>
-                            <Text style={styles.diseaseName}>{diagnosis.disease_name}</Text>
+                            <Text style={styles.labelSmall}>{t('doctor.analysis_result').toUpperCase()}</Text>
+                            <Text style={styles.diseaseName}>
+                                {translateDiseaseName(diagnosis.disease_slug || diagnosis.disease_name, diagnosis.disease_name)}
+                            </Text>
                             
                             <View style={styles.confidenceRow}>
                                 <View style={styles.progressBarContainer}>
@@ -63,14 +69,16 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
 
                             <View style={styles.techDetails}>
                                 <View style={styles.detailItem}>
-                                    <Text style={styles.detailLabel}>MÔ TẢ BỆNH LÝ</Text>
-                                    <Text style={styles.descriptionText}>"{diagnosis.description}"</Text>
+                                    <Text style={styles.detailLabel}>{t('doctor.description').toUpperCase()}</Text>
+                                    <Text style={styles.descriptionText}>
+                                        "{translateDescription(diagnosis.disease_slug || diagnosis.disease_name, diagnosis.description)}"
+                                    </Text>
                                 </View>
 
                                 <View style={styles.detailItem}>
-                                    <Text style={styles.detailLabel}>DẤU HIỆU NHẬN BIẾT</Text>
+                                    <Text style={styles.detailLabel}>{t('doctor.symptoms').toUpperCase()}</Text>
                                     <View style={styles.symptomsList}>
-                                        {diagnosis.symptoms && diagnosis.symptoms.map((s, i) => (
+                                        {translateSymptoms(diagnosis.disease_slug || diagnosis.disease_name, diagnosis.symptoms || []).map((s, i) => (
                                             <View key={i} style={styles.symptomItem}>
                                                 <CheckCircle size={14} color="#2E7D32" />
                                                 <Text style={styles.symptomText}>{s}</Text>
@@ -88,16 +96,18 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
                             {diagnosis.is_healthy ? (
                                 <>
                                     <Cross color="#2E7D32" size={24} />
-                                    <Text style={[styles.treatmentTitle, { color: '#2E7D32' }]}>Kế hoạch Chăm sóc</Text>
+                                    <Text style={[styles.treatmentTitle, { color: '#2E7D32' }]}>{t('doctor.care_plan')}</Text>
                                 </>
                             ) : (
                                 <>
                                     <Hospital color="#F56565" size={24} />
-                                    <Text style={[styles.treatmentTitle, { color: '#F56565' }]}>Phác đồ Điều trị Hệ thống</Text>
+                                    <Text style={[styles.treatmentTitle, { color: '#F56565' }]}>{t('doctor.treatment_plan')}</Text>
                                 </>
                             )}
                         </View>
-                        <TreatmentCard treatments={diagnosis.treatments} />
+                        <TreatmentCard 
+                            treatments={translateTreatments(diagnosis.disease_slug || diagnosis.disease_name, diagnosis.treatments || [])} 
+                        />
                     </View>
 
                     {/* Enhanced Disclaimer */}
@@ -106,11 +116,10 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
                             <View style={styles.warningCircle}>
                                 <Info color="#92400E" size={16} />
                             </View>
-                            <Text style={styles.disclaimerTitle}>KHUYẾN CÁO CHUYÊN MÔN</Text>
+                            <Text style={styles.disclaimerTitle}>{t('doctor.recommendation').toUpperCase()}</Text>
                         </View>
                         <Text style={styles.disclaimerBody}>
-                            Kỹ thuật này dựa trên mô hình học sâu (Deep Learning). Kết quả có thể biến động tùy theo chất lượng ảnh và giống cây.{"\n\n"}
-                            <Text style={styles.disclaimerBold}>Vui lòng tham vấn chuyên gia trước khi áp dụng hóa chất bảo vệ thực vật diện rộng.</Text>
+                            {t('doctor.recommendation_desc')}
                         </Text>
                     </View>
                 </View>

@@ -1,15 +1,28 @@
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 /**
- * BACKEND API CONFIGURATION
+ * AUTO-DETECTION CONFIGURATION
  */
 
-// Lấy IP động từ Expo (hoạt động tốt khi chạy máy ảo hoặc LAN)
 const getHostUri = () => {
-    if (Constants.expoConfig && Constants.expoConfig.hostUri) {
-        return Constants.expoConfig.hostUri.split(':')[0];
+    // 1. Ưu tiên lấy IP từ Expo (Đây là cách chính xác nhất cho điện thoại thật chạy Expo Go)
+    const hostUri = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoGo?.debuggerHost || Constants.manifest?.debuggerHost;
+    
+    if (hostUri && !hostUri.includes('localhost') && !hostUri.includes('127.0.0.1')) {
+        return hostUri.split(':')[0];
     }
-    return "192.168.1.100"; // Fallback
+
+    // 2. Nếu không lấy được từ Expo (vùng dev đặc biệt), mới dùng fallback cho Emulator/Simulator
+    if (__DEV__) {
+        if (Platform.OS === 'android') {
+            return "10.0.2.2"; // Chỉ dành cho Android Emulator
+        }
+        return "localhost"; // Chỉ dành cho iOS Simulator
+    }
+    
+    // 3. Fallback cuối cùng nếu mọi thứ thất bại
+    return "192.168.1.100"; 
 };
 
 export const LOCAL_IP = getHostUri();

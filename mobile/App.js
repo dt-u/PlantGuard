@@ -4,6 +4,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Home, Activity, Stethoscope, User } from 'lucide-react-native';
 import * as SplashScreen from 'expo-splash-screen';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { 
   useFonts, 
   BeVietnamPro_400Regular, 
@@ -25,6 +27,9 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import DiagnosisDetailScreen from './src/screens/DiagnosisDetailScreen';
+import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen';
+import PrivacySettingsScreen from './src/screens/PrivacySettingsScreen';
+import AppSettingsScreen from './src/screens/AppSettingsScreen';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,10 +43,11 @@ function TabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
-          if (route.name === 'Trang chủ' || route.name === 'Home') return <Home color={color} size={size} />;
-          if (route.name === 'Giám sát' || route.name === 'Monitor') return <Activity color={color} size={size} />;
-          if (route.name === 'Bác sĩ' || route.name === 'Doctor') return <Stethoscope color={color} size={size} />;
-          if (route.name === 'Tài khoản' || route.name === 'Account') return <User color={color} size={size} />;
+          const iconName = route.name;
+          if (iconName === 'Trang chủ' || iconName === 'Home') return <Home color={color} size={size} />;
+          if (iconName === 'Giám sát' || iconName === 'Monitor') return <Activity color={color} size={size} />;
+          if (iconName === 'Bác sĩ' || iconName === 'Doctor') return <Stethoscope color={color} size={size} />;
+          if (iconName === 'Tài khoản' || iconName === 'Account') return <User color={color} size={size} />;
         },
         tabBarActiveTintColor: (route.name === 'Giám sát' || route.name === 'Monitor') ? '#3B82F6' : '#2E7D32',
         tabBarInactiveTintColor: '#94A3B8',
@@ -103,18 +109,24 @@ export default function App() {
   }
 
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <NavigationContainer onReady={onLayoutRootView}>
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="MainTabs" component={TabNavigator} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-            <Stack.Screen name="History" component={HistoryScreen} />
-            <Stack.Screen name="DiagnosisDetail" component={DiagnosisDetailScreen} />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </AuthProvider>
-    </LanguageProvider>
+    <SafeAreaProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <NavigationContainer onReady={onLayoutRootView}>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="MainTabs" component={TabNavigator} />
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen name="History" component={HistoryScreen} />
+              <Stack.Screen name="DiagnosisDetail" component={DiagnosisDetailScreen} />
+              <Stack.Screen name="Notifications" component={NotificationSettingsScreen} />
+              <Stack.Screen name="Privacy" component={PrivacySettingsScreen} />
+              <Stack.Screen name="AppSettings" component={AppSettingsScreen} />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </AuthProvider>
+      </LanguageProvider>
+      <StatusBar style="dark" />
+    </SafeAreaProvider>
   );
 }

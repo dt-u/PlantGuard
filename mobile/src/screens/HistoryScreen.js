@@ -12,14 +12,38 @@ import {
 import axios from 'axios';
 import { ENDPOINTS, API_BASE_URL } from '../api/config';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
 import { useHistorySync } from '../hooks/useHistorySync';
 import { ArrowLeft, Calendar, ChevronRight, AlertCircle, Trash2 } from 'lucide-react-native';
 
 const HistoryScreen = ({ navigation }) => {
     const { user } = useAuth();
+    const { language, t } = useLanguage();
+    const { translateDiseaseName } = useDiseaseTranslator();
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+
+    const content = {
+        vi: {
+            title: "Lịch sử chẩn đoán",
+            empty_title: "Chưa có lịch sử",
+            empty_subtitle: "Các kết quả chẩn đoán của bạn sẽ xuất hiện tại đây",
+            confidence: "Độ tin cậy"
+        },
+        en: {
+            title: "Diagnosis History",
+            empty_title: "No History Yet",
+            empty_subtitle: "Your diagnosis results will appear here",
+            confidence: "Confidence"
+        }
+    }[language] || {
+        title: "Diagnosis History",
+        empty_title: "No History Yet",
+        empty_subtitle: "Your diagnosis results will appear here",
+        confidence: "Confidence"
+    };
 
     // Sync remote updates
     useHistorySync(
@@ -90,13 +114,15 @@ const HistoryScreen = ({ navigation }) => {
                 style={styles.cardImage} 
             />
             <View style={styles.cardInfo}>
-                <Text style={styles.diseaseName} numberOfLines={1}>{item.disease_name}</Text>
+                <Text style={styles.diseaseName} numberOfLines={1}>
+                    {translateDiseaseName(item.disease_slug || item.disease_name, item.disease_name)}
+                </Text>
                 <View style={styles.dateContainer}>
                     <Calendar size={12} color="#94A3B8" />
                     <Text style={styles.dateText}>{formatDate(item.created_at)}</Text>
                 </View>
                 <View style={styles.confidenceBadge}>
-                    <Text style={styles.confidenceText}>Độ tin cậy: {(item.confidence * 100).toFixed(1)}%</Text>
+                    <Text style={styles.confidenceText}>{content.confidence}: {(item.confidence * 100).toFixed(1)}%</Text>
                 </View>
             </View>
             <TouchableOpacity 
@@ -114,7 +140,7 @@ const HistoryScreen = ({ navigation }) => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <ArrowLeft color="#1E293B" size={24} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Lịch sử chẩn đoán</Text>
+                <Text style={styles.headerTitle}>{content.title}</Text>
             </View>
 
             {loading ? (
@@ -124,8 +150,8 @@ const HistoryScreen = ({ navigation }) => {
             ) : history.length === 0 ? (
                 <View style={styles.centerContainer}>
                     <AlertCircle size={48} color="#CBD5E1" />
-                    <Text style={styles.emptyTitle}>Chưa có lịch sử</Text>
-                    <Text style={styles.emptySubtitle}>Các kết quả chẩn đoán của bạn sẽ xuất hiện tại đây</Text>
+                    <Text style={styles.emptyTitle}>{content.empty_title}</Text>
+                    <Text style={styles.emptySubtitle}>{content.empty_subtitle}</Text>
                 </View>
             ) : (
                 <FlatList

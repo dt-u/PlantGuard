@@ -22,10 +22,8 @@ const HomeScreen = ({ navigation }) => {
 
     return (
         <View style={[styles.container, { backgroundColor: '#F8FAFC' }]}>
-            <StatusBar barStyle="dark-content" />
-            
             {/* Header / Profile */}
-            <View style={[styles.header, { paddingTop: Math.max(insets.top + 15, 50), paddingBottom: 15 }]}>
+            <View style={[styles.header, { paddingTop: insets.top + 10, paddingBottom: 15 }]}>
                 <View style={styles.logoContainer}>
                     <Sprout color="#2E7D32" size={28} />
                     <Text style={styles.logoText}>PlantGuard</Text>
