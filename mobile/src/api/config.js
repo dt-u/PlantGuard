@@ -34,6 +34,7 @@ export const ENDPOINTS = {
     // Auth
     LOGIN: `${API_BASE_URL}/api/auth/login`,
     REGISTER: `${API_BASE_URL}/api/auth/register`,
+    UPDATE_PROFILE: (id) => `${API_BASE_URL}/api/auth/users/${id}`,
     
     // Monitor
     ANALYZE_VIDEO: `${API_BASE_URL}/api/monitor/analyze`,

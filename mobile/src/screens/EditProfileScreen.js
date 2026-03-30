@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { User, Mail, Phone, Camera, ChevronLeft, Save } from 'lucide-react-native';
+import { User, Mail, Camera, ChevronLeft, Save } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const EditProfileScreen = ({ navigation }) => {
-    const { user } = useAuth();
+    const { user, updateProfile } = useAuth();
     const { t, language } = useLanguage();
     const insets = useSafeAreaInsets();
 
@@ -37,19 +37,30 @@ const EditProfileScreen = ({ navigation }) => {
         save: "Save Changes",
         name: "Display Name",
         email: "Email",
-        phone: "Phone Number",
         change_avatar: "Change Avatar",
         success: "Success",
         success_msg: "Profile updated."
     };
 
     const [name, setName] = useState(user?.name || '');
-    const [phone, setPhone] = useState(user?.phone || '0912345678'); 
+    const [isSaving, setIsSaving] = useState(false);
 
-    const handleSave = () => {
-        Alert.alert(content.success, content.success_msg, [
-            { text: "OK", onPress: () => navigation.goBack() }
-        ]);
+    const handleSave = async () => {
+        if (!name.trim()) {
+            Alert.alert(language === 'vi' ? 'Lỗi' : 'Error', language === 'vi' ? 'Tên không được để trống' : 'Name cannot be empty');
+            return;
+        }
+        setIsSaving(true);
+        const result = await updateProfile(name);
+        setIsSaving(false);
+        
+        if (result.success) {
+            Alert.alert(content.success, content.success_msg, [
+                { text: "OK", onPress: () => navigation.goBack() }
+            ]);
+        } else {
+            Alert.alert(language === 'vi' ? 'Lỗi' : 'Error', result.error);
+        }
     };
 
     return (
@@ -59,8 +70,12 @@ const EditProfileScreen = ({ navigation }) => {
                     <ChevronLeft color="#1E293B" size={24} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>{content.title}</Text>
-                <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
-                    <Text style={styles.saveBtnText}>{t('common.save') || 'Lưu'}</Text>
+                <TouchableOpacity onPress={handleSave} style={styles.saveBtn} disabled={isSaving}>
+                    {isSaving ? (
+                        <ActivityIndicator size="small" color="#2E7D32" />
+                    ) : (
+                        <Text style={styles.saveBtnText} numberOfLines={1}>{t('common.save') || 'Lưu'}</Text>
+                    )}
                 </TouchableOpacity>
             </View>
 
@@ -98,23 +113,16 @@ const EditProfileScreen = ({ navigation }) => {
                         />
                     </View>
 
-                    <Text style={styles.label}>{content.phone}</Text>
-                    <View style={styles.inputContainer}>
-                        <Phone color="#64748B" size={20} style={styles.inputIcon} />
-                        <TextInput
-                            style={styles.input}
-                            value={phone}
-                            onChangeText={setPhone}
-                            placeholder="Nhập số điện thoại"
-                            placeholderTextColor="#94A3B8"
-                            keyboardType="phone-pad"
-                        />
-                    </View>
-
-                    <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                    <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={isSaving}>
                         <LinearGradient colors={['#2E7D32', '#10B981']} style={styles.gradient}>
-                            <Save color="#FFFFFF" size={20} />
-                            <Text style={styles.saveButtonText}>{content.save}</Text>
+                            {isSaving ? (
+                                <ActivityIndicator size="small" color="#FFFFFF" />
+                            ) : (
+                                <>
+                                    <Save color="#FFFFFF" size={20} />
+                                    <Text style={styles.saveButtonText}>{content.save}</Text>
+                                </>
+                            )}
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>
@@ -135,9 +143,9 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#F1F5F9',
     },
-    backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'flex-start' },
-    headerTitle: { fontSize: 17, fontFamily: 'Vietnam-Bold', color: '#1E293B' },
-    saveBtn: { width: 40, alignItems: 'flex-end', justifyContent: 'center' },
+    backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'flex-start' },
+    headerTitle: { fontSize: 17, fontFamily: 'Vietnam-Bold', color: '#1E293B', flex: 1, textAlign: 'center' },
+    saveBtn: { width: 44, height: 44, alignItems: 'flex-end', justifyContent: 'center' },
     saveBtnText: { fontSize: 14, fontFamily: 'Vietnam-Bold', color: '#2E7D32' },
     content: { padding: 24, paddingBottom: 60 },
     avatarSection: { alignItems: 'center', marginBottom: 32 },

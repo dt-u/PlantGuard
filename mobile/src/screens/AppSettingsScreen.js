@@ -1,14 +1,113 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Linking, ActivityIndicator } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, Moon, HelpCircle, Info, Video, Database, Trash2 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const AppSettingsScreen = ({ navigation }) => {
     const insets = useSafeAreaInsets();
     const { t, language } = useLanguage();
-    const [darkMode, setDarkMode] = useState(false);
-    const [videoQuality, setVideoQuality] = useState('auto'); // auto, high, low
+    const { user, updatePreferences } = useAuth();
+    
+    const [darkMode, setDarkMode] = useState(user?.preferences?.darkMode ?? false);
+    const [videoQuality, setVideoQuality] = useState(user?.preferences?.videoQuality ?? 'auto'); // auto, high, low
+    const [cacheSize, setCacheSize] = useState('Đang tính...');
+    const [isClearing, setIsClearing] = useState(false);
+    const [cacheBytes, setCacheBytes] = useState(0);
+
+    const formatBytes = (bytes) => {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    const calculateCacheSize = async () => {
+        try {
+            const cacheDir = FileSystem.cacheDirectory;
+            let totalSize = 0;
+            const readDir = async (dir) => {
+                const items = await FileSystem.readDirectoryAsync(dir);
+                for (const item of items) {
+                    const itemPath = `${dir}${item}`;
+                    const itemInfo = await FileSystem.getInfoAsync(itemPath, { size: true });
+                    if (itemInfo.isDirectory) {
+                        await readDir(itemPath + '/');
+                    } else {
+                        totalSize += (itemInfo.size || 0);
+                    }
+                }
+            };
+            await readDir(cacheDir);
+            setCacheBytes(totalSize);
+            setCacheSize(formatBytes(totalSize));
+        } catch (error) {
+            console.error("Error calculating cache size", error);
+            setCacheSize('0 B');
+            setCacheBytes(0);
+        }
+    };
+
+    useEffect(() => {
+        if (user?.preferences) {
+            setDarkMode(user.preferences.darkMode ?? false);
+            setVideoQuality(user.preferences.videoQuality ?? 'auto');
+        } else {
+            const loadSettings = async () => {
+                try {
+                    const stored = await AsyncStorage.getItem('appSettings');
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        setDarkMode(parsed.darkMode ?? false);
+                        setVideoQuality(parsed.videoQuality ?? 'auto');
+                    }
+                } catch (error) {
+                    console.error('Failed to load settings', error);
+                }
+            };
+            loadSettings();
+        }
+        calculateCacheSize();
+    }, [user?.preferences]);
+
+    const saveSettings = async (updates) => {
+        try {
+            if (user) {
+                await updatePreferences(updates);
+            } else {
+                const stored = await AsyncStorage.getItem('appSettings');
+                const parsed = stored ? JSON.parse(stored) : {};
+                const newSettings = { ...parsed, darkMode, videoQuality, ...updates };
+                await AsyncStorage.setItem('appSettings', JSON.stringify(newSettings));
+            }
+        } catch (error) {
+            console.error('Failed to save settings', error);
+        }
+    };
+
+    const handleToggleDarkMode = () => {
+        Alert.alert(
+            language === 'vi' ? 'Thông báo' : 'Notice',
+            language === 'vi' 
+                ? 'Giao diện Tối (Dark Mode) hiện đang được phát triển ở phiên bản này.' 
+                : 'Dark Mode is currently in development for this version.'
+        );
+        const newValue = !darkMode;
+        setDarkMode(newValue);
+        saveSettings({ darkMode: newValue });
+    };
+
+    const toggleVideoQuality = () => {
+        let newValue = 'auto';
+        if (videoQuality === 'auto') newValue = 'high';
+        else if (videoQuality === 'high') newValue = 'low';
+        setVideoQuality(newValue);
+        saveSettings({ videoQuality: newValue });
+    };
 
     const content = {
         vi: {
@@ -19,12 +118,12 @@ const AppSettingsScreen = ({ navigation }) => {
             video_quality_auto: "Tự động",
             storage: "Quản lý Bộ nhớ",
             clear_cache: "Xóa bộ nhớ đệm",
-            clear_cache_msg: "Bạn có muốn giải phóng 156 MB bộ nhớ đệm hình ảnh và video?",
+            clear_cache_msg: "Bạn có muốn giải phóng {{size}} bộ nhớ đệm ứng dụng?",
             support: "Hỗ trợ",
             help: "Trợ giúp & Hỗ trợ",
             about: "Giới thiệu",
             success: "Thành công",
-            cache_cleared: "Đã xóa 156 MB khỏi bộ nhớ đệm."
+            cache_cleared: "Đã xóa {{size}} khỏi bộ nhớ đệm."
         },
         en: {
             title: "App Settings",
@@ -34,12 +133,12 @@ const AppSettingsScreen = ({ navigation }) => {
             video_quality_auto: "Auto",
             storage: "Storage",
             clear_cache: "Clear Cache",
-            clear_cache_msg: "Do you want to free up 156 MB of image and video cache?",
+            clear_cache_msg: "Do you want to free up {{size}} of image and video cache?",
             support: "Support",
             help: "Help & Support",
             about: "About",
             success: "Success",
-            cache_cleared: "Cleared 156 MB from cache."
+            cache_cleared: "Cleared {{size}} from cache."
         }
     }[language] || {
         title: "App Settings",
@@ -49,31 +148,62 @@ const AppSettingsScreen = ({ navigation }) => {
         video_quality_auto: "Auto",
         storage: "Storage",
         clear_cache: "Clear Cache",
-        clear_cache_msg: "Do you want to free up 156 MB of cache?",
+        clear_cache_msg: "Do you want to clear the app's cache ({{size}})?",
         support: "Support",
         help: "Help & Support",
         about: "About",
         success: "Success",
-        cache_cleared: "Cache cleared."
+        cache_cleared: "Cache cleared ({{size}} freed)."
     };
 
-    const handleClearCache = () => {
+    const handleClearCache = async () => {
+        if (cacheBytes === 0) {
+            Alert.alert(
+                language === 'vi' ? 'Thông báo' : 'Notice', 
+                language === 'vi' ? 'Bộ nhớ đệm đã trống.' : 'Cache is already empty.'
+            );
+            return;
+        }
+
+        const msg = content.clear_cache_msg.replace('{{size}}', cacheSize);
+        const successMsg = content.cache_cleared.replace('{{size}}', cacheSize);
+
         Alert.alert(
             content.clear_cache,
-            content.clear_cache_msg,
+            msg,
             [
                 { text: t('common.cancel') || 'Hủy', style: 'cancel' },
-                { text: t('common.ok') || 'Đồng ý', onPress: () => {
-                    Alert.alert(content.success, content.cache_cleared);
+                { text: t('common.ok') || 'Đồng ý', onPress: async () => {
+                    setIsClearing(true);
+                    try {
+                        const cacheDir = FileSystem.cacheDirectory;
+                        const items = await FileSystem.readDirectoryAsync(cacheDir);
+                        for (const item of items) {
+                            await FileSystem.deleteAsync(`${cacheDir}${item}`, { idempotent: true });
+                        }
+                    } catch (error) {
+                        console.error("Lỗi khi xóa bộ nhớ đệm", error);
+                    }
+                    
+                    await calculateCacheSize();
+                    setIsClearing(false);
+                    Alert.alert(content.success, successMsg);
                 }, style: 'destructive' }
             ]
         );
     };
 
-    const toggleVideoQuality = () => {
-        if (videoQuality === 'auto') setVideoQuality('high');
-        else if (videoQuality === 'high') setVideoQuality('low');
-        else setVideoQuality('auto');
+    const handleSupport = () => {
+        Linking.openURL('mailto:support@plantguard.com');
+    };
+
+    const handleAbout = () => {
+        Alert.alert(
+            content.about,
+            language === 'vi' 
+                ? 'Phiên bản 1.0.0\nỨng dụng AI Nông nghiệp bảo vệ mùa màng.' 
+                : 'Version 1.0.0\nAI Agriculture App for crop protection.'
+        );
     };
 
     const getVideoQualityText = () => {
@@ -82,14 +212,14 @@ const AppSettingsScreen = ({ navigation }) => {
         return language === 'vi' ? 'Thấp (Tiết kiệm data)' : 'Low (Data Saver)';
     };
 
-    const SettingItem = ({ icon: Icon, title, value, onPress, onToggle, toggleValue, color }) => (
+    const SettingItem = ({ icon: Icon, title, value, onPress, onToggle, toggleValue, color, isLoading }) => (
         <TouchableOpacity 
             style={styles.settingItem} 
             onPress={onPress} 
-            disabled={onToggle !== undefined && !onPress}
+            disabled={(onToggle !== undefined && !onPress) || isLoading}
         >
             <View style={[styles.iconContainer, { backgroundColor: color + '12' }]}>
-                <Icon color={color} size={18} />
+                {isLoading ? <ActivityIndicator size="small" color={color} /> : <Icon color={color} size={18} />}
             </View>
             <View style={styles.textContainer}>
                 <Text style={styles.settingTitle}>{title}</Text>
@@ -127,7 +257,7 @@ const AppSettingsScreen = ({ navigation }) => {
                     <SettingItem 
                         icon={Moon}
                         title={content.dark}
-                        onToggle={() => setDarkMode(!darkMode)}
+                        onToggle={handleToggleDarkMode}
                         toggleValue={darkMode}
                         color="#8B5CF6"
                     />
@@ -145,9 +275,10 @@ const AppSettingsScreen = ({ navigation }) => {
                     <SettingItem 
                         icon={Trash2}
                         title={content.clear_cache}
-                        value="156 MB"
+                        value={cacheSize}
                         onPress={handleClearCache}
                         color="#EF4444"
+                        isLoading={isClearing}
                     />
                 </View>
 
@@ -156,13 +287,13 @@ const AppSettingsScreen = ({ navigation }) => {
                     <SettingItem 
                         icon={HelpCircle}
                         title={content.help}
-                        onPress={() => {}}
+                        onPress={handleSupport}
                         color="#10B981"
                     />
                     <SettingItem 
                         icon={Info}
                         title={content.about}
-                        onPress={() => {}}
+                        onPress={handleAbout}
                         color="#64748B"
                     />
                 </View>

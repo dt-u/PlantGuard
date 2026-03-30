@@ -63,6 +63,41 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const updateProfile = async (name) => {
+        try {
+            if (!user) return { success: false, error: 'Chưa đăng nhập' };
+            const response = await axios.put(ENDPOINTS.UPDATE_PROFILE(user.id), { name });
+            const userData = response.data;
+            setUser(userData);
+            await AsyncStorage.setItem('plantguard_user', JSON.stringify(userData));
+            return { success: true };
+        } catch (error) {
+            console.error('Update profile error:', error);
+            return { 
+                success: false, 
+                error: error.response?.data?.detail || 'Cập nhật thất bại. Vui lòng thử lại.' 
+            };
+        }
+    };
+
+    const updatePreferences = async (newPrefs) => {
+        try {
+            if (!user) return { success: false, error: 'Chưa đăng nhập' };
+            const mergedPrefs = { ...(user.preferences || {}), ...newPrefs };
+            const response = await axios.put(ENDPOINTS.UPDATE_PROFILE(user.id), { preferences: mergedPrefs });
+            const userData = response.data;
+            setUser(userData);
+            await AsyncStorage.setItem('plantguard_user', JSON.stringify(userData));
+            return { success: true };
+        } catch (error) {
+            console.error('Update preferences error:', error);
+            return { 
+                success: false, 
+                error: error.response?.data?.detail || 'Cập nhật cài đặt thất bại.' 
+            };
+        }
+    };
+
     const logout = async () => {
         try {
             setUser(null);
@@ -83,6 +118,8 @@ export const AuthProvider = ({ children }) => {
             login, 
             register, 
             logout, 
+            updateProfile,
+            updatePreferences,
             isAuthenticated, 
             getUserId 
         }}>

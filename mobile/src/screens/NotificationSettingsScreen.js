@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Platform, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChevronLeft, Bell, MessageSquare, ShieldAlert, Zap, Volume2 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -16,8 +17,51 @@ const NotificationSettingsScreen = ({ navigation }) => {
         news: true
     });
 
-    const toggleSwitch = (key) => {
-        setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const stored = await AsyncStorage.getItem('notificationSettings');
+                if (stored) {
+                    setSettings(JSON.parse(stored));
+                }
+            } catch (error) {
+                console.error('Failed to load settings', error);
+            }
+        };
+        loadSettings();
+    }, []);
+
+    const toggleSwitch = async (key) => {
+        try {
+            if (key === 'push' && !settings.push) {
+                return Alert.alert(
+                    language === 'vi' ? 'Cấp quyền thông báo' : 'Allow Notifications',
+                    language === 'vi' 
+                        ? 'PlantGuard muốn gửi cho bạn cảnh báo về khu vườn.\nBạn có cho phép không?' 
+                        : 'PlantGuard would like to send you alerts about your garden. Do you allow this?',
+                    [
+                        { 
+                            text: language === 'vi' ? 'Từ chối' : 'Deny', 
+                            style: 'cancel' 
+                        },
+                        { 
+                            text: language === 'vi' ? 'Cho phép' : 'Allow', 
+                            onPress: async () => {
+                                const newSettings = { ...settings, push: true };
+                                setSettings(newSettings);
+                                await AsyncStorage.setItem('notificationSettings', JSON.stringify(newSettings));
+                            } 
+                        }
+                    ]
+                );
+            }
+
+            const newSettings = { ...settings, [key]: !settings[key] };
+            setSettings(newSettings);
+            await AsyncStorage.setItem('notificationSettings', JSON.stringify(newSettings));
+        } catch (error) {
+            console.error('Failed to save settings', error);
+        }
     };
 
     // Nội dung dịch trực tiếp để đảm bảo luôn hoạt động

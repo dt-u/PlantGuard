@@ -1,21 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChevronLeft, Lock, Eye, Server, ShieldCheck } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const PrivacySettingsScreen = ({ navigation }) => {
     const insets = useSafeAreaInsets();
     const { language } = useLanguage();
+    const { user, updatePreferences } = useAuth();
     
-    const [privacy, setPrivacy] = useState({
+    const [privacy, setPrivacy] = useState(user?.preferences?.privacy || {
         dataSharing: false,
         profileVisible: true,
         historyLog: true
     });
 
-    const toggleSwitch = (key) => {
-        setPrivacy(prev => ({ ...prev, [key]: !prev[key] }));
+    useEffect(() => {
+        if (user?.preferences?.privacy) {
+            setPrivacy(user.preferences.privacy);
+        } else {
+            // Fallback load from AsyncStorage if not logged in
+            const loadSettings = async () => {
+                try {
+                    const stored = await AsyncStorage.getItem('privacySettings');
+                    if (stored) setPrivacy(JSON.parse(stored));
+                } catch (error) {
+                    console.error('Failed to load settings', error);
+                }
+            };
+            loadSettings();
+        }
+    }, [user?.preferences?.privacy]);
+
+    const toggleSwitch = async (key) => {
+        try {
+            const newSettings = { ...privacy, [key]: !privacy[key] };
+            setPrivacy(newSettings);
+            if (user) {
+                await updatePreferences({ privacy: newSettings });
+            } else {
+                await AsyncStorage.setItem('privacySettings', JSON.stringify(newSettings));
+            }
+        } catch (error) {
+            console.error('Failed to save settings', error);
+        }
     };
 
     const content = {

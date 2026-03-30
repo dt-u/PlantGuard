@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime
 from bson import ObjectId
 
@@ -26,6 +26,7 @@ class User(BaseModel):
     name: str
     password: str  # In production, this should be hashed
     created_at: datetime
+    preferences: Optional[Dict[str, Any]] = Field(default_factory=dict)
     
     class Config:
         populate_by_name = True
@@ -43,11 +44,16 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    preferences: Optional[Dict[str, Any]] = None
+
 class UserResponse(BaseModel):
     id: str
     email: EmailStr
     name: str
     created_at: datetime
+    preferences: Optional[Dict[str, Any]] = None
     
     class Config:
         arbitrary_types_allowed = True
