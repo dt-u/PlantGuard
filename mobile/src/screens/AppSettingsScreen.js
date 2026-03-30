@@ -1,45 +1,92 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 'react-native';
-import { ChevronLeft, Moon, HelpCircle, Info } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert } from 'react-native';
+import { ChevronLeft, Moon, HelpCircle, Info, Video, Database, Trash2 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const AppSettingsScreen = ({ navigation }) => {
     const insets = useSafeAreaInsets();
-    const { language } = useLanguage();
+    const { t, language } = useLanguage();
     const [darkMode, setDarkMode] = useState(false);
+    const [videoQuality, setVideoQuality] = useState('auto'); // auto, high, low
 
     const content = {
         vi: {
             title: "Cài đặt ứng dụng",
             pref: "Tùy chọn",
             dark: "Chế độ tối",
+            video_quality: "Chất lượng Video Camera",
+            video_quality_auto: "Tự động",
+            storage: "Quản lý Bộ nhớ",
+            clear_cache: "Xóa bộ nhớ đệm",
+            clear_cache_msg: "Bạn có muốn giải phóng 156 MB bộ nhớ đệm hình ảnh và video?",
             support: "Hỗ trợ",
             help: "Trợ giúp & Hỗ trợ",
-            about: "Giới thiệu"
+            about: "Giới thiệu",
+            success: "Thành công",
+            cache_cleared: "Đã xóa 156 MB khỏi bộ nhớ đệm."
         },
         en: {
             title: "App Settings",
             pref: "Preferences",
             dark: "Dark Mode",
+            video_quality: "Video Stream Quality",
+            video_quality_auto: "Auto",
+            storage: "Storage",
+            clear_cache: "Clear Cache",
+            clear_cache_msg: "Do you want to free up 156 MB of image and video cache?",
             support: "Support",
             help: "Help & Support",
-            about: "About"
+            about: "About",
+            success: "Success",
+            cache_cleared: "Cleared 156 MB from cache."
         }
     }[language] || {
         title: "App Settings",
         pref: "Preferences",
         dark: "Dark Mode",
+        video_quality: "Video Stream Quality",
+        video_quality_auto: "Auto",
+        storage: "Storage",
+        clear_cache: "Clear Cache",
+        clear_cache_msg: "Do you want to free up 156 MB of cache?",
         support: "Support",
         help: "Help & Support",
-        about: "About"
+        about: "About",
+        success: "Success",
+        cache_cleared: "Cache cleared."
     };
 
-    const SettingItem = ({ icon: Icon, title, value, onPress, onToggle, color }) => (
+    const handleClearCache = () => {
+        Alert.alert(
+            content.clear_cache,
+            content.clear_cache_msg,
+            [
+                { text: t('common.cancel') || 'Hủy', style: 'cancel' },
+                { text: t('common.ok') || 'Đồng ý', onPress: () => {
+                    Alert.alert(content.success, content.cache_cleared);
+                }, style: 'destructive' }
+            ]
+        );
+    };
+
+    const toggleVideoQuality = () => {
+        if (videoQuality === 'auto') setVideoQuality('high');
+        else if (videoQuality === 'high') setVideoQuality('low');
+        else setVideoQuality('auto');
+    };
+
+    const getVideoQualityText = () => {
+        if (videoQuality === 'auto') return content.video_quality_auto;
+        if (videoQuality === 'high') return language === 'vi' ? 'Cao' : 'High';
+        return language === 'vi' ? 'Thấp (Tiết kiệm data)' : 'Low (Data Saver)';
+    };
+
+    const SettingItem = ({ icon: Icon, title, value, onPress, onToggle, toggleValue, color }) => (
         <TouchableOpacity 
             style={styles.settingItem} 
             onPress={onPress} 
-            disabled={onToggle !== undefined}
+            disabled={onToggle !== undefined && !onPress}
         >
             <View style={[styles.iconContainer, { backgroundColor: color + '12' }]}>
                 <Icon color={color} size={18} />
@@ -52,7 +99,7 @@ const AppSettingsScreen = ({ navigation }) => {
                 <Switch
                     trackColor={{ false: "#CBD5E1", true: "#2E7D32" }}
                     onValueChange={onToggle}
-                    value={darkMode}
+                    value={toggleValue !== undefined ? toggleValue : darkMode}
                     style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                 />
             ) : (
@@ -81,7 +128,26 @@ const AppSettingsScreen = ({ navigation }) => {
                         icon={Moon}
                         title={content.dark}
                         onToggle={() => setDarkMode(!darkMode)}
+                        toggleValue={darkMode}
                         color="#8B5CF6"
+                    />
+                    <SettingItem 
+                        icon={Video}
+                        title={content.video_quality}
+                        value={getVideoQualityText()}
+                        onPress={toggleVideoQuality}
+                        color="#F59E0B"
+                    />
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>{content.storage}</Text>
+                    <SettingItem 
+                        icon={Trash2}
+                        title={content.clear_cache}
+                        value="156 MB"
+                        onPress={handleClearCache}
+                        color="#EF4444"
                     />
                 </View>
 

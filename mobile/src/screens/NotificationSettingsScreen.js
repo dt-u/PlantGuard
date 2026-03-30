@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Platform } from 'react-native';
-import { ChevronLeft, Bell, MessageSquare, ShieldAlert, Zap } from 'lucide-react-native';
+import { ChevronLeft, Bell, MessageSquare, ShieldAlert, Zap, Volume2 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -11,6 +11,7 @@ const NotificationSettingsScreen = ({ navigation }) => {
     const [settings, setSettings] = useState({
         push: true,
         detection: true,
+        siren: false,
         report: false,
         news: true
     });
@@ -29,6 +30,8 @@ const NotificationSettingsScreen = ({ navigation }) => {
             monitor: "Cảnh báo giám sát",
             disease: "Phát hiện bệnh",
             disease_desc: "Thông báo ngay khi thấy rủi ro",
+            siren: "Còi báo động khẩn cấp",
+            siren_desc: "Phát âm thanh lớn khi có rủi ro cao",
             realtime: "Cập nhật trực tiếp",
             realtime_desc: "Dữ liệu liên tục từ Drone/Camera",
             other: "Khác",
@@ -43,6 +46,8 @@ const NotificationSettingsScreen = ({ navigation }) => {
             monitor: "Monitoring Alerts",
             disease: "Disease Detection",
             disease_desc: "Instant alerts on detection",
+            siren: "Emergency Siren",
+            siren_desc: "Play loud sound on high risk",
             realtime: "Real-time Updates",
             realtime_desc: "Continuous data from devices",
             other: "Other",
@@ -57,6 +62,8 @@ const NotificationSettingsScreen = ({ navigation }) => {
         monitor: "Monitoring Alerts",
         disease: "Disease Detection",
         disease_desc: "Instant alerts on detection",
+        siren: "Emergency Siren",
+        siren_desc: "Play loud sound on high risk",
         realtime: "Real-time Updates",
         realtime_desc: "Continuous data from devices",
         other: "Other",
@@ -119,6 +126,14 @@ const NotificationSettingsScreen = ({ navigation }) => {
                         value={settings.detection}
                         onToggle={() => toggleSwitch('detection')}
                         color="#EF4444"
+                    />
+                    <SettingItem 
+                        icon={Volume2}
+                        title={content.siren}
+                        description={content.siren_desc}
+                        value={settings.siren}
+                        onToggle={() => toggleSwitch('siren')}
+                        color="#DC2626"
                     />
                     <SettingItem 
                         icon={Zap}

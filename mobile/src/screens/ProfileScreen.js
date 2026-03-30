@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { User, History, LogOut, ChevronRight, Settings, Shield, Bell, LogIn, ArrowLeft, UserPlus, Globe, Check } from 'lucide-react-native';
+import { User, History, LogOut, ChevronRight, Settings, Shield, Bell, LogIn, ArrowLeft, UserPlus, Globe, Check, Edit2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -84,13 +84,19 @@ const ProfileScreen = ({ navigation }) => {
             >
                 {user ? (
                     <View style={styles.profileInfo}>
-                        <View style={styles.avatarContainer}>
+                        <TouchableOpacity style={styles.avatarContainer} onPress={() => navigation.navigate('EditProfile')}>
                             <User color="#2E7D32" size={28} />
-                        </View>
+                            <View style={styles.editBadge}>
+                                <Edit2 color="#FFFFFF" size={10} />
+                            </View>
+                        </TouchableOpacity>
                         <View style={styles.nameContainer}>
                             <Text style={styles.userName}>{user.name}</Text>
                             <Text style={styles.userEmail}>{user.email}</Text>
                         </View>
+                        <TouchableOpacity style={styles.editBtn} onPress={() => navigation.navigate('EditProfile')}>
+                             <Edit2 color="#FFFFFF" size={20} />
+                        </TouchableOpacity>
                     </View>
                 ) : (
                     <View style={styles.guestHeaderWrapper}>
@@ -119,13 +125,13 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.menuLabel}>{t('profile.history')}</Text>
                     <ChevronRight color="#CBD5E1" size={20} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Notifications')}>
-                    <View style={styles.menuIconContainer}><Bell color="#2E7D32" size={20} /></View>
-                    <Text style={styles.menuLabel}>{t('profile.notifications')}</Text>
-                    <ChevronRight color="#CBD5E1" size={20} />
-                </TouchableOpacity>
 
                 <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
+                <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Notifications')}>
+                    <View style={styles.menuIconContainer}><Bell color="#2E7D32" size={20} /></View>
+                    <Text style={styles.menuLabel}>{language === 'vi' ? 'Cài đặt thông báo' : 'Notification Settings'}</Text>
+                    <ChevronRight color="#CBD5E1" size={20} />
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem} onPress={() => setShowLanguageModal(true)}>
                     <View style={styles.menuIconContainer}><Globe color="#2E7D32" size={20} /></View>
                     <Text style={styles.menuLabel}>{t('profile.language')}</Text>
@@ -212,6 +218,8 @@ const styles = StyleSheet.create({
         fontFamily: 'Vietnam-Bold',
         color: '#FFFFFF',
     },
+    editBadge: { position: 'absolute', bottom: -2, right: -4, backgroundColor: '#3B82F6', width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
+    editBtn: { padding: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 12 },
     userEmail: {
         fontSize: 12,
         fontFamily: 'Vietnam-Medium',
