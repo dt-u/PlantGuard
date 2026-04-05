@@ -6,7 +6,6 @@ from .user import PyObjectId
 
 class NotificationType(str, Enum):
     DRONE = "drone"
-    HEALTH = "health"
     SYSTEM = "system"
 
 class Notification(BaseModel):

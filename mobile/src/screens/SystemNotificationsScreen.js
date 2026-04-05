@@ -37,8 +37,6 @@ const SystemNotificationsScreen = ({ navigation }) => {
 
     const getIconAndColor = (type) => {
         switch (type) {
-            case 'health':
-                return { icon: ShieldAlert, color: '#EF4444' };
             case 'drone':
                 return { icon: FileText, color: '#3B82F6' };
             case 'system':
