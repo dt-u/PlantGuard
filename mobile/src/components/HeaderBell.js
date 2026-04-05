@@ -2,9 +2,11 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { Bell } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../contexts/AuthContext';
 
 const HeaderBell = ({ color = "#1E293B", badgeCount = 2, style }) => {
     const navigation = useNavigation();
+    const { isAuthenticated } = useAuth();
 
     return (
         <TouchableOpacity 
@@ -14,7 +16,7 @@ const HeaderBell = ({ color = "#1E293B", badgeCount = 2, style }) => {
         >
             <View style={styles.iconWrapper}>
                 <Bell size={22} color={color} />
-                {badgeCount > 0 && (
+                {isAuthenticated() && badgeCount > 0 && (
                     <View style={styles.badge}>
                         <Text style={styles.badgeText}>
                             {badgeCount > 9 ? '9+' : badgeCount}

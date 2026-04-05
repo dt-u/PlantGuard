@@ -45,7 +45,7 @@ const HomeScreen = ({ navigation }) => {
                                 </View>
                             ) : (
                                 <View style={styles.guestAvatar}>
-                                    <Sprout color="#2E7D32" size={14} />
+                                    <LogIn color="#2E7D32" size={14} />
                                 </View>
                             )}
                         </TouchableOpacity>
