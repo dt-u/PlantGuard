@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image,
 import { Radio, Upload, Play, Square, AlertTriangle, Activity, Maximize, Minimize, Trash2, Download, Video as VideoIcon, FileText, Archive, ChevronRight, Zap } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import HeaderBell from '../components/HeaderBell';
 import ScreenHeader from '../components/ScreenHeader';
 import * as ImagePicker from 'expo-image-picker';
@@ -64,6 +65,7 @@ const LiveCameraView = memo(({ imageRef, isFullscreen }) => {
 }, () => true);
 
 const MonitorScreen = () => {
+    const { user, isAuthenticated } = useAuth();
     const insets = useSafeAreaInsets();
     const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState('live');
@@ -252,6 +254,10 @@ const MonitorScreen = () => {
             name: 'video.mp4',
             type: 'video/mp4',
         });
+
+        if (isAuthenticated() && user?.id) {
+            formData.append('user_id', user.id);
+        }
 
         try {
             const response = await axios.post(ENDPOINTS.ANALYZE_VIDEO, formData, {

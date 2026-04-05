@@ -4,6 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, ShieldAlert, FileText, Bell, CheckCircle2, Trash2, LogIn, Clock, Info } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import axios from 'axios';
+import { ENDPOINTS } from '../api/config';
+import { formatDistanceToNow } from 'date-fns';
+import { vi, enUS } from 'date-fns/locale';
 
 const SystemNotificationsScreen = ({ navigation }) => {
     const insets = useSafeAreaInsets();
@@ -11,74 +15,78 @@ const SystemNotificationsScreen = ({ navigation }) => {
     const { language, t } = useLanguage();
     const [loading, setLoading] = useState(true);
     
-    // Mock Data
-    const [notifications, setNotifications] = useState([
-        {
-            id: '1',
-            type: 'alert',
-            title: language === 'vi' ? 'Cảnh báo dịch bệnh' : 'Disease Alert',
-            message: language === 'vi' 
-                ? 'Phát hiện sương mai tại Khu vực A (Mảnh vườn phía Tây).' 
-                : 'Late blight detected in Area A (West Garden).',
-            time: '2 phút trước',
-            read: false,
-            icon: ShieldAlert,
-            color: '#EF4444'
-        },
-        {
-            id: '2',
-            type: 'report',
-            title: language === 'vi' ? 'Báo cáo tuần' : 'Weekly Report',
-            message: language === 'vi' 
-                ? 'Báo cáo sức khỏe cây trồng tuần qua đã sẵn sàng.' 
-                : 'Last week\'s crop health report is ready.',
-            time: '3 giờ trước',
-            read: false,
-            icon: FileText,
-            color: '#3B82F6'
-        },
-        {
-            id: '3',
-            type: 'system',
-            title: language === 'vi' ? 'Cập nhật hệ thống' : 'System Update',
-            message: language === 'vi' 
-                ? 'Hệ thống AI đã được nâng cấp lên phiên bản 2.1.' 
-                : 'AI System upgraded to version 2.1.',
-            time: '1 ngày trước',
-            read: true,
-            icon: Info,
-            color: '#10B981'
-        },
-        {
-            id: '4',
-            type: 'doctor',
-            title: language === 'vi' ? 'Nhắc nhở bác sĩ' : 'Doctor Reminder',
-            message: language === 'vi' 
-                ? 'Đừng quên kiểm tra lại tiến triển của cây cà chua.' 
-                : 'Don\'t forget to re-check the tomato plants\' progress.',
-            time: '2 ngày trước',
-            read: true,
-            icon: Bell,
-            color: '#F59E0B'
+    const [notifications, setNotifications] = useState([]);
+    
+    const fetchNotifications = async () => {
+        if (isAuthenticated() && user?.id) {
+            try {
+                setLoading(true);
+                const response = await axios.get(`${ENDPOINTS.NOTIFICATIONS_LIST}?user_id=${user.id}`);
+                setNotifications(response.data);
+            } catch (error) {
+                console.error("Error fetching notifications:", error);
+            } finally {
+                setLoading(false);
+            }
         }
-    ]);
+    };
 
     useEffect(() => {
-        // Simulate loading
-        const timer = setTimeout(() => setLoading(false), 800);
-        return () => clearTimeout(timer);
-    }, []);
+        fetchNotifications();
+    }, [user, isAuthenticated]);
 
-    const markAllAsRead = () => {
-        setNotifications(notifications.map(n => ({ ...n, read: true })));
+    const getIconAndColor = (type) => {
+        switch (type) {
+            case 'health':
+                return { icon: ShieldAlert, color: '#EF4444' };
+            case 'drone':
+                return { icon: FileText, color: '#3B82F6' };
+            case 'system':
+                return { icon: Info, color: '#10B981' };
+            default:
+                return { icon: Bell, color: '#F59E0B' };
+        }
     };
 
-    const clearAll = () => {
-        setNotifications([]);
+    const formatTime = (dateString) => {
+        try {
+            const date = new Date(dateString);
+            return formatDistanceToNow(date, { 
+                addSuffix: true, 
+                locale: language === 'vi' ? vi : enUS 
+            });
+        } catch (e) {
+            return dateString;
+        }
     };
 
-    const markAsRead = (id) => {
-        setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+    const markAllAsRead = async () => {
+        if (!user?.id) return;
+        try {
+            await axios.patch(`${ENDPOINTS.NOTIFICATIONS_READ_ALL}?user_id=${user.id}`);
+            setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+        } catch (error) {
+            console.error("Error marking all read:", error);
+        }
+    };
+
+    const clearAll = async () => {
+        if (!user?.id) return;
+        try {
+            await axios.delete(`${ENDPOINTS.NOTIFICATIONS_CLEAR}?user_id=${user.id}`);
+            setNotifications([]);
+        } catch (error) {
+            console.error("Error clearing notifications:", error);
+        }
+    };
+
+    const markAsRead = async (id) => {
+        try {
+            await axios.patch(ENDPOINTS.NOTIFICATIONS_MARK_READ(id));
+            setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
+        } catch (error) {
+            console.error("Error marking read:", error);
+        }
     };
 
     const content = {
@@ -167,29 +175,32 @@ const SystemNotificationsScreen = ({ navigation }) => {
                                 </TouchableOpacity>
                             </View>
 
-                            {notifications.map((item) => (
-                                <TouchableOpacity 
-                                    key={item.id} 
-                                    style={[styles.notiCard, !item.read && styles.unreadCard]}
-                                    onPress={() => markAsRead(item.id)}
-                                    activeOpacity={0.7}
-                                >
-                                    <View style={[styles.iconContainer, { backgroundColor: item.color + '15' }]}>
-                                        <item.icon color={item.color} size={20} />
-                                    </View>
-                                    <View style={styles.textContainer}>
-                                        <View style={styles.cardHeader}>
-                                            <Text style={styles.notiTitle}>{item.title}</Text>
-                                            {!item.read && <View style={styles.unreadDot} />}
+                            {notifications.map((item) => {
+                                const { icon: Icon, color } = getIconAndColor(item.type);
+                                return (
+                                    <TouchableOpacity 
+                                        key={item.id} 
+                                        style={[styles.notiCard, !item.is_read && styles.unreadCard]}
+                                        onPress={() => markAsRead(item.id)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <View style={[styles.iconContainer, { backgroundColor: color + '15' }]}>
+                                            <Icon color={color} size={20} />
                                         </View>
-                                        <Text style={styles.notiMessage} numberOfLines={2}>{item.message}</Text>
-                                        <View style={styles.timeContainer}>
-                                            <Clock color="#94A3B8" size={12} />
-                                            <Text style={styles.notiTime}>{item.time}</Text>
+                                        <View style={styles.textContainer}>
+                                            <View style={styles.cardHeader}>
+                                                <Text style={styles.notiTitle}>{item.title}</Text>
+                                                {!item.is_read && <View style={styles.unreadDot} />}
+                                            </View>
+                                            <Text style={styles.notiMessage} numberOfLines={2}>{item.message}</Text>
+                                            <View style={styles.timeContainer}>
+                                                <Clock color="#94A3B8" size={12} />
+                                                <Text style={styles.notiTime}>{formatTime(item.created_at)}</Text>
+                                            </View>
                                         </View>
-                                    </View>
-                                </TouchableOpacity>
-                            ))}
+                                    </TouchableOpacity>
+                                );
+                            })}
                         </>
                     ) : (
                         <View style={styles.emptyContainer}>

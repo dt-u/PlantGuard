@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks
+from typing import Optional
 from fastapi.responses import FileResponse
 from ..ai_engine import AIEngine
 from ..models import AnalysisResponse
@@ -20,7 +21,7 @@ if not os.path.exists(UPLOAD_DIR):
 
 jobs = {}
 
-async def run_analysis(job_id: str, file_path: str):
+async def run_analysis(job_id: str, file_path: str, user_id: Optional[str] = None):
     def progress_cb(pct):
         jobs[job_id]["progress"] = pct
         
@@ -31,9 +32,32 @@ async def run_analysis(job_id: str, file_path: str):
     except Exception as e:
         jobs[job_id]["status"] = "failed"
         jobs[job_id]["error"] = str(e)
+    
+    # Trigger Notification if user_id is provided
+    if user_id and user_id != "anonymous":
+        try:
+            status_text = "hoàn tất" if jobs[job_id]["status"] == "completed" else "thất bại"
+            alert_count = result.get("alert_count", 0) if jobs[job_id]["status"] == "completed" else 0
+            
+            message = f"Phân tích Drone đã {status_text}. "
+            if jobs[job_id]["status"] == "completed":
+                message += f"Tìm thấy {alert_count} cảnh báo rủi ro. Xem chi tiết tại tab Giám sát."
+            else:
+                message += "Đã xảy ra lỗi trong quá trình xử lý tệp video."
+
+            await mongodb.notifications.insert_one({
+                "user_id": str(user_id),
+                "type": "drone",
+                "title": f"Cập nhật Phân tích Drone",
+                "message": message,
+                "is_read": False,
+                "created_at": datetime.now()
+            })
+        except Exception as noti_err:
+            print(f"Error creating drone notification: {noti_err}")
 
 @router.post("/analyze")
-async def analyze_video(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+async def analyze_video(background_tasks: BackgroundTasks, file: UploadFile = File(...), user_id: Optional[str] = None):
     try:
         job_id = str(uuid.uuid4())
         filename = f"{uuid.uuid4()}_{file.filename}"
@@ -42,8 +66,8 @@ async def analyze_video(background_tasks: BackgroundTasks, file: UploadFile = Fi
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
-        jobs[job_id] = {"status": "processing", "progress": 0, "result": None, "error": None}
-        background_tasks.add_task(run_analysis, job_id, file_path)
+        jobs[job_id] = {"status": "processing", "progress": 0, "result": None, "error": None, "user_id": user_id}
+        background_tasks.add_task(run_analysis, job_id, file_path, user_id)
         
         return {"job_id": job_id}
     except Exception as e:

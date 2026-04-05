@@ -55,5 +55,12 @@ export const ENDPOINTS = {
     // History
     HISTORY_LIST: `${API_BASE_URL}/api/history/list`,
     HISTORY_SAVE: `${API_BASE_URL}/api/history/save`,
-    HISTORY_DELETE: (id) => `${API_BASE_URL}/api/history/${id}`
+    HISTORY_DELETE: (id) => `${API_BASE_URL}/api/history/${id}`,
+    
+    // Notifications
+    NOTIFICATIONS_LIST: `${API_BASE_URL}/api/notifications/`,
+    NOTIFICATIONS_UNREAD_COUNT: `${API_BASE_URL}/api/notifications/unread-count`,
+    NOTIFICATIONS_MARK_READ: (id) => `${API_BASE_URL}/api/notifications/${id}/read`,
+    NOTIFICATIONS_READ_ALL: `${API_BASE_URL}/api/notifications/read-all`,
+    NOTIFICATIONS_CLEAR: `${API_BASE_URL}/api/notifications/clear`
 };
