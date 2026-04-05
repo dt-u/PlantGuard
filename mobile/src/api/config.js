@@ -6,22 +6,31 @@ import { Platform } from 'react-native';
  */
 
 const getHostUri = () => {
-    // 1. Ưu tiên lấy IP từ Expo (Đây là cách chính xác nhất cho điện thoại thật chạy Expo Go)
-    const hostUri = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoGo?.debuggerHost || Constants.manifest?.debuggerHost;
+    // 1. Tổng hợp tất cả các nguồn có thể chứa IP từ Expo
+    const hostUri = Constants.expoConfig?.hostUri || 
+                    Constants.manifest2?.extra?.expoGo?.debuggerHost || 
+                    Constants.manifest?.debuggerHost || 
+                    Constants.linkingUri || 
+                    Constants.experienceUrl;
     
-    if (hostUri && !hostUri.includes('localhost') && !hostUri.includes('127.0.0.1')) {
-        return hostUri.split(':')[0];
+    // 2. Nếu tìm thấy hostUri, bóc tách lấy IP (loại bỏ protocol và port)
+    if (hostUri) {
+        // Regex để tìm dải IP (4 nhóm số cách nhau bởi dấu chấm)
+        const ipMatch = hostUri.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+        if (ipMatch && ipMatch[1] !== '127.0.0.1') {
+            return ipMatch[1];
+        }
     }
 
-    // 2. Nếu không lấy được từ Expo (vùng dev đặc biệt), mới dùng fallback cho Emulator/Simulator
+    // 3. Fallback cho Emulator/Simulator nếu là môi trường Dev
     if (__DEV__) {
         if (Platform.OS === 'android') {
-            return "10.0.2.2"; // Chỉ dành cho Android Emulator
+            return "10.0.2.2"; // Android Emulator
         }
-        return "localhost"; // Chỉ dành cho iOS Simulator
+        return "localhost"; // iOS Simulator
     }
     
-    // 3. Fallback cuối cùng nếu mọi thứ thất bại
+    // 4. Fallback cuối cùng nếu mọi thứ thất bại
     return "192.168.1.100"; 
 };
 
