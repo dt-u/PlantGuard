@@ -38,9 +38,14 @@ async def create_indexes():
         await mongodb.users.create_index("created_at")
         
         # History collection indexes
-        await mongodb.history.create_index("user_id")
         await mongodb.history.create_index("created_at")
         await mongodb.history.create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
+        
+        # Notifications collection indexes
+        await mongodb.notifications.create_index("user_id")
+        await mongodb.notifications.create_index("created_at")
+        await mongodb.notifications.create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
+        await mongodb.notifications.create_index([("user_id", ASCENDING), ("is_read", ASCENDING)])
         
         print("✅ Database indexes created")
     except Exception as e:
@@ -60,23 +65,17 @@ async def seed_db():
         # Check if users collection exists and has data
         users_count = await mongodb.users.count_documents({})
         
-        if users_count == 0:
-            print("🌱 Seeding database...")
-            
-            # Create collections if they don't exist
-            collections = await database.list_collection_names()
-            
-            if "users" not in collections:
-                await database.create_collection("users")
-                print("✅ Created users collection")
-            
-            if "history" not in collections:
-                await database.create_collection("history")
-                print("✅ Created history collection")
-            
-            print("✅ Database seeded successfully")
-        else:
+        # Ensure collections exist even if already seeded
+        collections = await database.list_collection_names()
+        for col in ["users", "history", "notifications"]:
+            if col not in collections:
+                await database.create_collection(col)
+                print(f"✅ Created {col} collection")
+        
+        if users_count > 0:
             print(f"✅ Database already contains {users_count} users")
+        else:
+            print("🌱 Database is empty, ready for first user")
             
     except Exception as e:
         print(f"❌ Error seeding database: {e}")

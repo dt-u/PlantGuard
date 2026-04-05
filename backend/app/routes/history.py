@@ -40,6 +40,21 @@ async def save_diagnosis(record: DiagnosisRecord):
         # Get the inserted record
         saved_record = await mongodb.history.find_one({"_id": result.inserted_id})
         
+        # Trigger Notification
+        if record.user_id and record.user_id != "anonymous":
+            try:
+                disease_name = record.disease.common_name or record.disease.name
+                await mongodb.notifications.insert_one({
+                    "user_id": str(record.user_id),
+                    "type": "health",
+                    "title": "Chẩn đoán mới đã lưu",
+                    "message": f"Kết quả chẩn đoán cho cây {disease_name} đã được lưu vào lịch sử của bạn.",
+                    "is_read": False,
+                    "created_at": datetime.now()
+                })
+            except Exception as noti_err:
+                print(f"Error creating notification: {noti_err}")
+        
         # Convert ObjectId to string
         saved_record["id"] = str(saved_record.pop("_id"))
         
