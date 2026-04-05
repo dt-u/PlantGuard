@@ -4,6 +4,8 @@ import { Leaf, Eye, ArrowRight, Sprout, LogIn } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import HeaderBell from '../components/HeaderBell';
+import ScreenHeader from '../components/ScreenHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -22,32 +24,34 @@ const HomeScreen = ({ navigation }) => {
 
     return (
         <View style={[styles.container, { backgroundColor: '#F8FAFC' }]}>
-            {/* Header / Profile */}
-            <View style={[styles.header, { paddingTop: insets.top + 10, paddingBottom: 15 }]}>
-                <View style={styles.logoContainer}>
-                    <Sprout color="#2E7D32" size={28} />
-                    <Text style={styles.logoText}>PlantGuard</Text>
-                </View>
-                
-                <TouchableOpacity 
-                    onPress={handleProfilePress}
-                    style={styles.profileButton}
-                >
-                    {user ? (
-                        <View style={styles.userBadge}>
-                            <View style={styles.avatarMini}>
-                                <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
-                            </View>
-                            <Text style={styles.userNameMini} numberOfLines={1}>{user.name}</Text>
-                        </View>
-                    ) : (
-                        <View style={styles.loginBadge}>
-                            <LogIn color="#2E7D32" size={16} />
-                            <Text style={styles.loginTextMini}>{t('common.login')}</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-            </View>
+            <ScreenHeader 
+                paddingHorizontal={20}
+                leftElement={
+                    <View style={styles.logoContainer}>
+                        <Sprout color="#2E7D32" size={28} />
+                        <Text style={styles.logoText}>PlantGuard</Text>
+                    </View>
+                }
+                rightElement={
+                    <View style={styles.headerRight}>
+                        <HeaderBell style={{ marginRight: 8 }} />
+                        <TouchableOpacity 
+                            onPress={handleProfilePress}
+                            style={styles.profileButton}
+                        >
+                            {user ? (
+                                <View style={styles.avatarMini}>
+                                    <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
+                                </View>
+                            ) : (
+                                <View style={styles.guestAvatar}>
+                                    <Sprout color="#2E7D32" size={14} />
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                }
+            />
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {/* Hero Section */}
@@ -144,6 +148,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 5,
         elevation: 2,
+    },
+    headerRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     userBadge: {
         flexDirection: 'row',

@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image,
 import { Radio, Upload, Play, Square, AlertTriangle, Activity, Maximize, Minimize, Trash2, Download, Video as VideoIcon, FileText, Archive, ChevronRight, Zap } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../contexts/LanguageContext';
+import HeaderBell from '../components/HeaderBell';
+import ScreenHeader from '../components/ScreenHeader';
 import * as ImagePicker from 'expo-image-picker';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as FileSystem from 'expo-file-system';
@@ -330,15 +332,13 @@ const MonitorScreen = () => {
     };
 
     const currentLogs = activeTab === 'live' ? liveLogs : droneLogs;
-
+    
     return (
-        <View style={[styles.container, { paddingTop: Math.max(insets.top + 20, 60) }]}>
-            <View style={[styles.header, { marginBottom: 25 }]}>
-                <View>
-                    <Text style={styles.title}>{t('monitor.title')}</Text>
-                    <Text style={styles.subtitle}>{t('monitor.subtitle')}</Text>
-                </View>
-            </View>
+        <View style={styles.container}>
+            <ScreenHeader 
+                title={t('monitor.title')}
+                subtitle={t('monitor.subtitle')}
+            />
 
             <View style={styles.statusBannerContainer}>
                 <SimpleBadge status={status} hasFrame={hasFrame} />
@@ -585,8 +585,17 @@ const MonitorScreen = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F9FAFB' },
-    header: { paddingHorizontal: 20, marginBottom: 20 },
-    title: { fontSize: 28, fontFamily: 'Vietnam-Bold', color: '#111827' },
+    header: { 
+        paddingHorizontal: 20, 
+        paddingBottom: 15,
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        alignItems: 'center' 
+    },
+    headerTitleContainer: {
+        flex: 1,
+    },
+    title: { fontSize: 24, fontFamily: 'Vietnam-Bold', color: '#111827' },
     subtitle: { fontSize: 13, color: '#6B7280', marginTop: 2 },
     statusBannerContainer: { paddingHorizontal: 20, marginBottom: 15 },
     statusBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 12, borderRadius: 16, elevation: 1 },
