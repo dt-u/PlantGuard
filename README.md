@@ -1,118 +1,118 @@
-# PlantGuard - Hệ Thống Bảo Vệ Cây Trồng Thông Minh
+# PlantGuard - Smart Crop Protection System
 
-**PlantGuard** là giải pháp nông nghiệp thông minh tích hợp AI nhằm hỗ trợ nông dân giám sát sức khỏe cây trồng và phát hiện bệnh lý kịp thời. Hệ thống cung cấp trải nghiệm toàn diện từ giám sát diện rộng đến chẩn đoán chi tiết.
+**PlantGuard** is an AI-powered smart agriculture solution designed to help farmers monitor crop health and detect diseases in real-time. The system provides a comprehensive experience, ranging from wide-area monitoring to detailed diagnostics.
 
-## 🌟 Tính Năng Nổi Bật
+## 🌟 Key Features
 
-### 🔑 Hệ Thống Tài Khoản & Bảo Mật
--   **Đăng ký & Đăng nhập**: Hệ thống xác thực người dùng an toàn với tính năng ẩn/hiện mật khẩu.
--   **Lịch sử Chẩn đoán**: Người dùng đã đăng nhập có thể lưu trữ kết quả chẩn đoán vào lịch sử cá nhân để theo dõi diễn biến bệnh lý qua thời gian.
--   **Quyền Truy cập**: Bảo vệ các tính năng quan trọng (như lưu lịch sử) yêu cầu đăng nhập qua `ProtectedRoute`.
+### 🔑 Account System & Security
+-   **User Authentication**: Secure registration and login functionality with password visibility toggles.
+-   **Diagnostic History**: Logged-in users can store diagnostic results in their personal history to track disease progression over time.
+-   **Access Control**: Critical features (such as saving history) are protected and require authentication via `ProtectedRoute`.
 
-### 🔍 Chế Độ Giám Sát (Monitor Mode)
--   **Phân tích Video Drone**: Tải lên các đoạn phim từ Drone để tự động nhận diện vùng cây stress và điểm nóng bệnh dịch (Mô phỏng detection YOLOv8).
--   **Luồng Trực Tiếp (Live Stream)**: Kết nối với IP Camera (DroidCam) qua WebSocket để giám sát thực địa thời gian thực.
--   **Hệ Thống Cảnh Báo**: Hiển thị số lượng cảnh báo và nhật ký phát hiện theo thời gian thực.
--   **Quản lý Nhật ký**: Tính năng "Xóa nhật ký" giúp làm sạch dữ liệu giám sát cũ chỉ với một chạm.
+### 🔍 Monitor Mode
+-   **Drone Video Analysis**: Upload drone footage for automated identification of plant stress zones and disease hotspots (Simulated YOLOv8 detection).
+-   **Live Streaming**: Connect to field IP Cameras (e.g., DroidCam) via WebSockets for real-time remote monitoring.
+-   **Alert System**: Visualizes the number of alerts and maintains a real-time detection log.
+-   **Log Management**: "Clear Logs" feature allows for cleaning up old monitoring data with a single tap.
 
-### 🩺 Bác Sĩ Cây Trồng (Doctor Mode)
--   **Chẩn đoán Chính xác**: Tải ảnh lá cây để AI nhận diện các loại bệnh như "Bệnh mốc sương cà chua" hay "Rỉ sắt ngô".
--   **Phác đồ Điều trị**: Cung cấp giải pháp theo 3 cấp độ (Nhẹ, Trung bình, Nặng) với các bước hành động cụ thể và gợi ý sản phẩm điều trị.
+### 🩺 Doctor Mode
+-   **Precision Diagnosis**: Upload leaf images for AI-driven identification of diseases such as "Tomato Late Blight" or "Corn Rust."
+-   **Treatment Protocols**: Provides a 3-level solution (Light, Medium, Severe) with specific actionable steps and recommended treatment products.
 
-### 🎨 Giao Diện Người Dùng (UI/UX)
--   **Trang Chủ Tối Giản**: Thiết kế gói gọn trong một màn hình (Single-screen) với 2 lối tắt lớn vào Monitor và Doctor.
--   **Thiết Kế Premium**: Sử dụng phong cách Glassmorphism, hiệu ứng chuyển cảnh mượt mà và hệ thống biểu tượng Lucide-React hiện đại.
--   **Tương thích Đa nền tảng**: Trải nghiệm đồng nhất giữa Web và Mobile.
+### 🎨 UI/UX Design
+-   **Minimalist Home**: A streamlined single-screen interface with quick access to Monitor and Doctor modes.
+-   **Premium Aesthetics**: Modern Glassmorphism styling, smooth transitions, and a professional Lucide icon set.
+-   **Cross-Platform**: A consistent and responsive experience across both Web and Mobile platforms.
 
-## 🛠 Công Nghệ Sử Dụng (Tech Stack)
+## 🛠 Tech Stack
 
 -   **Backend**: Python (FastAPI), Uvicorn, Motor (Async MongoDB), OpenCV, WebSocket, Passlib (Bcrypt), Pydantic.
--   **AI/ML**: YOLOv8 (Ultralytics) - Engine giả lập mô phỏng hành vi nhận diện chuyên sâu.
+-   **AI/ML**: YOLOv8 (Ultralytics) - Simulated engine for advanced detection patterns.
 -   **Frontend (Web)**: ReactJS (Vite), Tailwind CSS, Lucide-React, Axios, Framer Motion (Transitions).
 -   **Mobile App**: React Native (Expo), Lucide-React-Native.
--   **Cơ sở Dữ liệu**: MongoDB.
+-   **Database**: MongoDB.
 
-## 📂 Cấu Trúc Dự Án
+## 📂 Project Structure
 
 ```text
 PlantGuard/
-├── backend/            # Máy chủ FastAPI
+├── backend/            # FastAPI Server
 │   ├── app/
-│   │   ├── main.py     # Điểm khởi chạy (Entry point)
-│   │   ├── ai_engine.py# Logic AI & Xử lý khung hình
-│   │   ├── auth.py     # Quản lý Đăng ký/Đăng nhập
-│   │   ├── routes/     # Các API Endpoints (Monitor/Doctor/History)
-│   │   └── seed_data.py# Khởi tạo dữ liệu mẫu
-│   └── results/        # Kho lưu trữ video/hình ảnh đã xử lý
+│   │   ├── main.py     # Application Entry point
+│   │   ├── ai_engine.py# AI Logic & Frame Processing
+│   │   ├── auth.py     # Auth & Security Management
+│   │   ├── routes/     # API Endpoints (Monitor/Doctor/History)
+│   │   └── seed_data.py# Sample Data Initializer
+│   └── results/        # Storage for processed media
 │
-├── frontend/           # Client Web (React)
+├── frontend/           # Web Client (React)
 │   ├── src/
-│   │   ├── components/ # UI Reusable (Navbar, FileUpload, Dialogs)
-│   │   ├── contexts/   # Quản lý State toàn cục (AuthContext)
-│   │   └── pages/      # Các trang chính (Home, Monitor, Doctor, History)
+│   │   ├── components/ # Reusable UI (Navbar, FileUpload, Dialogs)
+│   │   ├── contexts/   # Global State Management (AuthContext)
+│   │   └── pages/      # Key Pages (Home, Monitor, Doctor, History)
 │   └── vite.config.ts
 │
-└── mobile/             # Ứng dụng Mobile (Expo)
-    ├── App.js          # Điều hướng & Khởi chạy
-    └── src/            # Logic và giao diện Mobile
+└── mobile/             # Mobile Application (Expo)
+    ├── App.js          # Navigation & Entry point
+    └── src/            # Mobile Logic and UI Components
 ```
 
-## 🔧 Cài Đặt & Thiết Lập
+## 🔧 Installation & Setup
 
-### Điều kiện tiên quyết
+### Prerequisites
 -   **Python 3.8+**
 -   **Node.js 16+**
--   **MongoDB** (Chạy tại port `27017` mặc định)
+-   **MongoDB** (Default port `27017`)
 
-### 1. Cài đặt Backend
-1.  Di chuyển vào thư mục backend:
+### 1. Backend Setup
+1.  Navigate to the backend directory:
     ```bash
     cd backend
     ```
-2.  Cài đặt các thư viện cần thiết:
+2.  Install dependencies:
     ```bash
     pip install -r requirements.txt
     ```
-3.  Cấu hình Môi trường:
-    -   Tạo file `.env` từ file mẫu: `copy .env.example .env`
-4.  Khởi chạy server:
+3.  Configure Environment:
+    -   Create `.env` from the template: `cp .env.example .env` (or `copy .env.example .env` on Windows).
+4.  Start the server:
     ```bash
     uvicorn app.main:app --reload --host 0.0.0.0
     ```
 
-### 2. Cài đặt Frontend (Web)
-1.  Mở terminal mới và vào thư mục frontend:
+### 2. Frontend Setup (Web)
+1.  Open a new terminal and enter the frontend directory:
     ```bash
     cd frontend
     ```
-2.  Cài đặt dependencies:
+2.  Install dependencies:
     ```bash
     npm install
     ```
-3.  Khởi chạy ứng dụng:
+3.  Run the application:
     ```bash
     npm run dev
     ```
 
-### 3. Cài đặt Mobile App
-1.  Vào thư mục mobile và cài đặt:
+### 3. Mobile App Setup
+1.  Enter the mobile directory and install:
     ```bash
     cd mobile
     npm install
     ```
-2.  Khởi chạy Expo:
+2.  Launch Expo:
     ```bash
     npx expo start
     ```
-3.  Quét mã QR bằng ứng dụng **Expo Go** trên điện thoại.
+3.  Scan the QR code using the **Expo Go** app on your physical device.
 
-## 📖 Hướng Dẫn Sử Dụng
+## 📖 User Guide
 
-1.  **Trang chủ**: Chọn trực tiếp "Bắt đầu Giám sát" hoặc "Chẩn đoán ngay". Nên Đăng ký/Đăng nhập trước để có trải nghiệm đầy đủ.
-2.  **Giám sát**: Chuyển đổi giữa tab Live Cam và Upload Video. Sử dụng icon Thùng rác để làm sạch nhật ký giám sát.
-3.  **Bác sĩ**: Tải ảnh lá cây, xem kết quả chẩn đoán và bấm **Lưu vào lịch sử** để theo dõi sau này.
-4.  **Lịch sử**: Truy cập từ menu Profile (khi đã đăng nhập) để xem lại tất cả các lần chẩn đoán cũ kèm chi tiết phác đồ điều trị.
+1.  **Home**: Select "Start Monitoring" or "Diagnose Now." We recommend registering/logging in first for the full experience.
+2.  **Monitor**: Toggle between "Live Cam" and "Upload Video." Use the "Trash" icon to clear your detection logs.
+3.  **Doctor**: Upload a photo of a leaf, view the AI diagnosis, and click **Save to History** for future tracking.
+4.  **History**: Access your personal profile menu (when logged in) to review past diagnoses and treatment protocols.
 
-## ⚠️ Lưu ý Quan trọng
--   **Mock AI**: Phiên bản này sử dụng engine mô phỏng. Để triển khai thực tế, hãy thay thế logic trong `backend/app/ai_engine.py` bằng model YOLOv8 thực thụ (`.pt`).
--   **Dữ liệu**: MongoDB sẽ tự động được "seed" dữ liệu mẫu về các bệnh lý phổ biến trong lần chạy đầu tiên.
+## ⚠️ Important Notes
+-   **Mock AI**: This version uses a simulation engine. For production deployment, replace the logic in `backend/app/ai_engine.py` with a real YOLOv8 model (`.pt`).
+-   **Data Initialization**: MongoDB will automatically seed sample disease data during the first run.
