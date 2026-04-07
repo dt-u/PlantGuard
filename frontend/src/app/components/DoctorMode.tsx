@@ -55,14 +55,14 @@ export function DoctorMode({ onNavigate }: DoctorModeProps) {
           {/* Image Viewer - Left Side */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Image Analysis</h3>
-            
+
             <div className="relative bg-gray-100 rounded-xl overflow-hidden aspect-square">
               <ImageWithFallback
                 src="https://images.unsplash.com/photo-1769613638072-08fafd8c9f9e?w=800"
                 alt="Tomato leaf with disease"
                 className="w-full h-full object-cover"
               />
-              
+
               {/* Bounding Boxes for Disease Spots */}
               {boundingBoxes.map((box) => (
                 <div
@@ -84,7 +84,7 @@ export function DoctorMode({ onNavigate }: DoctorModeProps) {
 
             <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-900">
-                <strong>YOLOv8 Object Detection:</strong> {boundingBoxes.length} disease spots detected on leaf surface
+                <strong>YOLO26 Object Detection:</strong> {boundingBoxes.length} disease spots detected on leaf surface
               </p>
             </div>
           </div>
