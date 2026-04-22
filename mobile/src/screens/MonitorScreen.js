@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image, ActivityIndicator, Alert, Modal, StatusBar, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image, ActivityIndicator, Alert, Modal, StatusBar, Keyboard, Switch } from 'react-native';
 import { Radio, Upload, Play, Square, AlertTriangle, Activity, Maximize, Minimize, Trash2, Download, Video as VideoIcon, FileText, Archive, ChevronRight, Zap } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -84,6 +84,32 @@ const MonitorScreen = () => {
     const wsRef = useRef(null);
     const [hasFrame, setHasFrame] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isAutoScan, setIsAutoScan] = useState(false);
+
+    useEffect(() => {
+        if (user && user.id) {
+            axios.get(`${API_BASE_URL}/api/monitor/auto-scan/status/${user.id}`)
+                .then(res => setIsAutoScan(res.data.active))
+                .catch(console.error);
+        }
+    }, [user]);
+
+    const toggleAutoScan = async (value) => {
+        if (!user || (!user.id && user.id !== 'tmp')) return;
+        const uId = user.id || "anonymous";
+        const endpoint = value ? 'start' : 'stop';
+        
+        setIsAutoScan(value);
+        try {
+            await axios.post(`${API_BASE_URL}/api/monitor/auto-scan/${endpoint}`, {
+                camera_url: cameraUrl,
+                user_id: uId
+            });
+        } catch (e) {
+            setIsAutoScan(!value); 
+            console.error(e);
+        }
+    };
 
     // Upload state
     const [uploadLoading, setUploadLoading] = useState(false);
@@ -373,6 +399,20 @@ const MonitorScreen = () => {
                                 placeholder="http://192.168.x.x:4747/video"
                                 editable={!isStreaming}
                             />
+                            {user && (
+                                <View style={styles.autoScanContainer}>
+                                    <View style={styles.autoScanTextContainer}>
+                                        <Text style={styles.autoScanTitle}>Trực canh AI (Auto)</Text>
+                                        <Text style={styles.autoScanDesc}>Giám sát ngầm tự động 24/7 bằng YOLO26</Text>
+                                    </View>
+                                    <Switch
+                                        trackColor={{ false: '#D1D5DB', true: '#BFDBFE' }}
+                                        thumbColor={isAutoScan ? '#3B82F6' : '#9CA3AF'}
+                                        onValueChange={toggleAutoScan}
+                                        value={isAutoScan}
+                                    />
+                                </View>
+                            )}
                             {!isStreaming ? (
                                 <TouchableOpacity style={styles.startBtn} onPress={startStream}>
                                     <Play color="#FFFFFF" size={20} />
@@ -619,6 +659,10 @@ const styles = StyleSheet.create({
     configBox: { backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 15 },
     inputLabel: { fontSize: 11, fontFamily: 'Vietnam-Bold', color: '#6B7280', marginBottom: 6 },
     input: { backgroundColor: '#F3F4F6', borderRadius: 10, padding: 10, fontSize: 13, marginBottom: 12 },
+    autoScanContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#EFF6FF', padding: 12, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#DBEAFE' },
+    autoScanTextContainer: { flex: 1 },
+    autoScanTitle: { fontSize: 13, fontFamily: 'Vietnam-Bold', color: '#1E3A8A' },
+    autoScanDesc: { fontSize: 10, color: '#60A5FA', fontFamily: 'Vietnam-Regular', marginTop: 2 },
     startBtn: { backgroundColor: '#3B82F6', flexDirection: 'row', padding: 12, borderRadius: 10, justifyContent: 'center', gap: 8 },
     stopBtn: { backgroundColor: '#EF4444', flexDirection: 'row', padding: 12, borderRadius: 10, justifyContent: 'center', gap: 8 },
     btnText: { color: '#FFF', fontFamily: 'Vietnam-Bold' },

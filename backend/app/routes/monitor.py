@@ -11,6 +11,9 @@ import pandas as pd
 import zipfile
 import tempfile
 from datetime import datetime
+import cv2
+from pydantic import BaseModel
+from ..database.mongodb import mongodb
 
 router = APIRouter()
 ai_engine = AIEngine()
@@ -19,7 +22,61 @@ UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
 
+RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+
 jobs = {}
+auto_scan_tasks = {}
+
+class AutoScanRequest(BaseModel):
+    camera_url: str
+    user_id: str
+
+class AutoScanStopRequest(BaseModel):
+    user_id: str
+
+async def bg_auto_scan(user_id: str, camera_url: str):
+    print(f"Started auto-scan for {user_id} on {camera_url}")
+    while auto_scan_tasks.get(user_id, {}).get('active', False):
+        try:
+            frame, boxes = await ai_engine.scan_single_frame(camera_url)
+            if frame is not None and boxes:
+                found_disease = False
+                for box in boxes:
+                    conf = box[4]
+                    if conf > 0.5:
+                        found_disease = True
+                        break
+                
+                if found_disease:
+                    dataset_dir = os.path.join(RESULTS_DIR, "user_dataset", "unhealthy_zones")
+                    if not os.path.exists(dataset_dir):
+                        os.makedirs(dataset_dir)
+                    img_name = f"auto_{uuid.uuid4()}.jpg"
+                    img_path = os.path.join(dataset_dir, img_name)
+                    await asyncio.to_thread(cv2.imwrite, img_path, frame)
+
+                    if user_id and user_id != "anonymous":
+                        await mongodb.notifications.insert_one({
+                            "user_id": str(user_id),
+                            "type": "alert",
+                            "title": "Cảnh báo từ Giám sát ngầm",
+                            "message": f"Phát hiện khu vực có dấu hiệu dịch bệnh từ Camera lúc {datetime.now().strftime('%H:%M')}",
+                            "is_read": False,
+                            "created_at": datetime.now()
+                        })
+                    
+                    # Sleep 1 minute after finding disease
+                    await asyncio.sleep(60)
+                    continue
+
+            # Default sleep 10s
+            await asyncio.sleep(10)
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            print(f"Auto scan error for {user_id}: {e}")
+            await asyncio.sleep(10)
+
 
 async def run_analysis(job_id: str, file_path: str, user_id: Optional[str] = None):
     def progress_cb(pct):
@@ -177,3 +234,32 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.close()
         except:
             pass
+
+@router.post("/auto-scan/start")
+async def start_auto_scan(req: AutoScanRequest):
+    user_id = req.user_id
+    if user_id in auto_scan_tasks and auto_scan_tasks[user_id]['active']:
+        return {"status": "already_running"}
+    
+    auto_scan_tasks[user_id] = {'active': True}
+    task = asyncio.create_task(bg_auto_scan(user_id, req.camera_url))
+    auto_scan_tasks[user_id]['task'] = task
+    
+    return {"status": "started"}
+
+@router.post("/auto-scan/stop")
+async def stop_auto_scan(req: AutoScanStopRequest):
+    user_id = req.user_id
+    if user_id in auto_scan_tasks:
+        auto_scan_tasks[user_id]['active'] = False
+        task = auto_scan_tasks[user_id].get('task')
+        if task:
+            task.cancel()
+        del auto_scan_tasks[user_id]
+        return {"status": "stopped"}
+    return {"status": "not_running"}
+
+@router.get("/auto-scan/status/{user_id}")
+async def get_auto_scan_status(user_id: str):
+    is_active = user_id in auto_scan_tasks and auto_scan_tasks[user_id].get('active', False)
+    return {"active": is_active}

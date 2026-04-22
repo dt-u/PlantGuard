@@ -204,7 +204,7 @@ class AIEngine:
         """
         Generates frames from a camera stream (URL).
         Yields base64 encoded frames for WebSocket streaming.
-        Uses background threading to prevent frame buffer lag and YOLO bottleneck.
+        Uses background threading to prevent frame buffer lag and YOLO26 bottleneck.
         """
         import time
         import threading
@@ -376,3 +376,51 @@ class AIEngine:
             t_yolo.join(timeout=1.0)
             if cap and cap.isOpened():
                 cap.release()
+
+    async def scan_single_frame(self, camera_url: str):
+        """
+        Connects to the camera stream, grabs a single frame, runs YOLO26,
+        and returns the frame and detected boxes.
+        Used by the background auto-scan task.
+        """
+        def capture_frame():
+            # Add timeout/optimization flags if possible, or just standard read
+            cap = cv2.VideoCapture(camera_url)
+            ret, frame = cap.read()
+            cap.release()
+            return frame if ret else None
+
+        frame = await asyncio.to_thread(capture_frame)
+        if frame is None:
+            return None, []
+
+        height, width, _ = frame.shape
+        frame_resized = cv2.resize(frame, (640, 640))
+        boxes_data = []
+
+        if self.model:
+            try:
+                res = self.model(frame_resized, verbose=False)
+                h_ratio = height / 640.0
+                w_ratio = width / 640.0
+                for box in res[0].boxes:
+                    rx1, ry1, rx2, ry2 = box.xyxy[0].tolist()
+                    x1, y1 = int(rx1 * w_ratio), int(ry1 * h_ratio)
+                    x2, y2 = int(rx2 * w_ratio), int(ry2 * h_ratio)
+                    conf = float(box.conf[0].item())
+                    cls = int(box.cls[0].item())
+                    boxes_data.append((x1, y1, x2, y2, conf, cls))
+            except Exception as e:
+                print("YOLO26 Scan Error:", e)
+        else:
+            # Simulation Mode for Wide Monitoring (Unhealthy Zone)
+            if random.random() > 0.5: # 50% chance to detect something for demo
+                x1 = random.randint(10, width // 2)
+                y1 = random.randint(10, height // 2)
+                x2 = x1 + random.randint(100, 300)
+                y2 = y1 + random.randint(100, 300)
+                x2 = min(x2, width - 10)
+                y2 = min(y2, height - 10)
+                boxes_data.append((x1, y1, x2, y2, random.uniform(0.7, 0.99), -2)) # -2 implies Unhealthy Zone pseudo-class
+
+        return frame, boxes_data

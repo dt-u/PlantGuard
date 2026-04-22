@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Unplug, Play, Square, AlertCircle, Radio, Maximize, Minimize } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
+import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
 
 const LiveCamera = ({ onLogEvent }) => {
     const { t, i18n } = useTranslation();
@@ -16,6 +18,32 @@ const LiveCamera = ({ onLogEvent }) => {
     const containerRef = useRef(null);
     const isStreamingRef = useRef(false);
     const reconnectTimeoutRef = useRef(null);
+    const { user } = useAuth();
+    const [isAutoScan, setIsAutoScan] = useState(false);
+
+    useEffect(() => {
+        if (user && user.id) {
+            axios.get(`http://127.0.0.1:8000/api/monitor/auto-scan/status/${user.id}`)
+                 .then(res => setIsAutoScan(res.data.active))
+                 .catch(console.error);
+        }
+    }, [user]);
+
+    const toggleAutoScan = async () => {
+        if (!user || (!user.id && user.id !== 'tmp')) return;
+        const uId = user.id || "anonymous";
+        const endpoint = isAutoScan ? 'stop' : 'start';
+        setIsAutoScan(!isAutoScan);
+        try {
+            await axios.post(`http://127.0.0.1:8000/api/monitor/auto-scan/${endpoint}`, {
+                camera_url: cameraUrl,
+                user_id: uId
+            });
+        } catch (e) {
+            setIsAutoScan(isAutoScan); 
+            console.error(e);
+        }
+    };
 
     useEffect(() => {
         const handleFullscreenChange = () => {
@@ -151,6 +179,22 @@ const LiveCamera = ({ onLogEvent }) => {
                         disabled={isStreaming}
                     />
                     {wsError && <p className="text-red-500 text-[10px] mt-1 font-bold animate-pulse">{wsError}</p>}
+                    
+                    {user && (
+                        <div className="mt-4 flex items-center justify-between p-3 rounded-xl bg-blue-50 border border-blue-100">
+                            <div className="flex items-center gap-2">
+                                <Radio className={`w-5 h-5 ${isAutoScan ? 'text-blue-500 animate-pulse' : 'text-gray-400'}`} />
+                                <div>
+                                    <h4 className="text-sm font-bold text-gray-700">Trực canh AI (Auto)</h4>
+                                    <p className="text-[10px] text-gray-500">Giám sát ngầm tự động 24/7 bằng YOLO26</p>
+                                </div>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" className="sr-only peer" checked={isAutoScan} onChange={toggleAutoScan} />
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                            </label>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-end gap-2 pt-2 md:pt-6">
