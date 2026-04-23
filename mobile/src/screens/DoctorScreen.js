@@ -241,7 +241,8 @@ const DoctorScreen = ({ navigation }) => {
                             )}
                         </View>
                         <TreatmentCard 
-                            treatments={translateTreatments(result.disease.name, result.disease.treatments)} 
+                            treatments={translateTreatments(result.disease.name, result.disease.treatments)}
+                            diseaseKey={result.disease.name}
                         />
                     </View>
 
