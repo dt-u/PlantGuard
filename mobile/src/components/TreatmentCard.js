@@ -22,10 +22,15 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
-    // Format a JS Date to Google Calendar date string: YYYYMMDDTHHmmss
-    const toGCalDate = (date) => {
-        const pad = (n) => String(n).padStart(2, '0');
-        return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+    const getDayNumber = (eventDate, firstEventDate) => {
+        const start = new Date(firstEventDate);
+        start.setHours(0, 0, 0, 0);
+        const current = new Date(eventDate);
+        current.setHours(0, 0, 0, 0);
+        
+        const diffTime = Math.abs(current - start);
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
+        return diffDays + 1; // +1 because first day is Day 1
     };
 
     const saveAllToCalendar = async () => {
@@ -52,9 +57,6 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
             // 2. Find the best calendar to save to (Prefer Google Calendar)
             const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
             
-            // Priority 1: A calendar that is already synced with Google
-            // Priority 2: The default calendar of the device
-            // Priority 3: Any writeable calendar
             let targetCalendar = calendars.find(cal => 
                 cal.allowsModifications && 
                 (cal.source?.type === 'com.google' || cal.source?.name?.includes('@gmail.com'))
@@ -85,7 +87,7 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
                     endDate,
                     notes: event.description,
                     location: 'Khu vườn của bạn',
-                    alarms: [{ relativeOffset: -60, method: Calendar.AlarmMethod.ALERT }] // Notify 1 hour before
+                    alarms: [{ relativeOffset: -60, method: Calendar.AlarmMethod.ALERT }] 
                 });
             }
 
@@ -106,7 +108,6 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
                             try {
                                 await Linking.openURL(calendarUrl);
                             } catch (err) {
-                                // Fallback if the scheme fails
                                 Linking.openURL('https://calendar.google.com/');
                             }
                         },
@@ -159,16 +160,12 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
         return { color: '#6B7280', bg: '#F3F4F6', icon: <Zap size={18} color="#6B7280" />, label: level };
     };
 
-    // Helper to get translated treatment item
     const getTranslatedTreatment = (item, index) => {
         if (language === 'vi') return item;
-
         const diseaseDetails = t(`disease_details.${diseaseKey}`);
         if (typeof diseaseDetails === 'object' && diseaseDetails.treatments) {
-            // Find corresponding treatment by level index or level name
             const translatedItem = diseaseDetails.treatments[index] || 
                                  diseaseDetails.treatments.find(tr => tr.level.toLowerCase() === (item.level || '').toLowerCase());
-            
             if (translatedItem) {
                 return {
                     ...item,
@@ -253,7 +250,6 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
             })}
         </View>
 
-        {/* Routine Schedule Modal */}
         <Modal
             visible={routineModalVisible}
             animationType="slide"
@@ -263,13 +259,15 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
             <View style={styles.modalOverlay}>
                 <View style={styles.modalSheet}>
                     <Text style={styles.modalTitle}>Lịch chăm sóc đề xuất</Text>
-                    <Text style={styles.modalSubtitle}>3 mốc thời gian được tự động tính từ hôm nay</Text>
+                    <Text style={styles.modalSubtitle}>Các mốc thời gian được tính toán theo phác đồ</Text>
 
                     <ScrollView style={{ marginTop: 12 }} showsVerticalScrollIndicator={false}>
                         {routineEvents.map((ev, idx) => (
                             <View key={idx} style={styles.eventCard}>
                                 <View style={styles.eventDayBadge}>
-                                    <Text style={styles.eventDayText}>{idx === 0 ? 'Ngày 1' : idx === 1 ? 'Ngày 3' : 'Ngày 7'}</Text>
+                                    <Text style={styles.eventDayText}>
+                                        Ngày {getDayNumber(ev.date, routineEvents[0].date)}
+                                    </Text>
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.eventTitle}>{ev.title}</Text>
@@ -415,7 +413,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Vietnam-Bold',
         fontSize: 13,
     },
-    // Modal styles
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
