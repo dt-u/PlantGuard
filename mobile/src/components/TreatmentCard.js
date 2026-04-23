@@ -90,10 +90,29 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
             }
 
             Alert.alert(
-                'Thành công', 
-                `Đã lưu ${routineEvents.length} mốc chăm sóc vào lịch "${targetCalendar.title}". Mở Google Calendar để kiểm tra nhé!`
+                'Thành công',
+                `Đã lưu ${routineEvents.length} mốc chăm sóc vào lịch "${targetCalendar.title}".`,
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => setRoutineModalVisible(false),
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'Kiểm tra',
+                        onPress: async () => {
+                            setRoutineModalVisible(false);
+                            const calendarUrl = Platform.OS === 'ios' ? 'calshow:' : 'content://com.android.calendar/time/';
+                            try {
+                                await Linking.openURL(calendarUrl);
+                            } catch (err) {
+                                // Fallback if the scheme fails
+                                Linking.openURL('https://calendar.google.com/');
+                            }
+                        },
+                    },
+                ]
             );
-            setRoutineModalVisible(false);
         } catch (error) {
             console.error(error);
             Alert.alert('Lỗi', 'Không thể lưu vào lịch. Vui lòng thử lại.');
