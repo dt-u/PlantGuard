@@ -111,8 +111,7 @@ const TreatmentCard = ({ treatments = [], diseaseName = "Unknown" }) => {
                                 onClick={(e) => downloadRoutine(treatment, e)}
                                 className="w-full flex items-center justify-center gap-2 bg-agri-green/10 text-agri-green hover:bg-agri-green hover:text-white transition-colors duration-300 py-2.5 px-4 rounded-lg font-bold text-sm"
                             >
-                                <CalendarIcon className="w-4 h-4" />
-                                Lưu vào Lịch cá nhân (Web/PC)
+                                Lưu lịch điều trị
                             </button>
                         </div>
                     </div>

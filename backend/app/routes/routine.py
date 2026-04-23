@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime, timedelta
 import uuid
+import urllib.parse
 
 router = APIRouter()
 
@@ -116,6 +117,7 @@ DESCRIPTION:Mở ứng dụng PlantGuard để phân tích lại cây của bạ
 END:VEVENT
 END:VCALENDAR"""
 
+    encoded_filename = urllib.parse.quote(f"plantguard_routine_{req.disease_name.replace(' ', '_')}.ics")
     return Response(content=ics_content, media_type="text/calendar", headers={
-        "Content-Disposition": f"attachment; filename=plantguard_routine_{req.disease_name.replace(' ', '_')}.ics"
+        "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
     })
