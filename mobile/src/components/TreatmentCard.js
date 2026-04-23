@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
-import { AlertCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Beaker, ShieldCheck, Zap } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager, Alert, Switch } from 'react-native';
+import { AlertCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Beaker, ShieldCheck, Zap, Calendar as CalendarIcon } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
+import * as Calendar from 'expo-calendar';
+import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -10,10 +13,55 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 const TreatmentCard = ({ treatments = [], diseaseKey }) => {
     const { t, language } = useLanguage();
     const [expandedIndex, setExpandedIndex] = useState(null);
+    const [isTrackingEnabled, setIsTrackingEnabled] = useState(false);
 
     const toggleExpand = (index) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setExpandedIndex(expandedIndex === index ? null : index);
+    };
+
+    const startRoutine = async (item) => {
+        try {
+            const { status } = await Calendar.requestCalendarPermissionsAsync();
+            if (status === 'granted') {
+                const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+                const defaultCalendar = calendars.find(c => c.isPrimary) || calendars[0];
+                
+                if (!defaultCalendar) {
+                    Alert.alert("Lỗi", "Không tìm thấy ứng dụng Lịch trên thiết bị.");
+                    return;
+                }
+
+                // Get routine events from backend
+                const response = await axios.post(`${API_BASE_URL}/api/routine/generate`, {
+                    disease_name: t(`disease_names.${diseaseKey}`, diseaseKey),
+                    level: item.level || 'Moderate',
+                    action: item.action,
+                    product: item.product,
+                    is_tracking_enabled: isTrackingEnabled
+                });
+
+                if (response.data && response.data.events) {
+                    let eventsAdded = 0;
+                    for (const ev of response.data.events) {
+                        await Calendar.createEventAsync(defaultCalendar.id, {
+                            title: ev.title,
+                            startDate: new Date(ev.date),
+                            endDate: new Date(new Date(ev.date).getTime() + 60 * 60 * 1000), // 1 hour
+                            notes: ev.description,
+                            allDay: false
+                        });
+                        eventsAdded++;
+                    }
+                    Alert.alert("Thành công", `Đã lên lịch ${eventsAdded} sự kiện chăm sóc vào Lịch của thiết bị!`);
+                }
+            } else {
+                Alert.alert("Cấp quyền", "Vui lòng cấp quyền truy cập Lịch để PlantGuard có thể nhắc nhở bạn.");
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Lỗi", "Đã xảy ra lỗi khi tạo lịch.");
+        }
     };
 
     const getSeverityStyles = (level) => {
@@ -101,6 +149,26 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
                                         <View style={styles.productBadge}>
                                             <Text style={styles.productText}>{item.product}</Text>
                                         </View>
+                                    </View>
+
+                                    <View style={styles.routineSection}>
+                                        <Text style={styles.routineTitle}>Tự động hóa chăm sóc</Text>
+                                        <View style={styles.trackingRow}>
+                                            <Text style={styles.trackingText}>Lưu tiến độ vào "Vườn của tôi"</Text>
+                                            <Switch 
+                                                value={isTrackingEnabled} 
+                                                onValueChange={setIsTrackingEnabled}
+                                                trackColor={{ false: '#D1D5DB', true: '#A7F3D0' }}
+                                                thumbColor={isTrackingEnabled ? '#10B981' : '#9CA3AF'}
+                                            />
+                                        </View>
+                                        <TouchableOpacity 
+                                            style={styles.routineBtn} 
+                                            onPress={() => startRoutine(item)}
+                                        >
+                                            <CalendarIcon size={16} color="#FFFFFF" />
+                                            <Text style={styles.routineBtnText}>Bắt đầu Lộ trình</Text>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             )}
@@ -212,6 +280,45 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontFamily: 'Vietnam-Bold',
         color: '#065F46',
+    },
+    routineSection: {
+        marginTop: 16,
+        padding: 12,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    routineTitle: {
+        fontSize: 12,
+        fontFamily: 'Vietnam-Bold',
+        color: '#374151',
+        marginBottom: 8,
+    },
+    trackingRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    trackingText: {
+        fontSize: 12,
+        fontFamily: 'Vietnam-Regular',
+        color: '#6B7280',
+    },
+    routineBtn: {
+        backgroundColor: '#10B981',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        borderRadius: 8,
+        gap: 8,
+    },
+    routineBtnText: {
+        color: '#FFFFFF',
+        fontFamily: 'Vietnam-Bold',
+        fontSize: 13,
     }
 });
 

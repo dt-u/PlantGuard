@@ -2,7 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from .database import seed_db
-from .routes import monitor, doctor, admin, auth, history
+from .routes import monitor, doctor, admin, auth, history, routine
 from .websocket import manager
 import os
 
@@ -33,6 +33,7 @@ app.include_router(doctor.router, prefix="/api/doctor", tags=["Doctor"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(history.router, prefix="/api/history", tags=["History"])
+app.include_router(routine.router, prefix="/api/routine", tags=["Routine"])
 
 # Static Mounts
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "..", "results")

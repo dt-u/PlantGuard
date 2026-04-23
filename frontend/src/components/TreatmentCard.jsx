@@ -1,12 +1,38 @@
 import React, { useState } from 'react';
-import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, XCircle, Calendar as CalendarIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 
-const TreatmentCard = ({ treatments = [] }) => {
+const TreatmentCard = ({ treatments = [], diseaseName = "Unknown" }) => {
     const { t } = useTranslation();
     const [expandedId, setExpandedId] = useState(null);
 
     if (!treatments || treatments.length === 0) return null;
+
+    const downloadRoutine = async (treatment, e) => {
+        e.stopPropagation();
+        try {
+            const response = await axios.post('http://127.0.0.1:8000/api/routine/download.ics', {
+                disease_name: diseaseName,
+                level: treatment.level,
+                action: treatment.action,
+                product: treatment.product,
+                is_tracking_enabled: false
+            }, {
+                responseType: 'blob'
+            });
+            
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `plantguard_routine_${diseaseName.replace(/\s+/g, '_')}.ics`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error("Error downloading routine:", error);
+        }
+    };
 
     const translateLevel = (level) => {
         switch (level.toLowerCase()) {
@@ -79,6 +105,15 @@ const TreatmentCard = ({ treatments = [] }) => {
                         <div>
                             <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('treatment.product')}</p>
                             <p className="text-agri-green font-medium text-sm">{treatment.product}</p>
+                        </div>
+                        <div className="pt-4 pb-1">
+                            <button 
+                                onClick={(e) => downloadRoutine(treatment, e)}
+                                className="w-full flex items-center justify-center gap-2 bg-agri-green/10 text-agri-green hover:bg-agri-green hover:text-white transition-colors duration-300 py-2.5 px-4 rounded-lg font-bold text-sm"
+                            >
+                                <CalendarIcon className="w-4 h-4" />
+                                Lưu vào Lịch cá nhân (Web/PC)
+                            </button>
                         </div>
                     </div>
 
