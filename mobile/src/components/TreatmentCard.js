@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager, Alert, Linking, Modal, ScrollView } from 'react-native';
 import { AlertCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Beaker, ShieldCheck, Zap } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
+import * as Calendar from 'expo-calendar';
 import axios from 'axios';
 import { API_BASE_URL } from '../api/config';
 
@@ -14,6 +15,7 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
     const [expandedIndex, setExpandedIndex] = useState(null);
     const [routineModalVisible, setRoutineModalVisible] = useState(false);
     const [routineEvents, setRoutineEvents] = useState([]);
+    const [isSavingCalendar, setIsSavingCalendar] = useState(false);
 
     const toggleExpand = (index) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -23,20 +25,87 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
     // Format a JS Date to Google Calendar date string: YYYYMMDDTHHmmss
     const toGCalDate = (date) => {
         const pad = (n) => String(n).padStart(2, '0');
-        return `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+        return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
     };
 
-    const openGoogleCalendar = (title, description, startDate) => {
-        const start = toGCalDate(startDate);
-        const end = toGCalDate(new Date(startDate.getTime() + 60 * 60 * 1000));
-        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(description)}`;
-        Linking.openURL(url);
+    const saveAllToCalendar = async () => {
+        try {
+            setIsSavingCalendar(true);
+            
+            // 1. Request Permissions
+            const { status } = await Calendar.requestCalendarPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Quyền truy cập', 'Vui lòng cấp quyền truy cập lịch để sử dụng tính năng này.');
+                setIsSavingCalendar(false);
+                return;
+            }
+
+            if (Platform.OS === 'ios') {
+                const { status: remindersStatus } = await Calendar.requestRemindersPermissionsAsync();
+                if (remindersStatus !== 'granted') {
+                    Alert.alert('Quyền truy cập', 'Vui lòng cấp quyền truy cập lời nhắc.');
+                    setIsSavingCalendar(false);
+                    return;
+                }
+            }
+
+            // 2. Find the best calendar to save to (Prefer Google Calendar)
+            const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+            
+            // Priority 1: A calendar that is already synced with Google
+            // Priority 2: The default calendar of the device
+            // Priority 3: Any writeable calendar
+            let targetCalendar = calendars.find(cal => 
+                cal.allowsModifications && 
+                (cal.source?.type === 'com.google' || cal.source?.name?.includes('@gmail.com'))
+            );
+
+            if (!targetCalendar) {
+                targetCalendar = await Calendar.getDefaultCalendarAsync();
+            }
+
+            if (!targetCalendar || !targetCalendar.allowsModifications) {
+                targetCalendar = calendars.find(cal => cal.allowsModifications);
+            }
+
+            if (!targetCalendar) {
+                Alert.alert('Lỗi', 'Không tìm thấy lịch nào có quyền ghi trên thiết bị.');
+                setIsSavingCalendar(false);
+                return;
+            }
+
+            // 3. Create all events in that calendar
+            for (const event of routineEvents) {
+                const startDate = new Date(event.date);
+                const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour duration
+                
+                await Calendar.createEventAsync(targetCalendar.id, {
+                    title: `[PlantGuard] ${event.title}`,
+                    startDate,
+                    endDate,
+                    notes: event.description,
+                    location: 'Khu vườn của bạn',
+                    alarms: [{ relativeOffset: -60, method: Calendar.AlarmMethod.ALERT }] // Notify 1 hour before
+                });
+            }
+
+            Alert.alert(
+                'Thành công', 
+                `Đã lưu ${routineEvents.length} mốc chăm sóc vào lịch "${targetCalendar.title}". Mở Google Calendar để kiểm tra nhé!`
+            );
+            setRoutineModalVisible(false);
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Lỗi', 'Không thể lưu vào lịch. Vui lòng thử lại.');
+        } finally {
+            setIsSavingCalendar(false);
+        }
     };
 
     const startRoutine = async (item) => {
         try {
             const response = await axios.post(`${API_BASE_URL}/api/routine/generate`, {
-                disease_name: t(`disease_names.${diseaseKey}`, diseaseKey),
+                disease_name: diseaseKey || 'Unknown',
                 level: item.level || 'Moderate',
                 action: item.action,
                 product: item.product,
@@ -174,7 +243,7 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
         >
             <View style={styles.modalOverlay}>
                 <View style={styles.modalSheet}>
-                    <Text style={styles.modalTitle}>📅 Lịch chăm sóc đề xuất</Text>
+                    <Text style={styles.modalTitle}>Lịch chăm sóc đề xuất</Text>
                     <Text style={styles.modalSubtitle}>3 mốc thời gian được tự động tính từ hôm nay</Text>
 
                     <ScrollView style={{ marginTop: 12 }} showsVerticalScrollIndicator={false}>
@@ -188,15 +257,19 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
                                     <Text style={styles.eventDate}>{formatEventDate(ev.date)}</Text>
                                     <Text style={styles.eventDesc}>{ev.description}</Text>
                                 </View>
-                                <TouchableOpacity
-                                    style={styles.gcalBtn}
-                                    onPress={() => openGoogleCalendar(ev.title, ev.description, new Date(ev.date))}
-                                >
-                                    <Text style={styles.gcalBtnText}>+ Google{`\n`}Calendar</Text>
-                                </TouchableOpacity>
                             </View>
                         ))}
                     </ScrollView>
+
+                    <TouchableOpacity
+                        style={[styles.saveAllBtn, isSavingCalendar && { opacity: 0.7 }]}
+                        onPress={saveAllToCalendar}
+                        disabled={isSavingCalendar}
+                    >
+                        <Text style={styles.saveAllBtnText}>
+                            {isSavingCalendar ? 'Đang lưu...' : 'Lưu vào Google Calendar'}
+                        </Text>
+                    </TouchableOpacity>
 
                     <TouchableOpacity
                         style={styles.modalCloseBtn}
@@ -387,18 +460,17 @@ const styles = StyleSheet.create({
         color: '#6B7280',
         lineHeight: 16,
     },
-    gcalBtn: {
+    saveAllBtn: {
+        marginTop: 16,
         backgroundColor: '#4285F4',
-        paddingHorizontal: 8,
-        paddingVertical: 6,
-        borderRadius: 8,
+        paddingVertical: 13,
+        borderRadius: 12,
         alignItems: 'center',
     },
-    gcalBtnText: {
+    saveAllBtnText: {
         color: '#FFFFFF',
         fontFamily: 'Vietnam-Bold',
-        fontSize: 10,
-        textAlign: 'center',
+        fontSize: 14,
     },
     modalCloseBtn: {
         marginTop: 16,

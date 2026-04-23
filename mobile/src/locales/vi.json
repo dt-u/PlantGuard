@@ -97,6 +97,7 @@
   "history": {
     "title": "Lịch Sử Chẩn Đoán",
     "subtitle": "Xem lại tất cả các lần chẩn đoán bệnh cây trồng của bạn",
+    "detail_title": "Chi tiết chẩn đoán",
     "search_placeholder": "Tìm kiếm theo tên bệnh, triệu chứng...",
     "empty": "Chưa có lịch sử chẩn đoán nào.",
     "delete_confirm": "Xóa bản ghi này?",
