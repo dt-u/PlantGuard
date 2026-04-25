@@ -10,7 +10,7 @@
 -   **Access Control**: Critical features (such as saving history) are protected and require authentication via `ProtectedRoute`.
 
 ### 🔍 Monitor Mode
--   **Drone Video Analysis**: Upload drone footage for automated identification of plant stress zones and disease hotspots (Simulated YOLOv8 detection).
+-   **Drone Video Analysis**: Upload drone footage for automated identification of plant stress zones and disease hotspots (Simulated YOLO26 detection).
 -   **Live Streaming**: Connect to field IP Cameras (e.g., DroidCam) via WebSockets for real-time remote monitoring.
 -   **Alert System**: Visualizes the number of alerts and maintains a real-time detection log.
 -   **Log Management**: "Clear Logs" feature allows for cleaning up old monitoring data with a single tap.
@@ -27,7 +27,7 @@
 ## 🛠 Tech Stack
 
 -   **Backend**: Python (FastAPI), Uvicorn, Motor (Async MongoDB), OpenCV, WebSocket, Passlib (Bcrypt), Pydantic.
--   **AI/ML**: YOLOv8 (Ultralytics) - Simulated engine for advanced detection patterns.
+-   **AI/ML**: YOLO26 (Ultralytics) - Simulated engine for advanced detection patterns.
 -   **Frontend (Web)**: ReactJS (Vite), Tailwind CSS, Lucide-React, Axios, Framer Motion (Transitions).
 -   **Mobile App**: React Native (Expo), Lucide-React-Native.
 -   **Database**: MongoDB.
@@ -114,5 +114,5 @@ PlantGuard/
 4.  **History**: Access your personal profile menu (when logged in) to review past diagnoses and treatment protocols.
 
 ## ⚠️ Important Notes
--   **Mock AI**: This version uses a simulation engine. For production deployment, replace the logic in `backend/app/ai_engine.py` with a real YOLOv8 model (`.pt`).
+-   **Mock AI**: This version uses a simulation engine. For production deployment, replace the logic in `backend/app/ai_engine.py` with a real YOLO26 model (`.pt`).
 -   **Data Initialization**: MongoDB will automatically seed sample disease data during the first run.

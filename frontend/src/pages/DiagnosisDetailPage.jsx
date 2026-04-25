@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Calendar, User, Activity, AlertCircle, Leaf, Clock } from 'lucide-react';
+import { Calendar, User, Activity, AlertCircle, Leaf, Clock, CalendarPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
@@ -17,6 +17,33 @@ const DiagnosisDetailPage = () => {
     const [diagnosis, setDiagnosis] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const downloadRoutine = async (treatment) => {
+        try {
+            const response = await axios.post(`${API_BASE_URL}/api/routine/download.ics`, {
+                disease_name: diagnosis.disease_name,
+                level: treatment.level || 'Moderate',
+                action: treatment.action || '',
+                product: treatment.product || '',
+                is_tracking_enabled: false
+            }, { responseType: 'blob' });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `plantguard_${diagnosis.disease_name.replace(/\s+/g, '_')}_${treatment.level || 'routine'}.ics`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            console.error('Error downloading ICS:', err);
+        }
+    };
+
+    const getLevelLabel = (level) => {
+        const map = { mild: 'Nhẹ', moderate: 'Trung bình', severe: 'Nặng', maintenance: 'Duy trì' };
+        return map[(level || '').toLowerCase()] || level;
+    };
 
     useEffect(() => {
         fetchDiagnosisDetail();
@@ -232,11 +259,21 @@ const DiagnosisDetailPage = () => {
                                                 </div>
                                             )}
                                             
-                                            {treatment.action && (
+                                             {treatment.action && (
                                                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
                                                     <p className="text-[10px] font-black text-blue-800 uppercase mb-1">{t('detail.action_label')}:</p>
                                                     <p className="text-xs font-bold text-blue-700">{treatment.action}</p>
                                                 </div>
+                                            )}
+
+                                            {/* Routine Calendar Button */}
+                                            {!diagnosis.is_healthy && (
+                                                <button
+                                                    onClick={() => downloadRoutine(treatment)}
+                                                    className="w-full mt-1 flex items-center justify-center gap-2 bg-agri-green/10 text-agri-green hover:bg-agri-green hover:text-white transition-all duration-300 py-2 px-3 rounded-lg font-bold text-xs"
+                                                >
+                                                    Lưu lịch điều trị
+                                                </button>
                                             )}
                                         </div>
                                     </div>

@@ -15,7 +15,7 @@ if not os.path.exists(RESULTS_DIR):
 
 class AIEngine:
     def __init__(self):
-        # Load the trained YOLOv8 model
+        # Load the trained YOLO26 model
         model_path = os.path.join(os.path.dirname(__file__), "models", "best.pt")
         if os.path.exists(model_path):
             self.model = YOLO(model_path)
@@ -87,7 +87,7 @@ class AIEngine:
 
     async def detect_video(self, video_path: str, progress_callback=None):
         """
-        Processes video using YOLOv8 if available, else simulated.
+        Processes video using YOLO26 if available, else simulated.
         Reads frames, draws boxes, and saves the output video.
         """
         try:

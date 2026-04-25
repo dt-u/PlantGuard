@@ -14,6 +14,7 @@ database = client[DB_NAME]
 # Collections
 mongodb = database
 diseases_collection = mongodb.diseases
+routines_collection = mongodb.routines
 
 async def connect_to_mongodb():
     """Connect to MongoDB"""
@@ -46,6 +47,10 @@ async def create_indexes():
         await mongodb.notifications.create_index("created_at")
         await mongodb.notifications.create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
         await mongodb.notifications.create_index([("user_id", ASCENDING), ("is_read", ASCENDING)])
+
+        # Routines collection indexes
+        await mongodb.routines.create_index("user_id")
+        await mongodb.routines.create_index("created_at")
         
         print("✅ Database indexes created")
     except Exception as e:
