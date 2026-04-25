@@ -4,7 +4,12 @@
     "doctor": "Bác sĩ",
     "login": "Đăng nhập",
     "history": "Lịch sử chẩn đoán",
+    "routines": "Tiến độ chăm sóc",
     "logout": "Đăng xuất"
+  },
+  "routines": {
+    "title": "Tiến độ chăm sóc",
+    "subtitle": "Theo dõi và quản lý quá trình điều trị cho cây của bạn"
   },
   "home": {
     "title": "Nông Nghiệp Thông Minh",

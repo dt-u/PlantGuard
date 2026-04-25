@@ -56,14 +56,13 @@ async def bg_auto_scan(user_id: str, camera_url: str):
                     await asyncio.to_thread(cv2.imwrite, img_path, frame)
 
                     if user_id and user_id != "anonymous":
-                        await mongodb.notifications.insert_one({
-                            "user_id": str(user_id),
-                            "type": "alert",
-                            "title": "Cảnh báo từ Giám sát ngầm",
-                            "message": f"Phát hiện khu vực có dấu hiệu dịch bệnh từ Camera lúc {datetime.now().strftime('%H:%M')}",
-                            "is_read": False,
-                            "created_at": datetime.now()
-                        })
+                        from ..services.notification import send_push_notification
+                        await send_push_notification(
+                            user_id=str(user_id),
+                            n_type="alert",
+                            title="Cảnh báo từ Giám sát ngầm",
+                            body=f"Phát hiện khu vực có dấu hiệu dịch bệnh từ Camera lúc {datetime.now().strftime('%H:%M')}"
+                        )
                     
                     # Sleep 1 minute after finding disease
                     await asyncio.sleep(60)
@@ -76,7 +75,6 @@ async def bg_auto_scan(user_id: str, camera_url: str):
         except Exception as e:
             print(f"Auto scan error for {user_id}: {e}")
             await asyncio.sleep(10)
-
 
 async def run_analysis(job_id: str, file_path: str, user_id: Optional[str] = None):
     def progress_cb(pct):
@@ -102,14 +100,14 @@ async def run_analysis(job_id: str, file_path: str, user_id: Optional[str] = Non
             else:
                 message += "Đã xảy ra lỗi trong quá trình xử lý tệp video."
 
-            await mongodb.notifications.insert_one({
-                "user_id": str(user_id),
-                "type": "drone",
-                "title": f"Cập nhật Phân tích Drone",
-                "message": message,
-                "is_read": False,
-                "created_at": datetime.now()
-            })
+            from ..services.notification import send_push_notification
+            await send_push_notification(
+                user_id=str(user_id),
+                n_type="drone",
+                title="Cập nhật Phân tích Drone",
+                body=message,
+                data={"job_id": job_id}
+            )
         except Exception as noti_err:
             print(f"Error creating drone notification: {noti_err}")
 

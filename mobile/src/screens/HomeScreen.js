@@ -66,6 +66,7 @@ const HomeScreen = ({ navigation }) => {
                     </Text>
                 </View>
 
+
                 {/* Options List - Stacked for better readability */}
                 <View style={styles.menuList}>
                     <TouchableOpacity 
@@ -149,6 +150,7 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 2,
     },
+
     headerRight: {
         flexDirection: 'row',
         alignItems: 'center',

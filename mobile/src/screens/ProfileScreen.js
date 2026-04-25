@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { User, History, LogOut, ChevronRight, Settings, Shield, Bell, LogIn, ArrowLeft, UserPlus, Globe, Check, Edit2 } from 'lucide-react-native';
+import { User, History, LogOut, ChevronRight, Settings, Shield, Bell, LogIn, ArrowLeft, UserPlus, Globe, Check, Edit2, Calendar } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HeaderBell from '../components/HeaderBell';
@@ -125,6 +125,12 @@ const ProfileScreen = ({ navigation }) => {
                 <TouchableOpacity style={styles.menuItem} onPress={handleHistoryPress}>
                     <View style={styles.menuIconContainer}><History color="#2E7D32" size={20} /></View>
                     <Text style={styles.menuLabel}>{t('profile.history')}</Text>
+                    <ChevronRight color="#CBD5E1" size={20} />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => isAuthenticated() ? navigation.navigate('CareRoutines') : setShowGuestView(true)}>
+                    <View style={styles.menuIconContainer}><Calendar color="#2E7D32" size={20} /></View>
+                    <Text style={styles.menuLabel}>{language === 'vi' ? 'Tiến độ chăm sóc' : 'Care Routines'}</Text>
                     <ChevronRight color="#CBD5E1" size={20} />
                 </TouchableOpacity>
 

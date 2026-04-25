@@ -4,7 +4,12 @@
     "doctor": "Doctor",
     "login": "Login",
     "history": "Diagnosis History",
+    "routines": "Care Routines",
     "logout": "Logout"
+  },
+  "routines": {
+    "title": "Care Routines",
+    "subtitle": "Monitor and manage the treatment process for your plants"
   },
   "home": {
     "title": "Smart Agriculture",

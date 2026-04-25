@@ -106,7 +106,8 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
                             )}
                         </View>
                         <TreatmentCard 
-                            treatments={translateTreatments(diagnosis.disease_slug || diagnosis.disease_name, diagnosis.treatments || [])} 
+                            treatments={translateTreatments(diagnosis.disease_slug || diagnosis.disease_name, diagnosis.treatments || [])}
+                            diseaseKey={diagnosis.disease_slug || diagnosis.disease_name}
                         />
                     </View>
 

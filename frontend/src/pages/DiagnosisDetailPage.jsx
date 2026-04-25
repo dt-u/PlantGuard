@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Calendar, User, Activity, AlertCircle, Leaf, Clock } from 'lucide-react';
+import { Calendar, User, Activity, AlertCircle, Leaf, Clock, CalendarPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
-
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
 const DiagnosisDetailPage = () => {
@@ -17,6 +16,64 @@ const DiagnosisDetailPage = () => {
     const [diagnosis, setDiagnosis] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedTreatment, setSelectedTreatment] = useState(null);
+    const [plantName, setPlantName] = useState('');
+    const [isStrictTracking, setIsStrictTracking] = useState(true);
+    const [remindViaEmail, setRemindViaEmail] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState(false);
+
+    const openRoutineModal = (treatment) => {
+        if (!user) {
+            alert("Vui lòng đăng nhập để sử dụng tính năng này.");
+            return;
+        }
+        setSelectedTreatment(treatment);
+        setSaveSuccess(false);
+        setIsModalOpen(true);
+    };
+
+    const handleSaveRoutine = async () => {
+        if (!plantName.trim()) {
+            alert("Vui lòng nhập tên cây.");
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            const genRes = await axios.post('http://127.0.0.1:8000/api/routine/generate', {
+                disease_name: diagnosis.disease_name,
+                level: selectedTreatment.level || selectedTreatment.severity || 'Moderate',
+                action: selectedTreatment.action,
+                product: selectedTreatment.product
+            });
+
+            if (genRes.data.status === 'success') {
+                await axios.post('http://127.0.0.1:8000/api/routine/save', {
+                    user_id: user.id,
+                    plant_name: plantName,
+                    disease_name: diagnosis.disease_name,
+                    is_strict_tracking: isStrictTracking,
+                    remind_via_email: remindViaEmail,
+                    events: genRes.data.events
+                });
+                setSaveSuccess(true);
+            }
+        } catch (error) {
+            console.error("Error saving routine:", error);
+            alert("Đã xảy ra lỗi khi lưu lịch trình.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const downloadICS = () => {
+        window.location.href = `http://127.0.0.1:8000/api/routine/export_ics?disease_name=${encodeURIComponent(diagnosis.disease_name)}&events=${encodeURIComponent(JSON.stringify(selectedTreatment))}`;
+    };    const getLevelLabel = (level) => {
+        const map = { mild: 'Nhẹ', moderate: 'Trung bình', severe: 'Nặng', maintenance: 'Duy trì' };
+        return map[(level || '').toLowerCase()] || level;
+    };
 
     useEffect(() => {
         fetchDiagnosisDetail();
@@ -82,7 +139,8 @@ const DiagnosisDetailPage = () => {
     }
 
     return (
-        <div className="min-h-screen pb-12">
+        <>
+            <div className="min-h-screen pb-12">
             <div className="max-w-6xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="mb-8 text-center">
@@ -232,11 +290,21 @@ const DiagnosisDetailPage = () => {
                                                 </div>
                                             )}
                                             
-                                            {treatment.action && (
+                                             {treatment.action && (
                                                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
                                                     <p className="text-[10px] font-black text-blue-800 uppercase mb-1">{t('detail.action_label')}:</p>
                                                     <p className="text-xs font-bold text-blue-700">{treatment.action}</p>
                                                 </div>
+                                            )}
+
+                                            {!diagnosis.is_healthy && (
+                                                <button
+                                                    onClick={() => openRoutineModal(treatment)}
+                                                    className="w-full mt-1 flex items-center justify-center gap-2 bg-agri-green/10 text-agri-green hover:bg-agri-green hover:text-white transition-all duration-300 py-2 px-3 rounded-lg font-bold text-xs"
+                                                >
+                                                    <CalendarPlus size={14} />
+                                                    Lưu lịch điều trị
+                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -261,8 +329,99 @@ const DiagnosisDetailPage = () => {
                         </div>
                     </div>
                 </div>
+
+            {/* Routine Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
+                        <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-agri-green/5">
+                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <Leaf className="text-agri-green w-5 h-5" />
+                                Lịch trình chăm sóc
+                            </h3>
+                            <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-white rounded-full transition-colors">
+                                <Clock size={18} className="text-gray-400" />
+                            </button>
+                        </div>
+
+                        <div className="p-5 space-y-4 overflow-y-auto">
+                            {saveSuccess ? (
+                                <div className="text-center py-2">
+                                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <Leaf className="w-6 h-6 text-green-600" />
+                                    </div>
+                                    <h4 className="text-md font-bold text-gray-900 mb-1">Lưu thành công!</h4>
+                                    <p className="text-xs text-gray-500 mb-4">
+                                        Lịch trình đã được lưu vào hệ thống PlantGuard.
+                                    </p>
+                                    <button 
+                                        onClick={downloadICS}
+                                        className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 py-2.5 rounded-xl font-bold text-xs transition-colors mb-2"
+                                    >
+                                        <Calendar size={16} />
+                                        Thêm vào Google Calendar (.ics)
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-700">Tên cây cần theo dõi</label>
+                                        <input 
+                                            type="text" 
+                                            value={plantName}
+                                            onChange={(e) => setPlantName(e.target.value)}
+                                            placeholder="Ví dụ: Cà chua ban công..."
+                                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-agri-green focus:border-transparent outline-none transition-all text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-3 p-3 bg-agri-green/5 rounded-xl border border-agri-green/10">
+                                        <div className="flex-1">
+                                            <p className="text-xs font-bold text-gray-900">Theo dõi nghiêm ngặt</p>
+                                            <p className="text-[10px] text-gray-500">Xác nhận hoàn thành mỗi ngày.</p>
+                                        </div>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={isStrictTracking}
+                                            onChange={() => setIsStrictTracking(!isStrictTracking)}
+                                            className="w-4 h-4 accent-agri-green"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl border border-purple-100">
+                                        <div className="flex-1">
+                                            <p className="text-xs font-bold text-gray-900">Nhắc nhở qua Email</p>
+                                            <p className="text-[10px] text-gray-500">Nhận thông báo qua Gmail.</p>
+                                        </div>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={remindViaEmail}
+                                            onChange={() => setRemindViaEmail(!remindViaEmail)}
+                                            className="w-4 h-4 accent-purple-500"
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="p-4 bg-gray-50 flex gap-2">
+                            {saveSuccess ? (
+                                <button onClick={() => setIsModalOpen(false)} className="w-full bg-agri-green text-white py-2.5 rounded-xl font-bold text-sm">Hoàn tất</button>
+                            ) : (
+                                <>
+                                    <button onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-200 text-sm">Hủy</button>
+                                    <button onClick={handleSaveRoutine} disabled={isSaving} className="flex-[2] bg-agri-green text-white py-2.5 rounded-xl font-bold text-sm disabled:opacity-50">
+                                        {isSaving ? 'Đang lưu...' : 'Lưu lịch trình'}
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+                </div>
             </div>
-        </div>
+        </>
     );
 };
 
