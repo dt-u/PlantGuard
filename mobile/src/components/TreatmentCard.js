@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager, Alert, Modal, ScrollView, TextInput, Switch, Linking } from 'react-native';
 import * as Calendar from 'expo-calendar';
-import { AlertCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Beaker, ShieldCheck, Zap, Info, Calendar as CalendarIcon, Leaf } from 'lucide-react-native';
+import { AlertCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Beaker, ShieldCheck, Zap, Info, Calendar as CalendarIcon, Leaf, Sprout } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { API_BASE_URL } from '../api/config';
+import { API_BASE_URL, ENDPOINTS } from '../api/config';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -113,7 +113,7 @@ const TreatmentCard = ({ treatments = [], diseaseKey, imageUrl }) => {
             setIsSaving(true);
             const userId = getUserId();
             
-            const response = await axios.post(`${API_BASE_URL}/api/routine/save`, {
+            const response = await axios.post(ENDPOINTS.ROUTINE_CREATE, {
                 user_id: userId,
                 plant_name: plantName,
                 disease_name: diseaseKey || 'Bệnh chưa xác định',
@@ -153,7 +153,7 @@ const TreatmentCard = ({ treatments = [], diseaseKey, imageUrl }) => {
         }
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/api/routine/generate`, {
+            const response = await axios.post(ENDPOINTS.ROUTINE_GENERATE, {
                 disease_name: diseaseKey || 'Unknown',
                 level: item.level || 'Moderate',
                 action: item.action,
@@ -289,7 +289,8 @@ const TreatmentCard = ({ treatments = [], diseaseKey, imageUrl }) => {
             <View style={styles.modalOverlay}>
                 <View style={styles.modalSheet}>
                     <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Lịch trình chăm sóc Smart</Text>
+                        <Sprout color="#2E7D32" size={24} />
+                        <Text style={styles.modalTitle}>Lịch trình chăm sóc</Text>
                         <TouchableOpacity onPress={() => setRoutineModalVisible(false)}>
                             <XCircle size={24} color="#9CA3AF" />
                         </TouchableOpacity>

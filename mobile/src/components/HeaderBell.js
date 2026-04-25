@@ -5,30 +5,12 @@ import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { Bell } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 
 const HeaderBell = ({ color = "#1E293B", style }) => {
     const navigation = useNavigation();
-    const { user, isAuthenticated } = useAuth();
-    const [count, setCount] = useState(0);
-
-    const fetchUnreadCount = async () => {
-        if (isAuthenticated() && user?.id) {
-            try {
-                const response = await axios.get(`${ENDPOINTS.NOTIFICATIONS_UNREAD_COUNT}?user_id=${user.id}`);
-                setCount(response.data.count);
-            } catch (error) {
-                console.error("Error fetching unread count:", error);
-            }
-        }
-    };
-
-    useEffect(() => {
-        fetchUnreadCount();
-        
-        // Polling every 30 seconds for new notifications
-        const interval = setInterval(fetchUnreadCount, 30000);
-        return () => clearInterval(interval);
-    }, [user, isAuthenticated]);
+    const { isAuthenticated } = useAuth();
+    const { unreadCount } = useNotifications();
 
     return (
         <TouchableOpacity 
@@ -38,10 +20,10 @@ const HeaderBell = ({ color = "#1E293B", style }) => {
         >
             <View style={styles.iconWrapper}>
                 <Bell size={22} color={color} />
-                {isAuthenticated() && count > 0 && (
+                {isAuthenticated() && unreadCount > 0 && (
                     <View style={styles.badge}>
                         <Text style={styles.badgeText}>
-                            {count > 9 ? '9+' : count}
+                            {unreadCount > 9 ? '9+' : unreadCount}
                         </Text>
                     </View>
                 )}

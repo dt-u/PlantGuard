@@ -6,34 +6,43 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import axios from 'axios';
 import { ENDPOINTS } from '../api/config';
-import { formatDistanceToNow } from 'date-fns';
-import { vi, enUS } from 'date-fns/locale';
+import { useNotifications } from '../contexts/NotificationContext';
+
+const formatTimeHelper = (dateString, lang) => {
+    try {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) return lang === 'vi' ? 'Vừa xong' : 'Just now';
+        
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) return lang === 'vi' ? `${diffInMinutes} phút trước` : `${diffInMinutes}m ago`;
+        
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return lang === 'vi' ? `${diffInHours} giờ trước` : `${diffInHours}h ago`;
+        
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 7) return lang === 'vi' ? `${diffInDays} ngày trước` : `${diffInDays}d ago`;
+        
+        return date.toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US');
+    } catch (e) {
+        return dateString;
+    }
+};
 
 const SystemNotificationsScreen = ({ navigation }) => {
     const insets = useSafeAreaInsets();
-    const { user, isAuthenticated } = useAuth();
-    const { language, t } = useLanguage();
-    const [loading, setLoading] = useState(true);
-    
-    const [notifications, setNotifications] = useState([]);
-    
-    const fetchNotifications = async () => {
-        if (isAuthenticated() && user?.id) {
-            try {
-                setLoading(true);
-                const response = await axios.get(`${ENDPOINTS.NOTIFICATIONS_LIST}?user_id=${user.id}`);
-                setNotifications(response.data);
-            } catch (error) {
-                console.error("Error fetching notifications:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-    };
+    const { isAuthenticated } = useAuth();
+    const { language } = useLanguage();
+    const { notifications, loading, markAsRead, markAllAsRead, clearAll } = useNotifications();
+    const [activeFilter, setActiveFilter] = useState('all');
 
-    useEffect(() => {
-        fetchNotifications();
-    }, [user, isAuthenticated]);
+    const filteredNotifications = notifications.filter(noti => {
+        if (activeFilter === 'all') return true;
+        if (activeFilter === 'unread') return !noti.is_read;
+        return noti.type === activeFilter;
+    });
 
     const getIconAndColor = (type) => {
         switch (type) {
@@ -41,49 +50,10 @@ const SystemNotificationsScreen = ({ navigation }) => {
                 return { icon: FileText, color: '#3B82F6' };
             case 'system':
                 return { icon: Info, color: '#10B981' };
+            case 'routine':
+                return { icon: ShieldAlert, color: '#F59E0B' };
             default:
-                return { icon: Bell, color: '#F59E0B' };
-        }
-    };
-
-    const formatTime = (dateString) => {
-        try {
-            const date = new Date(dateString);
-            return formatDistanceToNow(date, { 
-                addSuffix: true, 
-                locale: language === 'vi' ? vi : enUS 
-            });
-        } catch (e) {
-            return dateString;
-        }
-    };
-
-    const markAllAsRead = async () => {
-        if (!user?.id) return;
-        try {
-            await axios.patch(`${ENDPOINTS.NOTIFICATIONS_READ_ALL}?user_id=${user.id}`);
-            setNotifications(notifications.map(n => ({ ...n, is_read: true })));
-        } catch (error) {
-            console.error("Error marking all read:", error);
-        }
-    };
-
-    const clearAll = async () => {
-        if (!user?.id) return;
-        try {
-            await axios.delete(`${ENDPOINTS.NOTIFICATIONS_CLEAR}?user_id=${user.id}`);
-            setNotifications([]);
-        } catch (error) {
-            console.error("Error clearing notifications:", error);
-        }
-    };
-
-    const markAsRead = async (id) => {
-        try {
-            await axios.patch(ENDPOINTS.NOTIFICATIONS_MARK_READ(id));
-            setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
-        } catch (error) {
-            console.error("Error marking read:", error);
+                return { icon: Bell, color: '#64748B' };
         }
     };
 
@@ -95,7 +65,13 @@ const SystemNotificationsScreen = ({ navigation }) => {
             clear: "Xóa tất cả",
             loginRequired: "Vui lòng đăng nhập",
             loginSub: "Bạn cần đăng nhập để xem thông báo cá nhân cho vườn cây của mình.",
-            loginBtn: "Đăng nhập ngay"
+            loginBtn: "Đăng nhập ngay",
+            filters: {
+                all: "Tất cả",
+                unread: "Chưa đọc",
+                drone: "Drone",
+                routine: "Lộ trình"
+            }
         },
         en: {
             title: "Notifications",
@@ -104,7 +80,13 @@ const SystemNotificationsScreen = ({ navigation }) => {
             clear: "Clear all",
             loginRequired: "Please login",
             loginSub: "You need to log in to see personalized alerts for your garden.",
-            loginBtn: "Login Now"
+            loginBtn: "Login Now",
+            filters: {
+                all: "All",
+                unread: "Unread",
+                drone: "Drone",
+                routine: "Routine"
+            }
         }
     }[language] || {
         title: "Notifications",
@@ -155,6 +137,22 @@ const SystemNotificationsScreen = ({ navigation }) => {
                 </TouchableOpacity>
             </View>
 
+            <View style={styles.filterContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+                    {Object.entries(content.filters).map(([key, label]) => (
+                        <TouchableOpacity 
+                            key={key}
+                            onPress={() => setActiveFilter(key)}
+                            style={[styles.filterTab, activeFilter === key && styles.activeFilterTab]}
+                        >
+                            <Text style={[styles.filterLabel, activeFilter === key && styles.activeFilterLabel]}>
+                                {label}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+
             {loading ? (
                 <View style={styles.centerContent}>
                     <ActivityIndicator size="large" color="#2E7D32" />
@@ -164,7 +162,7 @@ const SystemNotificationsScreen = ({ navigation }) => {
                     contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 20 }]}
                     showsVerticalScrollIndicator={false}
                 >
-                    {notifications.length > 0 ? (
+                    {filteredNotifications.length > 0 ? (
                         <>
                             <View style={styles.actionRow}>
                                 <TouchableOpacity onPress={markAllAsRead} style={styles.markReadAction}>
@@ -173,7 +171,7 @@ const SystemNotificationsScreen = ({ navigation }) => {
                                 </TouchableOpacity>
                             </View>
 
-                            {notifications.map((item) => {
+                            {filteredNotifications.map((item) => {
                                 const { icon: Icon, color } = getIconAndColor(item.type);
                                 return (
                                     <TouchableOpacity 
@@ -193,7 +191,7 @@ const SystemNotificationsScreen = ({ navigation }) => {
                                             <Text style={styles.notiMessage} numberOfLines={2}>{item.message}</Text>
                                             <View style={styles.timeContainer}>
                                                 <Clock color="#94A3B8" size={12} />
-                                                <Text style={styles.notiTime}>{formatTime(item.created_at)}</Text>
+                                                <Text style={styles.notiTime}>{formatTimeHelper(item.created_at, language)}</Text>
                                             </View>
                                         </View>
                                     </TouchableOpacity>
@@ -245,6 +243,37 @@ const styles = StyleSheet.create({
         fontFamily: 'Vietnam-Bold',
         color: '#1E293B',
     },
+    filterContainer: {
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F5F9',
+    },
+    filterScroll: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        gap: 8,
+    },
+    filterTab: {
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderRadius: 20,
+        backgroundColor: '#F1F5F9',
+        borderWidth: 1,
+        borderColor: 'transparent',
+    },
+    activeFilterTab: {
+        backgroundColor: '#ECFDF5',
+        borderColor: '#10B981',
+    },
+    filterLabel: {
+        fontSize: 13,
+        fontFamily: 'Vietnam-Medium',
+        color: '#64748B',
+    },
+    activeFilterLabel: {
+        color: '#047857',
+        fontFamily: 'Vietnam-Bold',
+    },
     scrollContent: {
         paddingHorizontal: 16,
         paddingTop: 12,
@@ -279,11 +308,11 @@ const styles = StyleSheet.create({
         borderColor: '#F1F5F9',
     },
     unreadCard: {
-        borderColor: '#E2E8F0',
-        backgroundColor: '#FFFFFF',
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
+        borderColor: '#BFDBFE',
+        backgroundColor: '#F0F9FF',
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 4,
     },
     iconContainer: {
         width: 44,

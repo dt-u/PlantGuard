@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Activ
 import { ChevronLeft, Calendar, ChevronRight, Leaf, AlertCircle, Trash2 } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { API_BASE_URL } from '../api/config';
+import { API_BASE_URL, ENDPOINTS } from '../api/config';
 import { Alert } from 'react-native';
 
 const CareRoutinesScreen = ({ navigation }) => {
@@ -15,7 +15,7 @@ const CareRoutinesScreen = ({ navigation }) => {
     const fetchRoutines = useCallback(async () => {
         try {
             const userId = getUserId();
-            const response = await axios.get(`${API_BASE_URL}/api/routine/user/${userId}`);
+            const response = await axios.get(`${ENDPOINTS.ROUTINE_LIST}/user/${userId}`);
             setRoutines(response.data);
         } catch (error) {
             console.error('Error fetching routines:', error);
@@ -46,7 +46,7 @@ const CareRoutinesScreen = ({ navigation }) => {
                     onPress: async () => {
                         try {
                             setLoading(true);
-                            await axios.delete(`${API_BASE_URL}/api/routine/${id}`);
+                            await axios.delete(ENDPOINTS.ROUTINE_DELETE(id));
                             setRoutines(prev => prev.filter(r => r._id !== id));
                         } catch (error) {
                             console.error('Error deleting routine:', error);

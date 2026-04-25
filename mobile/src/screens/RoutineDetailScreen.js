@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert, StatusBar, Switch } from 'react-native';
 import { ChevronLeft, Calendar, CheckCircle2, Circle, Clock, AlertCircle, ShieldCheck } from 'lucide-react-native';
 import axios from 'axios';
-import { API_BASE_URL } from '../api/config';
+import { API_BASE_URL, ENDPOINTS } from '../api/config';
 
 const RoutineDetailScreen = ({ route, navigation }) => {
     const { routineId } = route.params;
@@ -13,7 +13,7 @@ const RoutineDetailScreen = ({ route, navigation }) => {
     const fetchRoutineDetail = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`${API_BASE_URL}/api/routine/${routineId}`);
+            const response = await axios.get(ENDPOINTS.ROUTINE_DETAIL(routineId));
             setRoutine(response.data);
         } catch (error) {
             console.error('Error fetching routine detail:', error);
@@ -32,7 +32,7 @@ const RoutineDetailScreen = ({ route, navigation }) => {
             // Optimistic update
             setRoutine(prev => ({ ...prev, is_strict_tracking: value }));
             
-            await axios.put(`${API_BASE_URL}/api/routine/${routineId}/settings`, {
+            await axios.put(ENDPOINTS.ROUTINE_UPDATE_SETTINGS(routineId), {
                 is_strict_tracking: value
             });
         } catch (error) {
@@ -46,7 +46,7 @@ const RoutineDetailScreen = ({ route, navigation }) => {
     const updateEventStatus = async (eventId, newStatus) => {
         try {
             setUpdatingStatus(eventId);
-            await axios.put(`${API_BASE_URL}/api/routine/${routineId}/event/${eventId}`, {
+            await axios.put(ENDPOINTS.ROUTINE_UPDATE_EVENT(routineId, eventId), {
                 status: newStatus
             });
             
@@ -201,14 +201,17 @@ const RoutineDetailScreen = ({ route, navigation }) => {
                                     
                                     {today && event.status === 'pending' && (
                                         <TouchableOpacity 
-                                            style={styles.completeBtn}
+                                            style={styles.pendingBtn}
                                             onPress={() => updateEventStatus(event.id, 'completed')}
                                             disabled={updatingStatus === event.id}
                                         >
                                             {updatingStatus === event.id ? (
-                                                <ActivityIndicator size="small" color="#FFF" />
+                                                <ActivityIndicator size="small" color="#10B981" />
                                             ) : (
-                                                <Text style={styles.completeBtnText}>Hoàn thành ngay ✅</Text>
+                                                <>
+                                                    <View style={styles.pendingCircle} />
+                                                    <Text style={styles.pendingBtnText}>Xác nhận hoàn thành</Text>
+                                                </>
                                             )}
                                         </TouchableOpacity>
                                     )}
@@ -333,7 +336,32 @@ const styles = StyleSheet.create({
         color: '#9CA3AF',
         marginBottom: 4
     },
-    eventDesc: { fontSize: 13, fontFamily: 'Vietnam-Regular', color: '#4B5563', lineHeight: 19 },
+    eventDesc: { fontSize: 13, fontFamily: 'Vietnam-Regular', color: '#4B5563', lineHeight: 20 },
+    pendingBtn: {
+        marginTop: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        borderWidth: 1.5,
+        borderColor: '#10B981',
+        backgroundColor: '#FFFFFF',
+    },
+    pendingCircle: {
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        borderWidth: 1.5,
+        borderColor: '#10B981',
+        marginRight: 8,
+    },
+    pendingBtnText: {
+        fontSize: 13,
+        fontFamily: 'Vietnam-Bold',
+        color: '#10B981',
+    },
     completeBtn: {
         marginTop: 16,
         backgroundColor: '#10B981',
