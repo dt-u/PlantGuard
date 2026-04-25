@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, SafeAreaView, Linking } from 'react-native';
 import { ArrowLeft, Calendar, CheckCircle, Info, Cross, Hospital } from 'lucide-react-native';
 import { API_BASE_URL } from '../api/config';
 import TreatmentCard from '../components/TreatmentCard';
@@ -12,6 +12,19 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
     const { diagnosis } = route.params;
     const { t } = useLanguage();
     const { translateDiseaseName, translateDescription, translateSymptoms, translateTreatments } = useDiseaseTranslator();
+
+    const openPurchaseLink = (treatment) => {
+        const targetUrl = treatment.affiliate_url || 
+                         `https://shopee.vn/search?keyword=${encodeURIComponent(treatment.search_fallback_keyword || treatment.product || treatment.name)}`;
+        
+        Linking.canOpenURL(targetUrl).then(supported => {
+            if (supported) {
+                Linking.openURL(targetUrl);
+            } else {
+                console.log("Đéo mở được link: " + targetUrl);
+            }
+        });
+    };
 
     if (!diagnosis) return null;
 
@@ -107,6 +120,7 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
                         </View>
                         <TreatmentCard 
                             treatments={translateTreatments(diagnosis.disease_slug || diagnosis.disease_name, diagnosis.treatments || [])} 
+                            onBuyPress={openPurchaseLink}
                         />
                     </View>
 

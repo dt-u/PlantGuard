@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useHistorySync } from '../hooks/useHistorySync';
 import { useTranslation } from 'react-i18next';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
+import treatmentService from '../services/treatmentService';
 
 const Cross = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -61,6 +62,26 @@ const DoctorPage = () => {
     }, [user, isAuthenticated, pendingSaveToHistory, pendingResult]);
 
     const handleUpload = async (file) => {
+        // Validate file
+        if (!file) {
+            setError(t('doctor.no_file_selected'));
+            return;
+        }
+
+        // Check file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            setError(t('doctor.file_too_large'));
+            return;
+        }
+
+        // Check file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            setError(t('doctor.invalid_file_type'));
+            return;
+        }
+
         setLoading(true);
         setError(null);
         setResult(null);
@@ -69,21 +90,58 @@ const DoctorPage = () => {
         const formData = new FormData();
         formData.append('file', file);
 
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
         try {
+            console.log('📤 Starting image upload...');
             const response = await axios.post('http://127.0.0.1:8000/api/doctor/diagnose', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+                headers: { 
+                    'Content-Type': 'multipart/form-data',
+                },
+                signal: controller.signal,
+                timeout: 60000, // 60 seconds
             });
+            
+            clearTimeout(timeoutId);
+            console.log('✅ Upload successful:', response.data);
+            
             setResult(response.data);
             setSavedToHistory(false);
             setSavedId(null);
+            
+            // Clear any previous upload errors
+            setError(null);
+            
         } catch (err) {
-            console.error(err);
-            if (err.response && err.response.status === 404) {
-                setError(err.response.data.detail);
-            } else if (err.response && err.response.data && err.response.data.detail) {
-                setError(err.response.data.detail);
+            clearTimeout(timeoutId);
+            console.error('❌ Upload error:', err);
+            
+            // Handle different error types
+            if (err.name === 'AbortError') {
+                setError(t('doctor.upload_timeout'));
+            } else if (err.code === 'ECONNABORTED') {
+                setError(t('doctor.upload_timeout'));
+            } else if (err.response) {
+                // Server responded with error status
+                if (err.response.status === 404) {
+                    setError(err.response.data.detail || t('doctor.not_found'));
+                } else if (err.response.status === 413) {
+                    setError(t('doctor.file_too_large'));
+                } else if (err.response.status === 422) {
+                    setError(err.response.data.detail || t('doctor.validation_error'));
+                } else if (err.response.status === 500) {
+                    setError(t('doctor.server_error'));
+                } else {
+                    setError(err.response.data.detail || t('doctor.upload_failed'));
+                }
+            } else if (err.request) {
+                // Network error
+                setError(t('doctor.network_error'));
             } else {
-                setError(t('doctor.server_error'));
+                // Other errors
+                setError(t('doctor.upload_failed'));
             }
         } finally {
             setLoading(false);
@@ -145,6 +203,11 @@ const DoctorPage = () => {
         } else {
             saveToHistory(result);
         }
+    };
+
+    const handleBuyAction = (treatment) => {
+        // Sử dụng treatmentService để xử lý việc mua hàng
+        treatmentService.handlePurchase(treatment);
     };
 
     const resetPage = () => {
@@ -277,7 +340,7 @@ const DoctorPage = () => {
                                         </h3>
                                     </div>
 
-                                    <TreatmentCard treatments={translateTreatments(result.disease.name, result.disease.treatments)} />
+                                    <TreatmentCard treatments={translateTreatments(result.disease.name, result.disease.treatments)} onBuyAction={handleBuyAction} />
                                 </div>
                             </div>
 

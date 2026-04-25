@@ -14,6 +14,8 @@ database = client[DB_NAME]
 # Collections
 mongodb = database
 diseases_collection = mongodb.diseases
+treatments_collection = mongodb.treatments
+history_collection = mongodb.history
 
 async def connect_to_mongodb():
     """Connect to MongoDB"""
@@ -97,3 +99,15 @@ async def verify_user_credentials(email: str, password: str):
     if user and user.get("password") == password:  # In production, use hashed passwords
         return user
     return None
+
+async def get_treatments_by_disease(disease_id: str):
+    """Get treatments by disease ID"""
+    try:
+        treatments = []
+        cursor = treatments_collection.find({"disease_id": disease_id})
+        async for document in cursor:
+            treatments.append(document)
+        return treatments
+    except Exception as e:
+        print(f"❌ Error fetching treatments for disease {disease_id}: {e}")
+        return []

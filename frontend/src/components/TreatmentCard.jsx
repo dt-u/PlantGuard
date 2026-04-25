@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-const TreatmentCard = ({ treatments = [] }) => {
+const TreatmentCard = ({ treatments = [], onBuyAction }) => {
     const { t } = useTranslation();
     const [expandedId, setExpandedId] = useState(null);
 
@@ -10,11 +10,16 @@ const TreatmentCard = ({ treatments = [] }) => {
 
     const translateLevel = (level) => {
         switch (level.toLowerCase()) {
-            case 'mild': return t('treatment.mild');
-            case 'moderate': return t('treatment.moderate');
-            case 'severe': return t('treatment.severe');
-            case 'maintenance': return t('treatment.maintenance');
-            default: return level;
+            case 'mild': 
+                return t('treatment.mild');
+            case 'moderate': 
+                return t('treatment.moderate');
+            case 'severe': 
+                return t('treatment.severe');
+            case 'maintenance': 
+                return t('treatment.maintenance');
+            default: 
+                return level;
         }
     };
 
@@ -40,27 +45,30 @@ const TreatmentCard = ({ treatments = [] }) => {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            {treatments.map((treatment, index) => (
+            {treatments.map((treatment, index) => {
+                const level = treatment.level || treatment.severity || 'unknown';
+                
+                return (
                 <div
                     key={index}
                     onClick={() => setExpandedId(expandedId === index ? null : index)}
                     className={`glass-panel p-4 cursor-pointer transition-all duration-300 hover:scale-[1.02] border-2 ${expandedId === index ? 'ring-2 ring-offset-2 ring-agri-green scale-[1.02]' : 'border-transparent'
                         }`}
                 >
-                    <div className={`flex items-center justify-between p-3 rounded-lg mb-2 ${getLevelColor(treatment.level)}`}>
+                    <div className={`flex items-center justify-between p-3 rounded-lg mb-2 ${getLevelColor(level)}`}>
                         <div className="flex flex-col">
-                            {treatment.level.toLowerCase() === 'maintenance' ? (
+                            {level.toLowerCase() === 'maintenance' ? (
                                 <span className="font-bold uppercase tracking-wide text-[14px] whitespace-nowrap">{t('treatment.maintenance')}</span>
                             ) : (
                                 <>
                                     <span className="text-[12px] opacity-70 font-semibold uppercase">{t('treatment.suggestion')}</span>
                                     <span className="font-bold uppercase tracking-wide text-lg -mt-1">
-                                        {translateLevel(treatment.level)}
+                                        {translateLevel(level)}
                                     </span>
                                 </>
                             )}
                         </div>
-                        {getIcon(treatment.level)}
+                        {getIcon(level)}
                     </div>
 
                     <div className={`space-y-3 overflow-hidden transition-all duration-300 ${expandedId === index ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
@@ -78,15 +86,50 @@ const TreatmentCard = ({ treatments = [] }) => {
                         </div>
                         <div>
                             <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('treatment.product')}</p>
-                            <p className="text-agri-green font-medium text-sm">{treatment.product}</p>
+                            <p className="text-agri-green font-medium text-sm">{treatment.product_name || treatment.product}</p>
                         </div>
+                        
+                        {(treatment.product_name || treatment.product) && onBuyAction && (
+                            <div className="pt-3 border-t border-gray-100">
+                                <button
+                                    onClick={() => onBuyAction(treatment)}
+                                    style={{ 
+                                        backgroundColor: '#ee4d2d', 
+                                        color: 'white', 
+                                        padding: '8px 16px', 
+                                        borderRadius: '6px',
+                                        fontSize: '11px',
+                                        fontWeight: 'bold',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        transition: 'all 0.2s ease',
+                                        width: '100%',
+                                        justifyContent: 'center'
+                                    }}
+                                    onMouseOver={(e) => {
+                                        e.target.style.backgroundColor = '#d6381c';
+                                        e.target.style.transform = 'translateY(-1px)';
+                                    }}
+                                    onMouseOut={(e) => {
+                                        e.target.style.backgroundColor = '#ee4d2d';
+                                        e.target.style.transform = 'translateY(0)';
+                                    }}
+                                >
+                                    🛒 Mua ngay trên Shopee
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {expandedId !== index && (
                         <p className="text-center text-sm text-gray-400 mt-2">{t('treatment.click_detail')}</p>
                     )}
                 </div>
-            ))}
+                );
+            })}
         </div>
     );
 };

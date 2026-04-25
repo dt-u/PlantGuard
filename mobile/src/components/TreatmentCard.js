@@ -7,7 +7,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const TreatmentCard = ({ treatments = [], diseaseKey }) => {
+const TreatmentCard = ({ treatments = [], diseaseKey, onBuyPress }) => {
     const { t, language } = useLanguage();
     const [expandedIndex, setExpandedIndex] = useState(null);
 
@@ -102,6 +102,16 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
                                             <Text style={styles.productText}>{item.product}</Text>
                                         </View>
                                     </View>
+
+                                    {item.product && onBuyPress && (
+                                        <TouchableOpacity 
+                                            style={styles.buyButton}
+                                            onPress={() => onBuyPress(item)}
+                                            activeOpacity={0.8}
+                                        >
+                                            <Text style={styles.buyButtonText}>🛒 Mua ngay trên Shopee</Text>
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
                             )}
 
@@ -212,6 +222,25 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontFamily: 'Vietnam-Bold',
         color: '#065F46',
+    },
+    buyButton: {
+        backgroundColor: '#ee4d2d',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    buyButtonText: {
+        color: 'white',
+        fontSize: 14,
+        fontFamily: 'Vietnam-Bold',
+        fontWeight: 'bold',
     }
 });
 
