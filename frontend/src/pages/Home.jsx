@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Leaf, Eye, ArrowRight, Sprout, LogIn, UserPlus, User, History, LogOut } from 'lucide-react';
+import { Leaf, Eye, ArrowRight, Sprout, LogIn, UserPlus, User, History, LogOut, Bell, Calendar, Activity } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Home = () => {
     const { user, logout, openLogin, openRegister } = useAuth();
+    const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isNotiOpen, setIsNotiOpen] = useState(false);
     const { t, i18n } = useTranslation();
 
     const changeLanguage = (lng) => {
@@ -41,6 +45,93 @@ const Home = () => {
                         </button>
                     </div>
 
+                    {user && (
+                        <div className="relative">
+                            <button
+                                onClick={() => { setIsNotiOpen(!isNotiOpen); setIsProfileOpen(false); }}
+                                className="p-2 rounded-xl text-agri-dark hover:bg-green-100 transition-colors relative bg-white shadow-sm border border-green-100"
+                            >
+                                <Bell className="w-5 h-5" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-bounce">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            <AnimatePresence>
+                                {isNotiOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setIsNotiOpen(false)}></div>
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden text-left"
+                                        >
+                                            <div className="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                                                <h3 className="font-bold text-gray-900 text-sm">Thông báo</h3>
+                                                {unreadCount > 0 && (
+                                                    <button 
+                                                        onClick={() => markAllAsRead()}
+                                                        className="text-xs text-agri-green font-bold hover:underline"
+                                                    >
+                                                        Đánh dấu tất cả là đã đọc
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className="max-h-[400px] overflow-y-auto">
+                                                {notifications.length === 0 ? (
+                                                    <div className="p-8 text-center">
+                                                        <Bell className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                                                        <p className="text-gray-400 text-xs">Không có thông báo mới</p>
+                                                    </div>
+                                                ) : (
+                                                    notifications.slice(0, 10).map((noti) => (
+                                                        <div 
+                                                            key={noti.id}
+                                                            onClick={() => { markAsRead(noti.id); setIsNotiOpen(false); }}
+                                                            className={`p-4 border-b border-gray-50 cursor-pointer transition-colors hover:bg-gray-50 flex gap-3 ${!noti.is_read ? 'bg-green-50/30' : ''}`}
+                                                        >
+                                                            <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center ${
+                                                                noti.type === 'drone' ? 'bg-blue-100 text-blue-600' :
+                                                                noti.type === 'routine' ? 'bg-amber-100 text-amber-600' :
+                                                                'bg-green-100 text-agri-green'
+                                                            }`}>
+                                                                {noti.type === 'drone' ? <Activity className="w-5 h-5" /> : 
+                                                                 noti.type === 'routine' ? <Calendar className="w-5 h-5" /> : 
+                                                                 <Bell className="w-5 h-5" />}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className={`text-sm ${!noti.is_read ? 'font-bold text-gray-900' : 'text-gray-600'}`}>
+                                                                    {noti.title}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{noti.message}</p>
+                                                                <p className="text-[10px] text-gray-400 mt-1">
+                                                                    {new Date(noti.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                                                </p>
+                                                            </div>
+                                                            {!noti.is_read && (
+                                                                <div className="w-2 h-2 rounded-full bg-agri-green mt-2 flex-shrink-0"></div>
+                                                            )}
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                            <Link 
+                                                to="/notifications" 
+                                                className="block p-3 text-center text-xs font-bold text-gray-500 hover:bg-gray-50 border-t border-gray-50"
+                                                onClick={() => setIsNotiOpen(false)}
+                                            >
+                                                Xem tất cả thông báo
+                                            </Link>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
+
                     {user ? (
                         <div className="relative">
                             <button
@@ -67,6 +158,14 @@ const Home = () => {
                                         >
                                             <History className="w-3.5 h-3.5" />
                                             <span className="font-medium">{t('navbar.history')}</span>
+                                        </Link>
+                                        <Link
+                                            to="/routines"
+                                            className="flex items-center space-x-3 px-4 py-2.5 text-xs text-gray-700 hover:bg-green-50 hover:text-agri-green transition-colors"
+                                            onClick={() => setIsProfileOpen(false)}
+                                        >
+                                            <Calendar className="w-3.5 h-3.5" />
+                                            <span className="font-medium">{t('navbar.routines') || 'Tiến độ chăm sóc'}</span>
                                         </Link>
                                         <button
                                             onClick={() => { logout(); setIsProfileOpen(false); }}

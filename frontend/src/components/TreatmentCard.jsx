@@ -12,6 +12,7 @@ const TreatmentCard = ({ treatments = [], diseaseName = "Unknown" }) => {
     const [selectedTreatment, setSelectedTreatment] = useState(null);
     const [plantName, setPlantName] = useState('');
     const [isStrictTracking, setIsStrictTracking] = useState(true);
+    const [remindViaEmail, setRemindViaEmail] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -57,6 +58,7 @@ const TreatmentCard = ({ treatments = [], diseaseName = "Unknown" }) => {
                     plant_name: plantName,
                     disease_name: diseaseName,
                     is_strict_tracking: isStrictTracking,
+                    remind_via_email: remindViaEmail,
                     events: genRes.data.events
                 });
 
@@ -164,18 +166,18 @@ const TreatmentCard = ({ treatments = [], diseaseName = "Unknown" }) => {
             {/* Routine Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-agri-green/5">
-                            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                <Leaf className="text-agri-green" />
-                                Lịch trình chăm sóc Smart
+                    <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[80vh]">
+                        <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-agri-green/5">
+                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <Leaf className="text-agri-green w-5 h-5" />
+                                Lịch trình chăm sóc
                             </h3>
-                            <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white rounded-full transition-colors">
-                                <X size={20} className="text-gray-400" />
+                            <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-white rounded-full transition-colors">
+                                <X size={18} className="text-gray-400" />
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-6">
+                        <div className="p-5 space-y-4 overflow-y-auto">
                             {saveSuccess ? (
                                 <div className="text-center py-4">
                                     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -226,6 +228,27 @@ const TreatmentCard = ({ treatments = [], diseaseName = "Unknown" }) => {
                                                 onChange={() => setIsStrictTracking(!isStrictTracking)}
                                             />
                                             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-agri-green"></div>
+                                        </label>
+                                    </div>
+
+                                    <div className="flex items-start gap-4 p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-sm font-bold text-gray-900">Nhắc nhở qua Email</span>
+                                                <Info size={14} className="text-gray-400" />
+                                            </div>
+                                            <p className="text-xs text-gray-500 leading-relaxed">
+                                                Nhận thông báo lịch chăm sóc hàng ngày qua Gmail (hữu ích khi không mở Web).
+                                            </p>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                className="sr-only peer" 
+                                                checked={remindViaEmail}
+                                                onChange={() => setRemindViaEmail(!remindViaEmail)}
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
                                         </label>
                                     </div>
                                 </>

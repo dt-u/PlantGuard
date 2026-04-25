@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar, CheckCircle2, Circle, Clock, AlertCircle, ShieldCheck, ChevronRight, Leaf, ArrowLeft, Trash2 } from 'lucide-react';
+import { Calendar, CheckCircle2, Circle, Clock, AlertCircle, ShieldCheck, ChevronRight, Leaf, ArrowLeft, Trash2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CareRoutinesPage = () => {
@@ -275,9 +275,21 @@ const CareRoutinesPage = () => {
                                                             <button
                                                                 onClick={() => handleUpdateStatus(selectedRoutine._id, event.id, 'completed')}
                                                                 disabled={updatingStatus === event.id}
-                                                                className="mt-4 w-full sm:w-auto bg-agri-green text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:scale-105 transition-transform disabled:opacity-50"
+                                                                className="mt-4 w-full sm:w-auto flex items-center justify-center gap-3 border-2 border-agri-green text-agri-green px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-agri-green hover:text-white transition-all group disabled:opacity-50"
                                                             >
-                                                                {updatingStatus === event.id ? 'Đang cập nhật...' : 'Đã hoàn thành ✅'}
+                                                                {updatingStatus === event.id ? (
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="w-4 h-4 border-2 border-agri-green border-t-transparent rounded-full animate-spin"></div>
+                                                                        Đang cập nhật...
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <div className="w-5 h-5 rounded-full border-2 border-agri-green group-hover:border-white transition-colors flex items-center justify-center">
+                                                                            <Check className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                        </div>
+                                                                        Xác nhận hoàn thành
+                                                                    </>
+                                                                )}
                                                             </button>
                                                         )}
 
