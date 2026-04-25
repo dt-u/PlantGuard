@@ -13,6 +13,9 @@ database = client[DB_NAME]
 
 # Collections
 mongodb = database
+users_collection = mongodb.users
+history_collection = mongodb.history
+notifications_collection = mongodb.notifications
 diseases_collection = mongodb.diseases
 routines_collection = mongodb.routines
 

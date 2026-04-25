@@ -19,6 +19,7 @@ class UserRoutine(BaseModel):
     disease_slug: Optional[str] = None
     image_url: Optional[str] = None
     is_strict_tracking: bool = True
+    remind_via_email: bool = False
     created_at: datetime = Field(default_factory=datetime.now)
     events: List[RoutineEvent] = []
 

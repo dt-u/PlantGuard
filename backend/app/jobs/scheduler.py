@@ -1,8 +1,9 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime, time
 import logging
-from ..database.mongodb import routines_collection
+from ..database.mongodb import routines_collection, users_collection
 from ..services.notification import send_push_notification
+from ..services.email import send_care_reminder_email
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,21 @@ async def morning_reminder_job():
             if today_start <= event_date <= today_end and event["status"] == "pending":
                 title = f"{plant_name} đang đợi bạn!"
                 body = f"Hãy {event['title']} để hoàn thành lộ trình hôm nay nhé."
-                await send_push_notification(user_id, title, body)
+                
+                # 1. Send In-app/Web Push
+                await send_push_notification(user_id, title, body, n_type="routine")
+                
+                # 2. Send Email if enabled for this routine
+                if routine.get("remind_via_email"):
+                    user = await users_collection.find_one({"_id": user_id})
+                    if user and user.get("email"):
+                        send_care_reminder_email(
+                            user_email=user["email"],
+                            user_name=user["name"],
+                            plant_name=plant_name,
+                            task_title=event["title"],
+                            task_desc=event["description"]
+                        )
 
 async def afternoon_followup_job():
     """
@@ -68,10 +83,24 @@ async def afternoon_followup_job():
             if isinstance(event_date, str):
                 event_date = datetime.fromisoformat(event_date)
                 
-            if today_start <= event_date <= today_end and event["status"] == "pending":
-                title = f"Nhắc nhẹ: {plant_name}"
-                body = f"Đừng quên {event['title']} cho cây hôm nay nha!"
-                await send_push_notification(user_id, title, body)
+            if (today_start <= event_date <= today_end) and (event["status"] == "pending"):
+                title = f"Lời nhắc từ {plant_name}"
+                body = f"Bạn chưa xác nhận hoàn thành công việc '{event['title']}' ngày hôm nay."
+                
+                # 1. Send In-app Push
+                await send_push_notification(user_id, title, body, n_type="routine")
+                
+                # 2. Send Email if enabled for this routine
+                if routine.get("remind_via_email"):
+                    user = await users_collection.find_one({"_id": user_id})
+                    if user and user.get("email"):
+                        send_care_reminder_email(
+                            user_email=user["email"],
+                            user_name=user["name"],
+                            plant_name=plant_name,
+                            task_title=f"NHẮC NHỞ: {event['title']}",
+                            task_desc=f"Bạn chưa hoàn thành công việc hôm nay cho {plant_name}. Hãy chăm sóc cây kịp thời nhé!"
+                        )
 
 async def end_of_day_cleanup_job():
     """
