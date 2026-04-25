@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager, Alert, Linking, Modal, ScrollView } from 'react-native';
-import { AlertCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Beaker, ShieldCheck, Zap } from 'lucide-react-native';
-import { useLanguage } from '../contexts/LanguageContext';
+import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager, Alert, Modal, ScrollView, TextInput, Switch, Linking } from 'react-native';
 import * as Calendar from 'expo-calendar';
+import { AlertCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Beaker, ShieldCheck, Zap, Info, Calendar as CalendarIcon, Leaf } from 'lucide-react-native';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { API_BASE_URL } from '../api/config';
 
@@ -10,12 +11,17 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const TreatmentCard = ({ treatments = [], diseaseKey }) => {
+const TreatmentCard = ({ treatments = [], diseaseKey, imageUrl }) => {
     const { t, language } = useLanguage();
+    const { user, getUserId } = useAuth();
     const [expandedIndex, setExpandedIndex] = useState(null);
     const [routineModalVisible, setRoutineModalVisible] = useState(false);
     const [routineEvents, setRoutineEvents] = useState([]);
-    const [isSavingCalendar, setIsSavingCalendar] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    
+    // New fields for Smart Care Routine
+    const [plantName, setPlantName] = useState('');
+    const [isStrictTracking, setIsStrictTracking] = useState(true);
 
     const toggleExpand = (index) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -30,109 +36,132 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
         
         const diffTime = Math.abs(current - start);
         const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
-        return diffDays + 1; // +1 because first day is Day 1
+        return diffDays + 1;
     };
 
-    const saveAllToCalendar = async () => {
+    const openGoogleCalendar = async () => {
         try {
-            setIsSavingCalendar(true);
-            
-            // 1. Request Permissions
             const { status } = await Calendar.requestCalendarPermissionsAsync();
             if (status !== 'granted') {
-                Alert.alert('Quyền truy cập', 'Vui lòng cấp quyền truy cập lịch để sử dụng tính năng này.');
-                setIsSavingCalendar(false);
+                Alert.alert('Quyền truy cập', 'Vui lòng cấp quyền truy cập lịch để đồng bộ lộ trình.');
                 return;
             }
 
-            if (Platform.OS === 'ios') {
-                const { status: remindersStatus } = await Calendar.requestRemindersPermissionsAsync();
-                if (remindersStatus !== 'granted') {
-                    Alert.alert('Quyền truy cập', 'Vui lòng cấp quyền truy cập lời nhắc.');
-                    setIsSavingCalendar(false);
-                    return;
-                }
-            }
-
-            // 2. Find the best calendar to save to (Prefer Google Calendar)
             const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
             
-            let targetCalendar = calendars.find(cal => 
-                cal.allowsModifications && 
-                (cal.source?.type === 'com.google' || cal.source?.name?.includes('@gmail.com'))
-            );
+            // Tìm lịch phù hợp để lưu (Ưu tiên Gmail hoặc Lịch mặc định)
+            let targetCalendar = calendars.find(cal => cal.allowsModifications && (cal.type === 'gmail' || cal.source?.name?.toLowerCase().includes('gmail')))
+                              || calendars.find(cal => cal.allowsModifications && cal.isPrimary)
+                              || calendars.find(cal => cal.allowsModifications);
 
             if (!targetCalendar) {
-                targetCalendar = await Calendar.getDefaultCalendarAsync();
-            }
-
-            if (!targetCalendar || !targetCalendar.allowsModifications) {
-                targetCalendar = calendars.find(cal => cal.allowsModifications);
-            }
-
-            if (!targetCalendar) {
-                Alert.alert('Lỗi', 'Không tìm thấy lịch nào có quyền ghi trên thiết bị.');
-                setIsSavingCalendar(false);
+                Alert.alert('Lỗi', 'Không tìm thấy lịch khả dụng trên thiết bị này.');
                 return;
             }
 
-            // 3. Create all events in that calendar
-            for (const event of routineEvents) {
-                const startDate = new Date(event.date);
-                const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour duration
-                
+            setIsSaving(true);
+            
+            for (const ev of routineEvents) {
+                const startDate = new Date(ev.date);
+                startDate.setHours(8, 0, 0, 0); 
+                const endDate = new Date(ev.date);
+                endDate.setHours(9, 0, 0, 0);
+
                 await Calendar.createEventAsync(targetCalendar.id, {
-                    title: `[PlantGuard] ${event.title}`,
+                    title: `[PlantGuard] ${ev.title} - ${plantName}`,
                     startDate,
                     endDate,
-                    notes: event.description,
-                    location: 'Khu vườn của bạn',
-                    alarms: [{ relativeOffset: -60, method: Calendar.AlarmMethod.ALERT }] 
+                    notes: ev.description,
+                    location: 'Vườn của bạn',
+                    timeZone: 'Asia/Ho_Chi_Minh',
+                    alarms: [{ relativeOffset: -30 }], // Nhắc trước 30 phút
                 });
             }
 
             Alert.alert(
-                'Thành công',
-                `Đã lưu ${routineEvents.length} mốc chăm sóc vào lịch "${targetCalendar.title}".`,
+                'Đồng bộ thành công',
+                `Đã thêm ${routineEvents.length} lời nhắc chăm sóc vào lịch "${targetCalendar.title}" trên điện thoại của bạn.`,
                 [
-                    {
-                        text: 'OK',
-                        onPress: () => setRoutineModalVisible(false),
-                        style: 'cancel',
-                    },
-                    {
-                        text: 'Kiểm tra',
-                        onPress: async () => {
+                    { 
+                        text: 'Kiểm tra 📅', 
+                        onPress: () => {
                             setRoutineModalVisible(false);
-                            const calendarUrl = Platform.OS === 'ios' ? 'calshow:' : 'content://com.android.calendar/time/';
-                            try {
-                                await Linking.openURL(calendarUrl);
-                            } catch (err) {
-                                Linking.openURL('https://calendar.google.com/');
-                            }
-                        },
+                            const url = Platform.OS === 'ios' ? 'calshow:' : 'content://com.android.calendar/time/';
+                            Linking.openURL(url).catch(() => {
+                                Alert.alert('Thông báo', 'Không thể mở tự động ứng dụng Lịch, bạn hãy mở thủ công để kiểm tra nhé.');
+                            });
+                        } 
                     },
+                    { text: 'Tuyệt vời', onPress: () => setRoutineModalVisible(false) }
                 ]
             );
         } catch (error) {
-            console.error(error);
-            Alert.alert('Lỗi', 'Không thể lưu vào lịch. Vui lòng thử lại.');
+            console.error('Calendar Sync Error:', error);
+            Alert.alert('Lỗi', 'Không thể đồng bộ với lịch trên thiết bị. Vui lòng kiểm tra lại quyền truy cập.');
         } finally {
-            setIsSavingCalendar(false);
+            setIsSaving(false);
+        }
+    };
+
+    const saveRoutineToDB = async () => {
+        if (!plantName.trim()) {
+            Alert.alert('Thiếu thông tin', 'Vui lòng nhập tên cây (ví dụ: Cà chua ban công).');
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            const userId = getUserId();
+            
+            const response = await axios.post(`${API_BASE_URL}/api/routine/save`, {
+                user_id: userId,
+                plant_name: plantName,
+                disease_name: diseaseKey || 'Bệnh chưa xác định',
+                image_url: imageUrl,
+                is_strict_tracking: isStrictTracking,
+                events: routineEvents
+            });
+
+            if (response.data.status === 'success') {
+                Alert.alert(
+                    'Thành công',
+                    'Đã lưu lịch trình chăm sóc vào hệ thống PlantGuard.',
+                    [
+                        { 
+                            text: 'Đồng bộ Google Calendar', 
+                            onPress: openGoogleCalendar 
+                        },
+                        { 
+                            text: 'Xong', 
+                            onPress: () => setRoutineModalVisible(false) 
+                        }
+                    ]
+                );
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Lỗi', 'Không thể lưu lịch trình. Vui lòng thử lại sau.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const startRoutine = async (item) => {
+        if (!user) {
+            Alert.alert('Yêu cầu đăng nhập', 'Bạn cần đăng nhập để sử dụng tính năng theo dõi tiến độ chăm sóc.');
+            return;
+        }
+
         try {
             const response = await axios.post(`${API_BASE_URL}/api/routine/generate`, {
                 disease_name: diseaseKey || 'Unknown',
                 level: item.level || 'Moderate',
                 action: item.action,
-                product: item.product,
-                is_tracking_enabled: false
+                product: item.product
             });
             if (response.data && response.data.events) {
                 setRoutineEvents(response.data.events);
+                setPlantName('');
                 setRoutineModalVisible(true);
             }
         } catch (error) {
@@ -148,7 +177,7 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
 
     const getSeverityStyles = (level) => {
         const lowerLevel = (level || '').toLowerCase();
-        if (lowerLevel.includes('nhẹ') || lowerLevel.includes('mild') || lowerLevel.includes('duy trì') || lowerLevel.includes('maintenance')) {
+        if (lowerLevel.includes('nhẹ') || lowerLevel.includes('mild')) {
             return { color: '#10B981', bg: '#F0FDF4', icon: <CheckCircle2 size={18} color="#10B981" />, label: t('treatment.mild') };
         }
         if (lowerLevel.includes('trung bình') || lowerLevel.includes('moderate')) {
@@ -235,7 +264,8 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
                                             style={styles.routineBtn} 
                                             onPress={() => startRoutine(item)}
                                         >
-                                            <Text style={styles.routineBtnText}>Lưu lịch điều trị</Text>
+                                            <CalendarIcon size={16} color="#FFF" style={{ marginRight: 8 }} />
+                                            <Text style={styles.routineBtnText}>Lập kế hoạch chăm sóc</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -258,10 +288,49 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
         >
             <View style={styles.modalOverlay}>
                 <View style={styles.modalSheet}>
-                    <Text style={styles.modalTitle}>Lịch chăm sóc đề xuất</Text>
-                    <Text style={styles.modalSubtitle}>Các mốc thời gian được tính toán theo phác đồ</Text>
-
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Lịch trình chăm sóc Smart</Text>
+                        <TouchableOpacity onPress={() => setRoutineModalVisible(false)}>
+                            <XCircle size={24} color="#9CA3AF" />
+                        </TouchableOpacity>
+                    </View>
+                    
                     <ScrollView style={{ marginTop: 12 }} showsVerticalScrollIndicator={false}>
+                        <View style={styles.inputSection}>
+                            <Text style={styles.inputLabel}>Tên cây cần theo dõi</Text>
+                            <View style={styles.inputWrapper}>
+                                <Leaf size={18} color="#10B981" style={{ marginRight: 10 }} />
+                                <TextInput
+                                    style={styles.textInput}
+                                    placeholder="Ví dụ: Cà chua ban công, Hoa hồng chậu 1..."
+                                    value={plantName}
+                                    onChangeText={setPlantName}
+                                />
+                            </View>
+                        </View>
+
+                        <View style={styles.settingRow}>
+                            <View style={{ flex: 1 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={styles.settingTitle}>Theo dõi nghiêm ngặt</Text>
+                                    <TouchableOpacity style={{ marginLeft: 6 }}>
+                                        <Info size={14} color="#9CA3AF" />
+                                    </TouchableOpacity>
+                                </View>
+                                <Text style={styles.settingDesc}>
+                                    Yêu cầu xác nhận hoàn thành mỗi ngày để tính điểm tiến độ.
+                                </Text>
+                            </View>
+                            <Switch
+                                value={isStrictTracking}
+                                onValueChange={setIsStrictTracking}
+                                trackColor={{ false: '#E5E7EB', true: '#10B981' }}
+                                thumbColor="#FFFFFF"
+                            />
+                        </View>
+
+                        <Text style={styles.sectionDivider}>Các mốc thời gian</Text>
+
                         {routineEvents.map((ev, idx) => (
                             <View key={idx} style={styles.eventCard}>
                                 <View style={styles.eventDayBadge}>
@@ -276,23 +345,17 @@ const TreatmentCard = ({ treatments = [], diseaseKey }) => {
                                 </View>
                             </View>
                         ))}
+                        <View style={{ height: 20 }} />
                     </ScrollView>
 
                     <TouchableOpacity
-                        style={[styles.saveAllBtn, isSavingCalendar && { opacity: 0.7 }]}
-                        onPress={saveAllToCalendar}
-                        disabled={isSavingCalendar}
+                        style={[styles.saveAllBtn, isSaving && { opacity: 0.7 }]}
+                        onPress={saveRoutineToDB}
+                        disabled={isSaving}
                     >
                         <Text style={styles.saveAllBtnText}>
-                            {isSavingCalendar ? 'Đang lưu...' : 'Lưu vào Google Calendar'}
+                            {isSaving ? 'Đang khởi tạo...' : 'Lưu lịch trình chăm sóc'}
                         </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.modalCloseBtn}
-                        onPress={() => setRoutineModalVisible(false)}
-                    >
-                        <Text style={styles.modalCloseBtnText}>Đóng</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -403,10 +466,11 @@ const styles = StyleSheet.create({
     },
     routineBtn: {
         backgroundColor: '#10B981',
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 10,
-        borderRadius: 8,
+        paddingVertical: 12,
+        borderRadius: 12,
     },
     routineBtnText: {
         color: '#FFFFFF',
@@ -423,19 +487,72 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: 24,
-        maxHeight: '80%',
+        maxHeight: '90%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
     },
     modalTitle: {
         fontSize: 18,
         fontFamily: 'Vietnam-Bold',
         color: '#1F2937',
-        marginBottom: 4,
     },
-    modalSubtitle: {
+    inputSection: {
+        marginTop: 16,
+        marginBottom: 16,
+    },
+    inputLabel: {
+        fontSize: 14,
+        fontFamily: 'Vietnam-Bold',
+        color: '#374151',
+        marginBottom: 8,
+    },
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F9FAFB',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+    },
+    textInput: {
+        flex: 1,
+        paddingVertical: 12,
+        fontFamily: 'Vietnam-Regular',
+        fontSize: 14,
+        color: '#1F2937',
+    },
+    settingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: '#F3F4F6',
+    },
+    settingTitle: {
+        fontSize: 14,
+        fontFamily: 'Vietnam-Bold',
+        color: '#374151',
+    },
+    settingDesc: {
         fontSize: 12,
         fontFamily: 'Vietnam-Regular',
+        color: '#6B7280',
+        marginTop: 2,
+    },
+    sectionDivider: {
+        fontSize: 12,
+        fontFamily: 'Vietnam-Bold',
         color: '#9CA3AF',
-        marginBottom: 8,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        marginTop: 20,
+        marginBottom: 10,
     },
     eventCard: {
         flexDirection: 'row',
@@ -477,28 +594,21 @@ const styles = StyleSheet.create({
         lineHeight: 16,
     },
     saveAllBtn: {
-        marginTop: 16,
-        backgroundColor: '#4285F4',
-        paddingVertical: 13,
+        marginTop: 20,
+        backgroundColor: '#10B981',
+        paddingVertical: 14,
         borderRadius: 12,
         alignItems: 'center',
+        shadowColor: '#10B981',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
     },
     saveAllBtnText: {
         color: '#FFFFFF',
         fontFamily: 'Vietnam-Bold',
-        fontSize: 14,
-    },
-    modalCloseBtn: {
-        marginTop: 16,
-        backgroundColor: '#F3F4F6',
-        paddingVertical: 12,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    modalCloseBtnText: {
-        fontFamily: 'Vietnam-Bold',
-        fontSize: 14,
-        color: '#374151',
+        fontSize: 15,
     },
 });
 

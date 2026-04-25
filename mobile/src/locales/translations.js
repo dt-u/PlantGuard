@@ -42,6 +42,7 @@ export const translations = {
         profile: {
             account: "Tài khoản",
             history: "Lịch sử chẩn đoán",
+            routines: "Tiến độ chăm sóc",
             notifications: "Thông báo",
             settings: "Cài đặt",
             privacy: "Quyền riêng tư",
@@ -186,6 +187,7 @@ export const translations = {
         profile: {
             account: "Account",
             history: "Diagnosis History",
+            routines: "Care Routines",
             notifications: "Notifications",
             settings: "Settings",
             privacy: "Privacy",

@@ -31,6 +31,8 @@ import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen
 import PrivacySettingsScreen from './src/screens/PrivacySettingsScreen';
 import AppSettingsScreen from './src/screens/AppSettingsScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
+import CareRoutinesScreen from './src/screens/CareRoutinesScreen';
+import RoutineDetailScreen from './src/screens/RoutineDetailScreen';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -124,6 +126,8 @@ export default function App() {
               <Stack.Screen name="Privacy" component={PrivacySettingsScreen} />
               <Stack.Screen name="AppSettings" component={AppSettingsScreen} />
               <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+              <Stack.Screen name="CareRoutines" component={CareRoutinesScreen} />
+              <Stack.Screen name="RoutineDetail" component={RoutineDetailScreen} />
             </Stack.Navigator>
           </NavigationContainer>
         </AuthProvider>

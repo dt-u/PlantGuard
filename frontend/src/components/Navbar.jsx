@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Sprout, Activity, Stethoscope, User, LogOut, History, LogIn } from 'lucide-react';
+import { Sprout, Activity, Stethoscope, User, LogOut, History, LogIn, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -86,6 +86,14 @@ const Navbar = () => {
                                     >
                                         <History className="w-4 h-4" />
                                         <span>{t('navbar.history')}</span>
+                                    </Link>
+                                    <Link
+                                        to="/routines"
+                                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-agri-green"
+                                        onClick={() => setIsProfileOpen(false)}
+                                    >
+                                        <Calendar className="w-4 h-4" />
+                                        <span>{t('navbar.routines') || 'Tiến độ chăm sóc'}</span>
                                     </Link>
                                     <button
                                         onClick={() => { logout(); setIsProfileOpen(false); }}
