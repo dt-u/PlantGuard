@@ -89,7 +89,9 @@ const TreatmentCard = ({ treatments = [], onBuyAction }) => {
                             <p className="text-agri-green font-medium text-sm">{treatment.product_name || treatment.product}</p>
                         </div>
                         
-                        {(treatment.product_name || treatment.product) && onBuyAction && (
+                        {(treatment.product_name || treatment.product) && 
+                         (treatment.product_name || treatment.product) !== 'N/A' && 
+                         onBuyAction && (
                             <div className="pt-3 border-t border-gray-100">
                                 <button
                                     onClick={() => onBuyAction(treatment)}
