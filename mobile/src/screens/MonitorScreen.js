@@ -158,7 +158,7 @@ const MonitorScreen = () => {
         setStatus("connecting");
         setHasFrame(false);
 
-        const ws = new WebSocket(`${WS_BASE_URL}/api/monitor/ws/live`);
+        const ws = new WebSocket(ENDPOINTS.WS_LIVE(user?.id || 'anonymous'));
         wsRef.current = ws;
 
         ws.onopen = () => {

@@ -47,7 +47,7 @@ export const ENDPOINTS = {
     
     // Monitor
     ANALYZE_VIDEO: `${API_BASE_URL}/api/monitor/analyze`,
-    WS_LIVE: `${WS_BASE_URL}/api/monitor/ws/live`,
+    WS_LIVE: (userId) => `${WS_BASE_URL}/api/monitor/ws/live/${userId}`,
     
     // Doctor
     DIAGNOSE: `${API_BASE_URL}/api/doctor/diagnose`,
