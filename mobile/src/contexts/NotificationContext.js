@@ -5,6 +5,8 @@ import { ENDPOINTS } from '../api/config';
 import { Alert } from 'react-native';
 import { navigate } from '../api/navigation';
 import { Audio } from 'expo-av';
+import * as Notifications from 'expo-notifications';
+import { registerForPushNotificationsAsync, registerTokenWithBackend } from '../services/pushNotificationService';
 
 const NotificationContext = createContext();
 
@@ -14,18 +16,8 @@ export const NotificationProvider = ({ children }) => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const socketRef = useRef(null);
-
-    const playNotificationSound = async () => {
-        try {
-            const { sound } = await Audio.Sound.createAsync(
-                { uri: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3' },
-                { shouldPlay: true, volume: 0.5 }
-            );
-            await sound.playAsync();
-        } catch (error) {
-            console.log('Error playing notification sound:', error);
-        }
-    };
+    const notificationListener = useRef();
+    const responseListener = useRef();
 
     const fetchNotifications = useCallback(async () => {
         if (!isAuthenticated() || !user?.id) return;
@@ -44,8 +36,52 @@ export const NotificationProvider = ({ children }) => {
     }, [user, isAuthenticated]);
 
     useEffect(() => {
-        fetchNotifications();
-    }, [fetchNotifications]);
+        if (isAuthenticated() && user?.id) {
+            // Register for push notifications
+            registerForPushNotificationsAsync().then(token => {
+                if (token) {
+                    registerTokenWithBackend(user.id, token);
+                }
+            });
+
+            // Refresh notifications list
+            fetchNotifications();
+
+            // This listener is fired whenever a notification is received while the app is foregrounded
+            notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+                fetchNotifications();
+            });
+
+            // This listener is fired whenever a user taps on or interacts with a notification
+            responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+                const data = response.notification.request.content.data;
+                if (data.type === 'drone') {
+                    navigate('MainTabs', { screen: 'Giám sát' });
+                } else if (data.type === 'routine') {
+                    navigate('CareRoutines');
+                } else {
+                    navigate('NotificationCenter');
+                }
+            });
+
+            return () => {
+                Notifications.removeNotificationSubscription(notificationListener.current);
+                Notifications.removeNotificationSubscription(responseListener.current);
+            };
+        }
+    }, [user, isAuthenticated, fetchNotifications]);
+
+    const playNotificationSound = async () => {
+        try {
+            const { sound } = await Audio.Sound.createAsync(
+                { uri: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3' },
+                { shouldPlay: true, volume: 0.5 }
+            );
+            await sound.playAsync();
+        } catch (error) {
+            console.log('Error playing notification sound:', error);
+        }
+    };
 
     useEffect(() => {
         if (!isAuthenticated() || !user?.id) {

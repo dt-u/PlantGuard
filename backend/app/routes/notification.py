@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Body
 from typing import List, Optional
 from datetime import datetime
 from bson import ObjectId
@@ -7,6 +7,31 @@ from ..database.mongodb import mongodb
 from ..models.notification import Notification, NotificationResponse
 
 router = APIRouter()
+
+@router.post("/register-push-token")
+async def register_push_token(user_id: str = Body(...), token: str = Body(...)):
+    """Register a push token for a user."""
+    try:
+        # Add token to user's push_tokens list if not already there
+        await mongodb.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$addToSet": {"push_tokens": token}}
+        )
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error registering push token: {str(e)}")
+
+@router.post("/unregister-push-token")
+async def unregister_push_token(user_id: str = Body(...), token: str = Body(...)):
+    """Remove a push token for a user (e.g., on logout)."""
+    try:
+        await mongodb.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$pull": {"push_tokens": token}}
+        )
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error unregistering push token: {str(e)}")
 
 @router.get("/", response_model=List[NotificationResponse])
 async def get_notifications(

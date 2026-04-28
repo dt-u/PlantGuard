@@ -27,6 +27,7 @@ class User(BaseModel):
     password: str  # In production, this should be hashed
     created_at: datetime
     preferences: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    push_tokens: Optional[list[str]] = Field(default_factory=list)
     
     class Config:
         populate_by_name = True
@@ -47,6 +48,7 @@ class UserLogin(BaseModel):
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     preferences: Optional[Dict[str, Any]] = None
+    push_tokens: Optional[list[str]] = None
 
 class UserResponse(BaseModel):
     id: str
@@ -54,6 +56,7 @@ class UserResponse(BaseModel):
     name: str
     created_at: datetime
     preferences: Optional[Dict[str, Any]] = None
+    push_tokens: Optional[list[str]] = None
     
     class Config:
         arbitrary_types_allowed = True

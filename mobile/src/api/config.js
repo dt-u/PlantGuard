@@ -72,5 +72,7 @@ export const ENDPOINTS = {
     NOTIFICATIONS_MARK_READ: (id) => `${API_BASE_URL}/api/notifications/${id}/read`,
     NOTIFICATIONS_READ_ALL: `${API_BASE_URL}/api/notifications/read-all`,
     NOTIFICATIONS_CLEAR: `${API_BASE_URL}/api/notifications/clear`,
+    NOTIFICATIONS_REGISTER_PUSH: `${API_BASE_URL}/api/notifications/register-push-token`,
+    NOTIFICATIONS_UNREGISTER_PUSH: `${API_BASE_URL}/api/notifications/unregister-push-token`,
     WS_NOTIFICATIONS: (userId) => `${WS_BASE_URL}/ws/${userId}`
 };
