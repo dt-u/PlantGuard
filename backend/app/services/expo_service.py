@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send"
 
-def send_expo_push_notifications(tokens: List[str], title: str, body: str, data: Dict[str, Any] = None):
+def send_expo_push_notifications(tokens: List[str], title: str, body: str, data: Dict[str, Any] = None, badge: int = None):
     if not tokens:
         return
     
@@ -20,7 +20,8 @@ def send_expo_push_notifications(tokens: List[str], title: str, body: str, data:
             "sound": "default",
             "title": title,
             "body": body,
-            "data": data or {}
+            "data": data or {},
+            "badge": badge
         }
         messages.append(message)
     

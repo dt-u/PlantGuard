@@ -41,11 +41,18 @@ async def create_and_send_notification(user_id: str, title: str, message: str, t
         # 3. Send via Expo Push (System-level)
         user = await mongodb.users.find_one({"_id": ObjectId(user_id)})
         if user and "push_tokens" in user and user["push_tokens"]:
+            # Count current unread notifications for badge
+            unread_count = await mongodb.notifications.count_documents({
+                "user_id": user_id, 
+                "is_read": False
+            })
+            
             send_expo_push_notifications(
                 tokens=user["push_tokens"],
                 title=title,
                 body=message,
-                data={"notification_id": new_notification["id"], "type": type}
+                data={"notification_id": new_notification["id"], "type": type},
+                badge=unread_count
             )
             
         return new_notification

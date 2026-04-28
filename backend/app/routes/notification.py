@@ -74,6 +74,13 @@ async def mark_as_read(notification_id: str):
         if not result:
             raise HTTPException(status_code=404, detail="Notification not found")
         
+        # Sync via WebSocket
+        from ..websocket import manager
+        await manager.broadcast_to_user(result["user_id"], {
+            "type": "NOTIFICATION_MARKED_READ",
+            "notification_id": str(result["_id"])
+        })
+        
         result["id"] = str(result.pop("_id"))
         return NotificationResponse(**result)
     except Exception as e:
@@ -87,6 +94,13 @@ async def mark_all_as_read(user_id: str):
             {"user_id": user_id, "is_read": False},
             {"$set": {"is_read": True}}
         )
+        
+        # Sync via WebSocket
+        from ..websocket import manager
+        await manager.broadcast_to_user(user_id, {
+            "type": "ALL_NOTIFICATIONS_READ"
+        })
+        
         return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating notifications: {str(e)}")

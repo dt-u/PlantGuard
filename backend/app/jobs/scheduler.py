@@ -1,6 +1,6 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import logging
 from ..database.mongodb import mongodb, routines_collection
 from ..services.notification_service import create_and_send_notification
@@ -19,8 +19,34 @@ def setup_scheduler():
     # Cảnh báo Strict Mode 20h00
     scheduler.add_job(send_evening_strict_reminder, CronTrigger(hour=20, minute=0))
     
+    # Dọn dẹp dữ liệu cũ (Chủ Nhật lúc 00:00)
+    scheduler.add_job(cleanup_old_data, CronTrigger(day_of_week='sun', hour=0, minute=0))
+    
     logger.info("Scheduler setup complete with cron jobs")
     return scheduler
+
+async def cleanup_old_data():
+    """Xóa log Live Cam và thông báo cũ hơn 30 ngày."""
+    logger.info("Running weekly cleanup job")
+    thirty_days_ago = (datetime.now() - timedelta(days=30)).isoformat()
+    
+    try:
+        # Xóa log Live Cam
+        result_logs = await mongodb.live_cam_logs.delete_many({
+            "timestamp": {"$lt": thirty_days_ago}
+        })
+        
+        # Xóa thông báo cũ
+        # Chuyển đổi datetime sang iso string nếu cần, tùy thuộc vào cách bạn lưu
+        # Hiện tại trong create_and_send_notification lưu là datetime object
+        dt_30_days_ago = datetime.now() - timedelta(days=30)
+        result_notis = await mongodb.notifications.delete_many({
+            "created_at": {"$lt": dt_30_days_ago}
+        })
+        
+        logger.info(f"Cleanup complete: Removed {result_logs.deleted_count} logs and {result_notis.deleted_count} notifications")
+    except Exception as e:
+        logger.error(f"Error in cleanup job: {e}")
 
 async def send_morning_routines_reminder():
     """Gửi nhắc nhở lúc 7:00 sáng cho các lịch trình trong ngày."""
