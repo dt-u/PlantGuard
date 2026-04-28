@@ -62,7 +62,7 @@ export const ENDPOINTS = {
     ROUTINE_DETAIL: (id) => `${API_BASE_URL}/api/routine/${id}`,
     ROUTINE_CREATE: `${API_BASE_URL}/api/routine/save`,
     ROUTINE_GENERATE: `${API_BASE_URL}/api/routine/generate`,
-    ROUTINE_UPDATE_EVENT: (id, eventIndex) => `${API_BASE_URL}/api/routine/${id}/events/${eventIndex}`,
+    ROUTINE_UPDATE_EVENT: (id, eventId) => `${API_BASE_URL}/api/routine/${id}/event/${eventId}`,
     ROUTINE_UPDATE_SETTINGS: (id) => `${API_BASE_URL}/api/routine/${id}/settings`,
     ROUTINE_DELETE: (id) => `${API_BASE_URL}/api/routine/${id}`,
 
