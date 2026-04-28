@@ -1,161 +1,120 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from datetime import datetime, time
+from apscheduler.triggers.cron import CronTrigger
+from datetime import datetime, date
 import logging
-from ..database.mongodb import routines_collection, users_collection
-from ..services.notification import send_push_notification
-from ..services.email import send_care_reminder_email
+from ..database.mongodb import mongodb, routines_collection
+from ..services.notification_service import create_and_send_notification
 
 logger = logging.getLogger(__name__)
-
-async def morning_reminder_job():
-    """
-    Runs every morning at 7:00 AM.
-    Sends notifications for pending tasks of the day.
-    """
-    logger.info("Running morning reminder job...")
-    today_start = datetime.combine(datetime.today(), time.min)
-    today_end = datetime.combine(datetime.today(), time.max)
-    
-    # Find all routines that have an event for today with status 'pending'
-    cursor = routines_collection.find({
-        "events": {
-            "$elemMatch": {
-                "date": {"$gte": today_start, "$lte": today_end},
-                "status": "pending"
-            }
-        }
-    })
-    
-    async for routine in cursor:
-        user_id = routine["user_id"]
-        plant_name = routine["plant_name"]
-        
-        # Find the specific event for today
-        for event in routine["events"]:
-            # Handle both datetime objects and ISO strings if necessary
-            event_date = event["date"]
-            if isinstance(event_date, str):
-                event_date = datetime.fromisoformat(event_date)
-            
-            if today_start <= event_date <= today_end and event["status"] == "pending":
-                title = f"{plant_name} đang đợi bạn!"
-                body = f"Hãy {event['title']} để hoàn thành lộ trình hôm nay nhé."
-                
-                # 1. Send In-app/Web Push
-                await send_push_notification(user_id, title, body, n_type="routine")
-                
-                # 2. Send Email if enabled for this routine
-                if routine.get("remind_via_email"):
-                    user = await users_collection.find_one({"_id": user_id})
-                    if user and user.get("email"):
-                        send_care_reminder_email(
-                            user_email=user["email"],
-                            user_name=user["name"],
-                            plant_name=plant_name,
-                            task_title=event["title"],
-                            task_desc=event["description"]
-                        )
-
-async def afternoon_followup_job():
-    """
-    Runs every afternoon at 5:00 PM.
-    Reminds users who haven't completed their daily task.
-    """
-    logger.info("Running afternoon follow-up job...")
-    today_start = datetime.combine(datetime.today(), time.min)
-    today_end = datetime.combine(datetime.today(), time.max)
-    
-    cursor = routines_collection.find({
-        "events": {
-            "$elemMatch": {
-                "date": {"$gte": today_start, "$lte": today_end},
-                "status": "pending"
-            }
-        }
-    })
-    
-    async for routine in cursor:
-        user_id = routine["user_id"]
-        plant_name = routine["plant_name"]
-        
-        for event in routine["events"]:
-            event_date = event["date"]
-            if isinstance(event_date, str):
-                event_date = datetime.fromisoformat(event_date)
-                
-            if (today_start <= event_date <= today_end) and (event["status"] == "pending"):
-                title = f"Lời nhắc từ {plant_name}"
-                body = f"Bạn chưa xác nhận hoàn thành công việc '{event['title']}' ngày hôm nay."
-                
-                # 1. Send In-app Push
-                await send_push_notification(user_id, title, body, n_type="routine")
-                
-                # 2. Send Email if enabled for this routine
-                if routine.get("remind_via_email"):
-                    user = await users_collection.find_one({"_id": user_id})
-                    if user and user.get("email"):
-                        send_care_reminder_email(
-                            user_email=user["email"],
-                            user_name=user["name"],
-                            plant_name=plant_name,
-                            task_title=f"NHẮC NHỞ: {event['title']}",
-                            task_desc=f"Bạn chưa hoàn thành công việc hôm nay cho {plant_name}. Hãy chăm sóc cây kịp thời nhé!"
-                        )
-
-async def end_of_day_cleanup_job():
-    """
-    Runs every day at 11:59 PM.
-    Marks pending tasks as 'missed' (strict) or 'skipped' (relaxed).
-    """
-    logger.info("Running end-of-day cleanup job...")
-    today_start = datetime.combine(datetime.today(), time.min)
-    today_end = datetime.combine(datetime.today(), time.max)
-    
-    # 1. Handle Strict Mode: pending -> missed
-    await routines_collection.update_many(
-        {
-            "is_strict_tracking": True,
-            "events": {
-                "$elemMatch": {
-                    "date": {"$lt": today_end},
-                    "status": "pending"
-                }
-            }
-        },
-        {
-            "$set": {"events.$[elem].status": "missed"}
-        },
-        array_filters=[{"elem.date": {"$lt": today_end}, "elem.status": "pending"}]
-    )
-    
-    # 2. Handle Relaxed Mode: pending -> skipped (or completed depending on preference)
-    await routines_collection.update_many(
-        {
-            "is_strict_tracking": False,
-            "events": {
-                "$elemMatch": {
-                    "date": {"$lt": today_end},
-                    "status": "pending"
-                }
-            }
-        },
-        {
-            "$set": {"events.$[elem].status": "skipped"}
-        },
-        array_filters=[{"elem.date": {"$lt": today_end}, "elem.status": "pending"}]
-    )
 
 def setup_scheduler():
     scheduler = AsyncIOScheduler()
     
-    # Schedule jobs
-    # 7:00 AM
-    scheduler.add_job(morning_reminder_job, 'cron', hour=7, minute=0)
+    # Nhắc nhở sáng 7h00
+    scheduler.add_job(send_morning_routines_reminder, CronTrigger(hour=7, minute=0))
     
-    # 5:00 PM
-    scheduler.add_job(afternoon_followup_job, 'cron', hour=17, minute=0)
+    # Tổng hợp Live Cam 19h00
+    scheduler.add_job(send_daily_detection_summary, CronTrigger(hour=19, minute=0))
     
-    # 11:59 PM
-    scheduler.add_job(end_of_day_cleanup_job, 'cron', hour=23, minute=59)
+    # Cảnh báo Strict Mode 20h00
+    scheduler.add_job(send_evening_strict_reminder, CronTrigger(hour=20, minute=0))
     
+    logger.info("Scheduler setup complete with cron jobs")
     return scheduler
+
+async def send_morning_routines_reminder():
+    """Gửi nhắc nhở lúc 7:00 sáng cho các lịch trình trong ngày."""
+    logger.info("Running morning routines reminder job")
+    today_str = date.today().isoformat() # YYYY-MM-DD
+    
+    try:
+        # Tìm các routine có event diễn ra vào ngày hôm nay
+        cursor = routines_collection.find({
+            "events": {
+                "$elemMatch": {
+                    "date": {"$regex": f"^{today_str}"},
+                    "status": "pending"
+                }
+            }
+        })
+        
+        routines = await cursor.to_list(length=1000)
+        user_tasks = {}
+        
+        for r in routines:
+            user_id = r["user_id"]
+            if user_id not in user_tasks:
+                user_tasks[user_id] = 0
+            
+            for event in r["events"]:
+                if event["date"].startswith(today_str) and event["status"] == "pending":
+                    user_tasks[user_id] += 1
+        
+        for user_id, task_count in user_tasks.items():
+            if task_count > 0:
+                await create_and_send_notification(
+                    user_id=user_id,
+                    title="Lịch chăm sóc cây hôm nay",
+                    message=f"Chào buổi sáng! Bạn có {task_count} công việc cần thực hiện hôm nay. Đừng quên nhé!",
+                    type="routine"
+                )
+    except Exception as e:
+        logger.error(f"Error in morning reminder job: {e}")
+
+async def send_evening_strict_reminder():
+    """Gửi cảnh báo lúc 20:00 tối cho các Strict Routine chưa hoàn thành."""
+    logger.info("Running evening strict reminder job")
+    today_str = date.today().isoformat()
+    
+    try:
+        cursor = routines_collection.find({
+            "is_strict_tracking": True,
+            "events": {
+                "$elemMatch": {
+                    "date": {"$regex": f"^{today_str}"},
+                    "status": "pending"
+                }
+            }
+        })
+        
+        routines = await cursor.to_list(length=1000)
+        users_to_warn = set()
+        
+        for r in routines:
+            users_to_warn.add(r["user_id"])
+            
+        for user_id in users_to_warn:
+            await create_and_send_notification(
+                user_id=user_id,
+                title="Cảnh báo: Chưa hoàn thành lịch trình",
+                message="Bạn vẫn còn các công việc quan trọng chưa hoàn thành trong ngày hôm nay. Hãy thực hiện ngay để đảm bảo sức khỏe cho cây!",
+                type="routine"
+            )
+    except Exception as e:
+        logger.error(f"Error in evening strict job: {e}")
+
+async def send_daily_detection_summary():
+    """Gửi tổng hợp Live Cam lúc 19:00."""
+    logger.info("Running daily detection summary job")
+    today_str = date.today().isoformat()
+    
+    try:
+        pipeline = [
+            {"$match": {"timestamp": {"$regex": f"^{today_str}"}}},
+            {"$group": {"_id": "$user_id", "count": {"$sum": 1}}}
+        ]
+        
+        cursor = mongodb.live_cam_logs.aggregate(pipeline)
+        results = await cursor.to_list(length=1000)
+        
+        for res in results:
+            user_id = res["_id"]
+            if user_id and user_id != "anonymous":
+                await create_and_send_notification(
+                    user_id=user_id,
+                    title="Tổng hợp Live Cam hôm nay",
+                    message=f"Hôm nay hệ thống đã phát hiện {res['count']} vùng rủi ro mới qua Live Cam. Nhấn để xem chi tiết.",
+                    type="drone"
+                )
+    except Exception as e:
+        logger.error(f"Error in daily summary job: {e}")

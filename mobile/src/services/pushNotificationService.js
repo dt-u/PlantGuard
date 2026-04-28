@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import axios from 'axios';
 import { ENDPOINTS } from '../api/config';
@@ -38,11 +39,13 @@ export const registerForPushNotificationsAsync = async () => {
     }
     
     // Get the token specifically for Expo
+    // projectId is automatically retrieved from app.json
+    const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
+    
     token = (await Notifications.getExpoPushTokenAsync({
-        projectId: 'your-project-id' // I will remind the user to update this
+        projectId: projectId
     })).data;
-  } else {
-    // alert('Must use physical device for Push Notifications');
+    console.log('Expo Push Token:', token);
   }
 
   return token;

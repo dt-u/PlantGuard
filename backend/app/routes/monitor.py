@@ -45,13 +45,12 @@ async def run_analysis(job_id: str, file_path: str, user_id: Optional[str] = Non
             else:
                 message += "Đã xảy ra lỗi trong quá trình xử lý tệp video."
 
-            from ..services.notification import send_push_notification
-            await send_push_notification(
+            from ..services.notification_service import create_and_send_notification
+            await create_and_send_notification(
                 user_id=str(user_id),
-                n_type="drone",
+                type="drone",
                 title="Cập nhật Phân tích Drone",
-                body=message,
-                data={"job_id": job_id}
+                message=message
             )
         except Exception as noti_err:
             print(f"Error creating drone notification: {noti_err}")
@@ -149,10 +148,10 @@ async def download_combined_zip(job_id: str):
         media_type="application/zip"
     )
 
-@router.websocket("/ws/live")
-async def websocket_endpoint(websocket: WebSocket):
+@router.websocket("/ws/live/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
     await websocket.accept()
-    print("WebSocket connection accepted")
+    print(f"WebSocket connection accepted for user: {user_id}")
     try:
         # Wait for client to send the camera URL with a timeout or safer receive
         try:
@@ -163,7 +162,7 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.close(code=1000)
             return
 
-        async for frame_data in ai_engine.generate_frames(camera_url):
+        async for frame_data in ai_engine.generate_frames(camera_url, user_id=user_id):
             # frame_data is now a JSON string from ai_engine
             await websocket.send_text(frame_data)
             # Small sleep to prevent overwhelming the socket

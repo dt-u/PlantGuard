@@ -200,7 +200,7 @@ class AIEngine:
              print(f"Error in detect_video: {e}")
              raise e
 
-    async def generate_frames(self, camera_url: str):
+    async def generate_frames(self, camera_url: str, user_id: str = "anonymous"):
         """
         Generates frames from a camera stream (URL).
         Yields base64 encoded frames for WebSocket streaming.
@@ -208,6 +208,8 @@ class AIEngine:
         """
         import time
         import threading
+        from .database.mongodb import mongodb
+        from datetime import datetime
         
         # Ensure protocol exists
         if not camera_url.startswith("http://") and not camera_url.startswith("https://"):
@@ -353,6 +355,15 @@ class AIEngine:
                             if current_time - last_logged_time.get(label, 0) > 3.0:
                                 detections_to_send.append({"label": label, "confidence": conf})
                                 last_logged_time[label] = current_time
+                                
+                                # Save to MongoDB for daily summary (background)
+                                if user_id and user_id != "anonymous":
+                                    asyncio.create_task(mongodb.live_cam_logs.insert_one({
+                                        "user_id": user_id,
+                                        "label": label,
+                                        "confidence": conf,
+                                        "timestamp": datetime.now().isoformat()
+                                    }))
                                 
                     # Target roughly 30 FPS for the video stream
                     await asyncio.sleep(0.03)

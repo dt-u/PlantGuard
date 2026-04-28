@@ -1,40 +1,50 @@
 {
-    "expo": {
-        "name": "PlantGuard",
-        "slug": "plantguard-mobile",
-        "version": "1.0.0",
-        "orientation": "portrait",
-        "userInterfaceStyle": "light",
-        "assetBundlePatterns": [
-            "**/*"
-        ],
-        "ios": {
-            "supportsImplicitNetworking": true,
-            "bundleIdentifier": "com.plantguard.app"
-        },
-        "android": {
-            "adaptiveIcon": {
-                "foregroundImage": "./assets/adaptive-icon.png",
-                "backgroundColor": "#ffffff"
-            },
-            "package": "com.plantguard.app"
-        },
-        "web": {
-            "favicon": "./assets/favicon.png"
-        },
-        "plugins": [
-            [
-                "expo-camera",
-                {
-                    "cameraPermission": "Allow PlantGuard to access your camera to diagnose plant diseases."
-                }
-            ],
-            [
-                "expo-image-picker",
-                {
-                    "photosPermission": "Allow PlantGuard to access your photos to diagnose plant diseases."
-                }
-            ]
-        ]
-    }
+  "expo": {
+    "name": "PlantGuard",
+    "slug": "plantguard",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsImplicitNetworking": true,
+      "bundleIdentifier": "com.plantguard.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.plantguard.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow PlantGuard to access your camera to diagnose plant diseases."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow PlantGuard to access your photos to diagnose plant diseases."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "03cf333e-5a77-45b5-addf-d8210ae5a55d"
+      }
+    },
+    "owner": "rubyngoc"
+  }
 }
