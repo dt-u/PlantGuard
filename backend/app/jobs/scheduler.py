@@ -1,11 +1,43 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime, time
 import logging
-from ..database.mongodb import routines_collection, users_collection
+from ..database.mongodb import routines_collection, users_collection, captures_collection
 from ..services.notification import send_push_notification
 from ..services.email import send_care_reminder_email
+from datetime import datetime, time, timedelta
 
 logger = logging.getLogger(__name__)
+
+async def daily_summary_job():
+    """
+    Runs every day at 9:00 PM (21:00).
+    Aggregates all auto-scan detections from the day and sends one notification.
+    """
+    logger.info("Running daily summary job for auto-scans...")
+    today_start = datetime.combine(datetime.today(), time.min)
+    
+    # Get all unique users who had detections today
+    pipeline = [
+        {"$match": {"created_at": {"$gte": today_start}}},
+        {"$group": {"_id": "$user_id", "count": {"$sum": 1}}}
+    ]
+    
+    cursor = captures_collection.aggregate(pipeline)
+    async for result in cursor:
+        user_id = result["_id"]
+        count = result["count"]
+        
+        if user_id and user_id != "anonymous":
+            title = "Báo cáo Giám sát Ngày"
+            body = f"Hệ thống đã tự động ghi nhận {count} vùng rủi ro mới trong ngày hôm nay. Hãy vào tab Giám sát để kiểm tra và xác nhận."
+            
+            await send_push_notification(
+                user_id=str(user_id),
+                n_type="alert",
+                title=title,
+                body=body
+            )
+            logger.info(f"Sent daily summary to user {user_id}")
 
 async def morning_reminder_job():
     """
@@ -154,6 +186,9 @@ def setup_scheduler():
     
     # 5:00 PM
     scheduler.add_job(afternoon_followup_job, 'cron', hour=17, minute=0)
+    
+    # 9:00 PM - Daily Summary
+    scheduler.add_job(daily_summary_job, 'cron', hour=21, minute=0)
     
     # 11:59 PM
     scheduler.add_job(end_of_day_cleanup_job, 'cron', hour=23, minute=59)

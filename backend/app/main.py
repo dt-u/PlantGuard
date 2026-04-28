@@ -42,8 +42,13 @@ app.include_router(routine.router, prefix="/api/routine", tags=["Routine"])
 
 # Static Mounts
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "..", "results")
-if not os.path.exists(RESULTS_DIR):
-    os.makedirs(RESULTS_DIR)
+DATASET_DIR = os.path.join(RESULTS_DIR, "user_dataset")
+PENDING_DIR = os.path.join(DATASET_DIR, "pending")
+VERIFIED_DIR = os.path.join(DATASET_DIR, "verified")
+
+for d in [RESULTS_DIR, DATASET_DIR, PENDING_DIR, VERIFIED_DIR]:
+    if not os.path.exists(d):
+        os.makedirs(d)
 
 app.mount("/results", StaticFiles(directory=RESULTS_DIR), name="results")
 

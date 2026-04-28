@@ -18,6 +18,7 @@ history_collection = mongodb.history
 notifications_collection = mongodb.notifications
 diseases_collection = mongodb.diseases
 routines_collection = mongodb.routines
+captures_collection = mongodb.captures
 
 async def connect_to_mongodb():
     """Connect to MongoDB"""

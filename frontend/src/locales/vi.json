@@ -65,6 +65,11 @@
     "stop_btn": "Dừng Luồng",
     "camera_disconnected": "Camera chưa kết nối",
     "camera_desc": "Nhập URL và nhấn Bắt đầu để quét thực địa",
+    "auto_scan": {
+      "title": "Trực canh AI",
+      "tooltip": "Hệ thống sẽ tự động giám sát vườn qua camera theo chu kỳ ngay cả khi bạn đóng trình duyệt. Nếu phát hiện dấu hiệu bất thường, hệ thống sẽ lưu lại hình ảnh và gửi thông báo đến bạn.",
+      "status_running": "Đang trực canh..."
+    },
     "fullscreen": "Toàn màn hình",
     "exit_fullscreen": "Thoát toàn màn hình",
     "error_upload": "Lỗi khi phân tích video. Vui lòng thử lại.",
