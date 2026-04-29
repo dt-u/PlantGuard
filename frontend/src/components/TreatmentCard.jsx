@@ -91,6 +91,17 @@ const TreatmentCard = ({ treatments = [], onBuyAction }) => {
                         
                         {(treatment.product_name || treatment.product) && 
                          (treatment.product_name || treatment.product) !== 'N/A' && 
+                         (treatment.product_name || treatment.product) !== 'n/a' && 
+                         (treatment.product_name || treatment.product) !== 'N/a' && 
+                         (treatment.product_name || treatment.product) !== null && 
+                         (treatment.product_name || treatment.product) !== undefined && 
+                         (treatment.product_name || treatment.product) !== 'Dọn dẹp tàn dư rơm rạ' && 
+                         (treatment.product_name || treatment.product) !== 'Dừng canh tác cây họ cà một vụ' && 
+                         (treatment.product_name || treatment.product) !== 'Không có thuốc chữa (Virus)' && 
+                         (treatment.product_name || treatment.product) !== 'Luân canh cây không cùng họ (Đậu, Lạc)' && 
+                         (treatment.product_name || treatment.product) !== 'Nước sạch' && 
+                         (treatment.product_name || treatment.product) !== 'Vệ sinh đồng ruộng' && 
+                         (treatment.product_name || treatment.product) !== 'Ánh sáng tự nhiên' && 
                          onBuyAction && (
                             <div className="pt-3 border-t border-gray-100">
                                 <button
