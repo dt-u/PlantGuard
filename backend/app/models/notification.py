@@ -8,6 +8,8 @@ class NotificationType(str, Enum):
     DRONE = "drone"
     SYSTEM = "system"
     ROUTINE = "routine"
+    ALERT = "alert"
+    ANALYSIS = "analysis"
 
 class Notification(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
@@ -17,6 +19,7 @@ class Notification(BaseModel):
     message: str
     is_read: bool = False
     created_at: datetime = Field(default_factory=datetime.now)
+    data: Optional[dict] = Field(default_factory=dict)
 
     class Config:
         populate_by_name = True
@@ -33,3 +36,4 @@ class NotificationResponse(BaseModel):
     message: str
     is_read: bool
     created_at: datetime
+    data: Optional[dict] = None
