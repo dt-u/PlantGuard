@@ -130,23 +130,32 @@ async def bg_auto_scan(user_id: str, camera_url: str):
                         # Save Image & Label (YOLO format)
                         await asyncio.to_thread(cv2.imwrite, img_path, frame)
                         save_cls = cls if cls >= 0 else 0
+                        
+                        # Get disease name
+                        disease_name = "Unknown"
+                        if 0 <= save_cls < len(DISEASES_SEED_DATA):
+                            disease_name = DISEASES_SEED_DATA[save_cls]["name"]
+                        elif save_cls == -2:
+                            disease_name = "Unhealthy Zone"
+
                         label_line = f"{save_cls} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}"
                         with open(txt_path, "w") as f:
                             f.write(label_line)
                         
-                        # Save to MongoDB
-                        await captures_collection.insert_one({
+                        # Save to MongoDB using correct collection
+                        await mongodb.captures.insert_one({
                             "capture_id": cap_id,
                             "user_id": user_id,
                             "camera_url": camera_url,
                             "class_id": save_cls,
+                            "disease_name": disease_name,
                             "confidence": conf,
                             "coordinates": {"cx": cx, "cy": cy, "w": w, "h": h},
                             "status": "pending",
                             "created_at": now
                         })
                         
-                        print(f"Captured new unique region: {cap_id} for user {user_id}")
+                        print(f"Captured new unique region: {cap_id} ({disease_name}) for user {user_id}")
 
             # Clean up old cache entries (> 30 mins)
             now = datetime.now()
