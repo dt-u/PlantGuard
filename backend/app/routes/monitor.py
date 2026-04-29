@@ -15,6 +15,7 @@ import cv2
 from pydantic import BaseModel
 from bson import ObjectId
 from ..database.mongodb import mongodb, captures_collection
+from ..seed_data import DISEASES_SEED_DATA
 
 router = APIRouter()
 ai_engine = AIEngine()
