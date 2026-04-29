@@ -2,35 +2,46 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { Check, X, Info, Camera, Clock, BarChart3, Loader2 } from 'lucide-react';
+import { Check, X, Info, Camera, Clock, BarChart3, Loader2, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
 
-const DatasetReview = () => {
+const DatasetReview = ({ isActive }) => {
     const { t } = useTranslation();
     const { getUserId } = useAuth();
     const { translateDiseaseName } = useDiseaseTranslator();
     const [captures, setCaptures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const userId = getUserId();
 
-    const fetchCaptures = async () => {
+    const fetchCaptures = async (showFullLoader = true) => {
         try {
-            setLoading(true);
+            if (showFullLoader) setLoading(true);
+            setIsRefreshing(true);
             const res = await axios.get(`http://127.0.0.1:8000/api/monitor/pending-captures?user_id=${userId}`);
             setCaptures(res.data);
         } catch (error) {
             console.error("Error fetching pending captures:", error);
         } finally {
             setLoading(false);
+            setIsRefreshing(false);
         }
     };
 
+    // Fetch on mount and when userId changes
     useEffect(() => {
-        fetchCaptures();
+        if (userId) fetchCaptures();
     }, [userId]);
+
+    // Re-fetch when tab becomes active
+    useEffect(() => {
+        if (isActive && userId) {
+            fetchCaptures(false); // Don't show full loader for background refresh
+        }
+    }, [isActive, userId]);
 
     const handleVerify = async (captureId, isCorrect) => {
         try {
@@ -48,7 +59,7 @@ const DatasetReview = () => {
         }
     };
 
-    if (loading) {
+    if (loading && captures.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
                 <Loader2 className="w-10 h-10 text-[#3B82F6] animate-spin mb-4" />
@@ -61,16 +72,27 @@ const DatasetReview = () => {
         <div className="space-y-6">
             {/* Header Stats */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
+                <div className="flex-1">
                     <h2 className="text-lg font-bold text-agri-dark flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-[#3B82F6]" />
                         {t('monitor.dataset_title')}
                     </h2>
                     <p className="text-xs text-gray-500 mt-1">{t('monitor.dataset_subtitle')}</p>
                 </div>
-                <div className="flex items-center gap-3 bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
-                    <span className="text-xs font-bold text-[#3B82F6] uppercase">{t('monitor.dataset_stats')}:</span>
-                    <span className="text-lg font-black text-[#3B82F6]">{captures.length}</span>
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                    <button 
+                        onClick={() => fetchCaptures(false)}
+                        disabled={isRefreshing}
+                        className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-gray-400 hover:text-[#3B82F6] hover:bg-blue-50 transition-all flex items-center justify-center gap-2 group"
+                        title="Làm mới dữ liệu"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#3B82F6]' : 'group-hover:rotate-180 duration-500'}`} />
+                        <span className="text-[10px] font-bold uppercase md:hidden tracking-wider">Làm mới</span>
+                    </button>
+                    <div className="flex items-center gap-3 bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 flex-1 md:flex-none justify-center">
+                        <span className="text-xs font-bold text-[#3B82F6] uppercase">{t('monitor.dataset_stats')}:</span>
+                        <span className="text-lg font-black text-[#3B82F6]">{captures.length}</span>
+                    </div>
                 </div>
             </div>
 

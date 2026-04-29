@@ -363,7 +363,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
 
                         {/* TAB CONTENT: DATASET REVIEW */}
                         <div className={`${activeTab !== 'dataset' ? 'hidden' : 'animate-in fade-in zoom-in-95 duration-300'}`}>
-                            <DatasetReview />
+                            <DatasetReview isActive={activeTab === 'dataset'} />
                         </div>
 
                         {/* Disclaimer: Moved down */}
