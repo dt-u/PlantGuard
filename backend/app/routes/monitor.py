@@ -13,6 +13,7 @@ import tempfile
 from datetime import datetime
 import cv2
 from pydantic import BaseModel
+from bson import ObjectId
 from ..database.mongodb import mongodb, captures_collection
 
 router = APIRouter()
@@ -43,6 +44,46 @@ class AutoScanStopRequest(BaseModel):
 class VerifyCaptureRequest(BaseModel):
     capture_id: str
     is_correct: bool
+
+class SaveCameraURLRequest(BaseModel):
+    user_id: str
+    camera_url: str
+
+@router.post("/camera-url/save")
+async def save_camera_url(req: SaveCameraURLRequest):
+    # Add to a list of urls, keeping it unique and limited to last 5
+    try:
+        user = await mongodb.users.find_one({"_id": ObjectId(req.user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+        urls = user.get("camera_urls", [])
+        if req.camera_url in urls:
+            urls.remove(req.camera_url)
+        urls.insert(0, req.camera_url)
+        urls = urls[:5] # Keep last 5
+        
+        await mongodb.users.update_one(
+            {"_id": ObjectId(req.user_id)},
+            {"$set": {"camera_urls": urls, "preferred_camera_url": req.camera_url}}
+        )
+        return {"status": "success", "urls": urls}
+    except Exception as e:
+        if isinstance(e, HTTPException): raise
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/camera-url/{user_id}")
+async def get_camera_url(user_id: str):
+    try:
+        user = await mongodb.users.find_one({"_id": ObjectId(user_id)})
+        if user:
+            return {
+                "camera_url": user.get("preferred_camera_url", ""),
+                "history": user.get("camera_urls", [])
+            }
+    except:
+        pass
+    return {"camera_url": "", "history": []}
 
 async def bg_auto_scan(user_id: str, camera_url: str):
     print(f"Started auto-scan for {user_id} on {camera_url}")

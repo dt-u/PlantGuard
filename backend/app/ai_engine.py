@@ -203,6 +203,32 @@ class AIEngine:
              print(f"Error in detect_video: {e}")
              raise e
 
+    async def save_capture(self, frame, label, conf, x, y, w, h):
+        """Saves a frame as a pending capture for the dataset collector"""
+        try:
+            capture_id = str(uuid.uuid4())
+            filename = f"cap_{capture_id}.jpg"
+            captures_dir = os.path.join(RESULTS_DIR, "captures")
+            if not os.path.exists(captures_dir):
+                os.makedirs(captures_dir)
+            
+            filepath = os.path.join(captures_dir, filename)
+            cv2.imwrite(filepath, frame)
+            
+            # Here we would normally save metadata to a database
+            # For this implementation, we'll return the metadata to be handled by routes
+            return {
+                "capture_id": capture_id,
+                "image_url": f"/results/captures/{filename}",
+                "disease_name": label,
+                "confidence": float(conf),
+                "coordinates": {"cx": float(x), "cy": float(y), "w": float(w), "h": float(h)},
+                "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            }
+        except Exception as e:
+            print(f"Error saving capture: {e}")
+            return None
+
     async def generate_frames(self, camera_url: str):
         """
         Generates frames from a camera stream (URL).

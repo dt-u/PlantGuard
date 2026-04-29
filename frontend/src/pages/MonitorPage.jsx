@@ -4,15 +4,17 @@ import FileUpload from '../components/FileUpload';
 import Loader from '../components/Loader';
 import LiveCamera from '../components/LiveCamera';
 import DatasetReview from '../components/DatasetReview';
-import { Video, AlertTriangle, Upload, Radio, Download, Trash2, Zap, Database } from 'lucide-react';
+import { Video, AlertTriangle, Upload, Radio, Download, Trash2, Zap, Database, Save } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
+import { useAuth } from '../contexts/AuthContext';
 
 import { useCamera } from '../contexts/CameraContext';
 
 const MonitorPage = ({ jobState, setJobState }) => {
     const { t } = useTranslation();
+    const { user, getUserId } = useAuth();
     const { translateDiseaseName } = useDiseaseTranslator();
     const { 
         status, frame, liveLogs, setLiveLogs, 
@@ -21,6 +23,56 @@ const MonitorPage = ({ jobState, setJobState }) => {
         isStreaming, setIsStreaming
     } = useCamera();
     const location = useLocation();
+
+    const [cameraHistory, setCameraHistory] = useState([]);
+    const [toastConfig, setToastConfig] = useState({ show: false, title: '', message: '', type: 'success' });
+
+    const showToastMsg = (title, message, type = 'success') => {
+        setToastConfig({ show: true, title, message, type });
+        setTimeout(() => setToastConfig(prev => ({ ...prev, show: false })), 3000);
+    };
+
+    // Fetch saved camera URL if logged in
+    React.useEffect(() => {
+        const fetchSavedUrl = async () => {
+            const userId = getUserId();
+            if (userId && userId !== 'anonymous') {
+                try {
+                    const res = await axios.get(`http://127.0.0.1:8000/api/monitor/camera-url/${userId}`);
+                    if (res.data.camera_url) {
+                        setCameraUrl(res.data.camera_url);
+                    }
+                    if (res.data.history) {
+                        setCameraHistory(res.data.history);
+                    }
+                } catch (e) {
+                    console.error("Error fetching saved URL:", e);
+                }
+            }
+        };
+        fetchSavedUrl();
+    }, [getUserId, setCameraUrl]);
+
+    const handleSaveUrl = async () => {
+        const userId = getUserId();
+        if (!userId || userId === 'anonymous') {
+            showToastMsg('Yêu cầu đăng nhập', 'Vui lòng đăng nhập để lưu URL camera vào danh sách của bạn.', 'error');
+            return;
+        }
+        
+        try {
+            const res = await axios.post('http://127.0.0.1:8000/api/monitor/camera-url/save', {
+                user_id: userId,
+                camera_url: cameraUrl
+            });
+            if (res.data.urls) setCameraHistory(res.data.urls);
+            
+            showToastMsg('Thành công!', 'Đã lưu URL camera vào danh sách của bạn.', 'success');
+        } catch (e) {
+            console.error("Error saving URL:", e);
+            showToastMsg('Lỗi', 'Không thể lưu URL camera lúc này.', 'error');
+        }
+    };
     
     // Tab State: 'upload', 'live', or 'dataset'
     const [activeTab, setActiveTab] = useState(location.state?.tab || 'live'); // Default to live
@@ -101,7 +153,22 @@ const MonitorPage = ({ jobState, setJobState }) => {
     };
 
     return (
-        <div className="min-h-screen pb-12">
+        <div className="min-h-screen pb-12 relative">
+            {/* Custom Toast Notification */}
+            {toastConfig.show && (
+                <div className="fixed top-20 right-4 z-[9999] animate-in slide-in-from-right-10 fade-in duration-300">
+                    <div className={`${toastConfig.type === 'error' ? 'bg-red-500 shadow-red-200' : 'bg-[#10B981] shadow-green-200'} text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/20 backdrop-blur-md`}>
+                        <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                            {toastConfig.type === 'error' ? <AlertTriangle className="w-3 h-3" /> : <Save className="w-3 h-3" />}
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold tracking-wide">{toastConfig.title}</p>
+                            <p className="text-[10px] opacity-90">{toastConfig.message}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-7xl mx-auto px-4 mt-4">
                 {/* Header Section: Now more compact */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
@@ -285,6 +352,8 @@ const MonitorPage = ({ jobState, setJobState }) => {
                         <div className={`${activeTab !== 'live' ? 'hidden' : 'animate-in fade-in zoom-in-95 duration-300'}`}>
                             <LiveCamera 
                                 onLogEvent={handleLiveLog} 
+                                onSaveUrl={handleSaveUrl}
+                                cameraHistory={cameraHistory}
                                 externalUrl={cameraUrl} 
                                 setExternalUrl={setCameraUrl}
                                 externalIsStreaming={isStreaming}

@@ -49,6 +49,16 @@ const DatasetReviewList = ({ userId }) => {
         finally { setLoading(false); }
     };
 
+    const getLocationName = (x, y) => {
+        if (x === undefined || y === undefined) return 'center';
+        const horizontal = x < 0.33 ? 'left' : (x > 0.66 ? 'right' : 'center');
+        const vertical = y < 0.33 ? 'top' : (y > 0.66 ? 'bottom' : 'center');
+        if (horizontal === 'center' && vertical === 'center') return 'center';
+        if (horizontal === 'center') return `${vertical}_center`;
+        if (vertical === 'center') return `${horizontal}_center`;
+        return `${vertical}_${horizontal}`;
+    };
+
     useEffect(() => { fetchCaptures(); }, [userId]);
 
     const handleVerify = async (id, correct) => {
@@ -72,12 +82,33 @@ const DatasetReviewList = ({ userId }) => {
         <View style={styles.datasetGrid}>
             {captures.map(cap => (
                 <View key={cap.capture_id} style={styles.datasetCard}>
-                    <Image source={{ uri: `${API_BASE_URL}${cap.image_url}` }} style={styles.datasetImg} />
+                    <View style={styles.datasetImgContainer}>
+                        <Image source={{ uri: `${API_BASE_URL}${cap.image_url}` }} style={styles.datasetImg} />
+                        {cap.coordinates && (
+                            <View 
+                                style={[
+                                    styles.datasetBoundingBox,
+                                    {
+                                        left: `${(cap.coordinates.cx - cap.coordinates.w/2) * 100}%`,
+                                        top: `${(cap.coordinates.cy - cap.coordinates.h/2) * 100}%`,
+                                        width: `${cap.coordinates.w * 100}%`,
+                                        height: `${cap.coordinates.h * 100}%`
+                                    }
+                                ]}
+                            />
+                        )}
+                    </View>
                     <View style={styles.datasetInfo}>
                         <Text style={styles.datasetDisease}>{translateDiseaseName(cap.disease_name || `Class ${cap.class_id}`)}</Text>
-                        <View style={styles.datasetMeta}>
-                            <Clock size={10} color="#9CA3AF" />
-                            <Text style={styles.datasetTime}>{new Date(cap.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                        <View style={styles.datasetMetaRow}>
+                            <View style={styles.datasetMeta}>
+                                <Clock size={10} color="#9CA3AF" />
+                                <Text style={styles.datasetTime}>{new Date(cap.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                            </View>
+                            <View style={styles.datasetMeta}>
+                                <Info size={10} color="#9CA3AF" />
+                                <Text style={styles.datasetTime}>{t(`monitor.location.${getLocationName(cap.coordinates?.cx, cap.coordinates?.cy)}`)}</Text>
+                            </View>
                         </View>
                     </View>
                     <View style={styles.datasetActions}>
@@ -131,8 +162,28 @@ const MonitorScreen = () => {
             axios.get(`${API_BASE_URL}/api/monitor/auto-scan/status/${user.id}`)
                 .then(res => setIsAutoScan(res.data.active))
                 .catch(console.error);
+            
+            // Fetch saved camera URL
+            axios.get(`${API_BASE_URL}/api/monitor/camera-url/${user.id}`)
+                .then(res => {
+                    if (res.data.camera_url) setCameraUrl(res.data.camera_url);
+                })
+                .catch(console.error);
         }
-    }, [user, setIsAutoScan]);
+    }, [user, setIsAutoScan, setCameraUrl]);
+
+    const handleSaveCameraUrl = async () => {
+        if (!user || !user.id) return;
+        try {
+            await axios.post(`${API_BASE_URL}/api/monitor/camera-url/save`, {
+                user_id: user.id,
+                camera_url: cameraUrl
+            });
+            Alert.alert(t('common.success'), "Đã lưu URL camera làm mặc định.");
+        } catch (e) {
+            Alert.alert("Lỗi", "Không thể lưu URL camera.");
+        }
+    };
 
     const handleToggleAutoScan = async (value) => {
         if (!user || (!user.id && user.id !== 'tmp')) return;
@@ -206,13 +257,24 @@ const MonitorScreen = () => {
                         <View style={styles.inputRow}>
                             <View style={styles.inputContainer}>
                                 <Text style={styles.inputLabel}>{t('monitor.url_label')}</Text>
-                                <TextInput 
-                                    style={styles.input}
-                                    value={cameraUrl}
-                                    onChangeText={setCameraUrl}
-                                    placeholder="http://192.168.x.x:4747/video"
-                                    editable={!isStreaming}
-                                />
+                                <View style={styles.inputWithActions}>
+                                    <TextInput 
+                                        style={[styles.input, { flex: 1 }]}
+                                        value={cameraUrl}
+                                        onChangeText={setCameraUrl}
+                                        placeholder="http://192.168.x.x:4747/video"
+                                        editable={!isStreaming}
+                                    />
+                                    {user && (
+                                        <TouchableOpacity 
+                                            style={styles.saveUrlBtn} 
+                                            onPress={handleSaveCameraUrl}
+                                            title="Lưu URL"
+                                        >
+                                            <Save color="#3B82F6" size={18} />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                             </View>
                             
                             {user && (
@@ -340,7 +402,9 @@ const styles = StyleSheet.create({
     inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginBottom: 10 },
     inputContainer: { flex: 1 },
     inputLabel: { fontSize: 10, fontFamily: 'Vietnam-Bold', color: '#6B7280', marginBottom: 4 },
-    input: { backgroundColor: '#F3F4F6', borderRadius: 10, padding: 8, fontSize: 12 },
+    inputWithActions: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 10, paddingRight: 4 },
+    input: { padding: 8, fontSize: 12, color: '#1F2937' },
+    saveUrlBtn: { padding: 8, borderRadius: 8, backgroundColor: '#FFF', elevation: 1, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 2 },
     autoScanMiniContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#EFF6FF', paddingHorizontal: 6, borderRadius: 10, height: 36, borderWidth: 1, borderColor: '#DBEAFE' }, 
     infoBtn: { padding: 4, marginRight: 2 },
     startBtn: { backgroundColor: '#3B82F6', flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 10, justifyContent: 'center', gap: 6 },
@@ -371,10 +435,13 @@ const styles = StyleSheet.create({
     emptyDataset: { padding: 40, alignItems: 'center', gap: 10 },
     datasetGrid: { gap: 15, marginTop: 10 },
     datasetCard: { backgroundColor: '#FFF', borderRadius: 16, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5 },
-    datasetImg: { width: '100%', height: 160, backgroundColor: '#F3F4F6' },
+    datasetImgContainer: { width: '100%', height: 160, backgroundColor: '#F3F4F6' },
+    datasetImg: { width: '100%', height: '100%' },
+    datasetBoundingBox: { position: 'absolute', borderWidth: 2, borderColor: '#EF4444', borderRadius: 4, borderStyle: 'dashed' },
     datasetInfo: { padding: 12 },
     datasetDisease: { fontSize: 14, fontFamily: 'Vietnam-Bold', color: '#1F2937' },
-    datasetMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+    datasetMetaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+    datasetMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     datasetTime: { fontSize: 11, color: '#9CA3AF' },
     datasetActions: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#F3F4F6' },
     actionBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
