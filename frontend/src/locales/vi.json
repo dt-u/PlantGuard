@@ -217,8 +217,19 @@
     "or_click": "hoặc click để chọn file"
   },
   "logs": {
-    "detected_at": "Tại {{time}} phát hiện rủi ro: [{{label}}]",
-    "live_alert": "Cảnh báo đối tượng: [{{label}}] - Độ tin cậy: {{confidence}}%"
+    "detected_at": "Tại {{time}} phát hiện vùng bệnh tại [{{location}}]",
+    "live_alert": "Cảnh báo: Vùng bệnh tại {{location}} - {{confidence}}%"
+  },
+  "monitor_location": {
+    "center": "Trung tâm",
+    "top_left": "Phía trên bên trái",
+    "top_right": "Phía trên bên phải",
+    "bottom_left": "Phía dưới bên trái",
+    "bottom_right": "Phía dưới bên phải",
+    "top_center": "Phía trên",
+    "bottom_center": "Phía dưới",
+    "left_center": "Bên trái",
+    "right_center": "Bên phải"
   },
   "diseases": {
     "Apple Healthy": {

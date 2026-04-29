@@ -32,6 +32,15 @@ const MonitorPage = ({ jobState, setJobState }) => {
     // Upload State
     const [video, setVideo] = useState(null);
     const [uploadError, setUploadError] = useState(null);
+    const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
+    const videoRef = useRef(null);
+
+    const seekToVideoTime = (timeStr) => {
+        if (!videoRef.current) return;
+        const [m, s] = timeStr.split(':').map(Number);
+        videoRef.current.currentTime = m * 60 + s;
+        videoRef.current.play();
+    };
 
     const result = jobState?.result;
     const loading = jobState?.status === 'processing';
@@ -80,6 +89,16 @@ const MonitorPage = ({ jobState, setJobState }) => {
     const gardenStatus = isNoData ? t('monitor.status.disconnected') : (hasIssues ? t('monitor.status.risk') : t('monitor.status.stable'));
     const statusColor = isNoData ? "text-gray-400" : (hasIssues ? "text-red-500" : "text-[#3B82F6]");
     const dotColor = isNoData ? "bg-gray-400" : (hasIssues ? "bg-red-500" : "bg-[#3B82F6]");
+
+    const getLocationName = (x, y) => {
+        if (x === undefined || y === undefined) return 'center';
+        const horizontal = x < 0.33 ? 'left' : (x > 0.66 ? 'right' : 'center');
+        const vertical = y < 0.33 ? 'top' : (y > 0.66 ? 'bottom' : 'center');
+        if (horizontal === 'center' && vertical === 'center') return 'center';
+        if (horizontal === 'center') return `${vertical}_center`;
+        if (vertical === 'center') return `${horizontal}_center`;
+        return `${vertical}_${horizontal}`;
+    };
 
     return (
         <div className="min-h-screen pb-12">
@@ -324,10 +343,10 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                             </span>
                                         </div>
                                         <p className="text-[11px] text-gray-300 leading-snug">
-                                            {log.type === 'alert' && (log.msg.includes('Tại') || log.msg.includes('At'))
+                                            {log.type === 'alert'
                                                 ? t('logs.detected_at', { 
                                                     time: log.time, 
-                                                    label: translateDiseaseName(log.label || log.msg.split('[')[1]?.split(']')[0] || '', log.label || log.msg.split('[')[1]?.split(']')[0] || '') 
+                                                    location: t(`monitor_location.${log.location || getLocationName(log.x, log.y)}`) 
                                                   })
                                                 : log.msg}
                                         </p>

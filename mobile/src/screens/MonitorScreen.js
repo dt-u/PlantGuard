@@ -291,7 +291,10 @@ const MonitorScreen = () => {
                                     <AlertTriangle color="#EF4444" size={16} />
                                     <View style={styles.logContent}>
                                         <Text style={styles.logText}>
-                                            Phát hiện rủi ro: <Text style={styles.logTarget}>[{log.label}]</Text>
+                                            {t('monitor.alert_at', { 
+                                                time: '', 
+                                                location: t(`monitor.location.${log.location}`) 
+                                            }).replace(': ', '')}
                                         </Text>
                                         <Text style={styles.logTime}>{log.time} • Tin cậy: {log.conf}%</Text>
                                     </View>

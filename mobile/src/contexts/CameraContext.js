@@ -16,6 +16,19 @@ export const CameraProvider = ({ children }) => {
     const wsRef = useRef(null);
     const isStreamingRef = useRef(false);
 
+    const getLocationName = (x, y) => {
+        // x, y are normalized (0-1)
+        if (x === undefined || y === undefined) return 'center';
+        
+        const horizontal = x < 0.33 ? 'left' : (x > 0.66 ? 'right' : 'center');
+        const vertical = y < 0.33 ? 'top' : (y > 0.66 ? 'bottom' : 'center');
+        
+        if (horizontal === 'center' && vertical === 'center') return 'center';
+        if (horizontal === 'center') return `${vertical}_center`;
+        if (vertical === 'center') return `${horizontal}_center`;
+        return `${vertical}_${horizontal}`;
+    };
+
     const startStream = (targetUrl) => {
         const urlToUse = targetUrl || cameraUrl;
         if (!urlToUse) return;
@@ -41,6 +54,7 @@ export const CameraProvider = ({ children }) => {
                         id: Math.random().toString(),
                         time: new Date().toLocaleTimeString(),
                         label: d.label,
+                        location: getLocationName(d.x, d.y),
                         conf: (d.confidence * 100).toFixed(1)
                     }));
                     setDroneLogs(prev => [...newLogs, ...prev].slice(0, 50));

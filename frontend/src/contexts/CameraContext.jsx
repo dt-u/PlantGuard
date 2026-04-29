@@ -45,6 +45,16 @@ export const CameraProvider = ({ children }) => {
             }, 500);
         };
 
+        const getLocationName = (x, y) => {
+            if (x === undefined || y === undefined) return 'center';
+            const horizontal = x < 0.33 ? 'left' : (x > 0.66 ? 'right' : 'center');
+            const vertical = y < 0.33 ? 'top' : (y > 0.66 ? 'bottom' : 'center');
+            if (horizontal === 'center' && vertical === 'center') return 'center';
+            if (horizontal === 'center') return `${vertical}_center`;
+            if (vertical === 'center') return `${horizontal}_center`;
+            return `${vertical}_${horizontal}`;
+        };
+
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
@@ -55,8 +65,9 @@ export const CameraProvider = ({ children }) => {
                     const newLogs = data.detections.map(d => ({
                         id: Date.now() + Math.random(),
                         time: new Date().toLocaleTimeString('vi-VN', { hour12: false }),
-                        msg: `Phát hiện: ${d.label.toUpperCase()} (${(d.confidence * 100).toFixed(0)}%)`,
                         label: d.label,
+                        location: getLocationName(d.x, d.y),
+                        confidence: (d.confidence * 100).toFixed(0),
                         type: 'alert'
                     }));
                     setLiveLogs(prev => [...newLogs, ...prev].slice(0, 50));

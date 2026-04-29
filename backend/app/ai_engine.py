@@ -173,6 +173,9 @@ class AIEngine:
                                 detailed_logs.append({
                                     "time": time_str,
                                     "msg": f"Tại {time_str} phát hiện rủi ro: [{label}]",
+                                    "label": label,
+                                    "x": (x1 + x2) / 2 / width,
+                                    "y": (y1 + y2) / 2 / height,
                                     "type": "alert"
                                 })
 
@@ -317,12 +320,21 @@ class AIEngine:
                     if random.random() > 0.8:
                         x1 = random.randint(100, 500)
                         y1 = random.randint(100, 300)
-                        cv2.rectangle(frame, (x1, y1), (x1+100, y1+100), (0, 255, 0), 2)
+                        w = 100
+                        h = 100
+                        cv2.rectangle(frame, (x1, y1), (x1+w, y1+h), (0, 255, 0), 2)
                         cv2.putText(frame, "Mock Object", (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                         
                         mock_label = "Vật thể Mô phỏng"
                         if current_time - last_logged_time.get(mock_label, 0) > 3.0:
-                            detections_to_send.append({"label": mock_label, "confidence": 0.99})
+                            detections_to_send.append({
+                                "label": mock_label, 
+                                "confidence": 0.99,
+                                "x": (x1 + w/2) / 640,
+                                "y": (y1 + h/2) / 480,
+                                "w": w / 640,
+                                "h": h / 480
+                            })
                             last_logged_time[mock_label] = current_time
                             
                     frame_to_send = frame
@@ -351,7 +363,14 @@ class AIEngine:
                         # Throttle the event logs (once every 3.0 seconds per label)
                         if conf >= 0.5:
                             if current_time - last_logged_time.get(label, 0) > 3.0:
-                                detections_to_send.append({"label": label, "confidence": conf})
+                                detections_to_send.append({
+                                    "label": label, 
+                                    "confidence": conf,
+                                    "x": (x1 + x2) / 2 / 640,
+                                    "y": (y1 + y2) / 2 / 480,
+                                    "w": (x2 - x1) / 640,
+                                    "h": (y2 - y1) / 480
+                                })
                                 last_logged_time[label] = current_time
                                 
                     # Target roughly 30 FPS for the video stream
