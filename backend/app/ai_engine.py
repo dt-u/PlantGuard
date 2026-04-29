@@ -15,6 +15,8 @@ if not os.path.exists(RESULTS_DIR):
 
 class AIEngine:
     def __init__(self):
+        # ... existing code ...
+        self.shared_frames = {} # {camera_url: latest_frame}
         # Load the trained YOLO26 model
         model_path = os.path.join(os.path.dirname(__file__), "models", "best.pt")
         if os.path.exists(model_path):
@@ -229,6 +231,17 @@ class AIEngine:
             print(f"Error saving capture: {e}")
             return None
 
+    def _fix_url(self, camera_url: str):
+        # Ensure protocol exists
+        if not camera_url.startswith("http://") and not camera_url.startswith("https://"):
+            camera_url = "http://" + camera_url
+
+        # Auto-fix for DroidCam URLs
+        if "4747" in camera_url and not any(x in camera_url for x in ["/video", "/mjpegfeed", "/video.force"]):
+            if not camera_url.endswith("/"): camera_url += "/"
+            camera_url += "video"
+        return camera_url
+
     async def generate_frames(self, camera_url: str):
         """
         Generates frames from a camera stream (URL).
@@ -238,27 +251,18 @@ class AIEngine:
         import time
         import threading
         
-        # Ensure protocol exists
-        if not camera_url.startswith("http://") and not camera_url.startswith("https://"):
-            camera_url = "http://" + camera_url
-            print(f"Added missing protocol: {camera_url}")
-
-        # Auto-fix for DroidCam URLs
-        if "4747" in camera_url and not any(x in camera_url for x in ["/video", "/mjpegfeed", "/video.force"]):
-            if not camera_url.endswith("/"): camera_url += "/"
-            camera_url += "video"
-            print(f"Auto-fixed DroidCam URL to: {camera_url}")
+        fixed_url = self._fix_url(camera_url)
 
         # Use a thread for the blocking VideoCapture.open() call
         def open_cap(url):
             return cv2.VideoCapture(url)
 
-        print(f"Attempting to connect to camera: {camera_url}...")
-        cap = await asyncio.to_thread(open_cap, camera_url)
+        print(f"Attempting to connect to camera: {fixed_url}...")
+        cap = await asyncio.to_thread(open_cap, fixed_url)
         
         is_mock = not cap.isOpened()
         if is_mock:
-            print(f"Failed to open camera: {camera_url}. Switching to Simulation Mode.")
+            print(f"Failed to open camera: {fixed_url}. Switching to Simulation Mode.")
 
         # State for Threading
         running = True
@@ -275,6 +279,7 @@ class AIEngine:
                 ret, frame = cap.read()
                 if ret:
                     latest_frame = frame
+                    self.shared_frames[fixed_url] = frame # Share with auto-scan
                 else:
                     print("Lost connection to camera in read thread.")
                     is_mock = True
@@ -428,14 +433,22 @@ class AIEngine:
         and returns the frame and detected boxes.
         Used by the background auto-scan task.
         """
-        def capture_frame():
-            # Add timeout/optimization flags if possible, or just standard read
-            cap = cv2.VideoCapture(camera_url)
-            ret, frame = cap.read()
-            cap.release()
-            return frame if ret else None
+        fixed_url = self._fix_url(camera_url)
+        
+        # Check if we have a shared frame first (avoids connection conflict)
+        if fixed_url in self.shared_frames:
+            frame = self.shared_frames[fixed_url].copy()
+            print(f"Using shared frame for auto-scan: {fixed_url}")
+        else:
+            def capture_frame():
+                # Add timeout/optimization flags if possible, or just standard read
+                cap = cv2.VideoCapture(fixed_url)
+                ret, frame = cap.read()
+                cap.release()
+                return frame if ret else None
 
-        frame = await asyncio.to_thread(capture_frame)
+            frame = await asyncio.to_thread(capture_frame)
+            
         if frame is None:
             return None, []
 
