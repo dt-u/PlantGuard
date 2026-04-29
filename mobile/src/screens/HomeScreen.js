@@ -93,8 +93,8 @@ const HomeScreen = ({ navigation }) => {
                                 <Sparkles color="#3B82F6" size={20} />
                             </View>
                             <View style={styles.bannerContent}>
-                                <Text style={styles.bannerTitle}>Hệ thống cần bạn giúp đỡ!</Text>
-                                <Text style={styles.bannerDesc}>AI đã thu thập {pendingCount} vùng rủi ro mới. Hãy xác nhận để giúp AI thông minh hơn.</Text>
+                                <Text style={styles.bannerTitle}>{t('home.learning_title')}</Text>
+                                <Text style={styles.bannerDesc}>{t('home.learning_desc', { count: pendingCount })}</Text>
                             </View>
                             <ArrowRight color="#FFFFFF" size={20} />
                         </LinearGradient>

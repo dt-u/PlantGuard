@@ -130,14 +130,14 @@ const ProfileScreen = ({ navigation }) => {
 
                 <TouchableOpacity style={styles.menuItem} onPress={() => isAuthenticated() ? navigation.navigate('CareRoutines') : setShowGuestView(true)}>
                     <View style={styles.menuIconContainer}><Calendar color="#2E7D32" size={20} /></View>
-                    <Text style={styles.menuLabel}>{language === 'vi' ? 'Tiến độ chăm sóc' : 'Care Routines'}</Text>
+                    <Text style={styles.menuLabel}>{t('profile.routines')}</Text>
                     <ChevronRight color="#CBD5E1" size={20} />
                 </TouchableOpacity>
 
                 <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
                 <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Notifications')}>
                     <View style={styles.menuIconContainer}><Bell color="#2E7D32" size={20} /></View>
-                    <Text style={styles.menuLabel}>{language === 'vi' ? 'Cài đặt thông báo' : 'Notification Settings'}</Text>
+                    <Text style={styles.menuLabel}>{t('profile.notifications')}</Text>
                     <ChevronRight color="#CBD5E1" size={20} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem} onPress={() => setShowLanguageModal(true)}>

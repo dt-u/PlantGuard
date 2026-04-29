@@ -37,6 +37,8 @@ export const translations = {
             doctor_desc: "Chẩn đoán chính xác các loại bệnh trên lá và nhận phác đồ điều trị tức thì từ chuyên gia AI.",
             start_now: "Bắt đầu ngay",
             diagnose_now: "Chẩn đoán ngay",
+            learning_title: "Hệ thống cần bạn giúp đỡ!",
+            learning_desc: "AI đã thu thập {{count}} vùng rủi ro mới. Hãy xác nhận để giúp AI thông minh hơn.",
             footer: "© 2026 PlantGuard AI • Giải pháp thông minh",
         },
         profile: {
@@ -182,6 +184,8 @@ export const translations = {
             doctor_desc: "Accurately diagnose leaf diseases and receive instant treatment protocols from AI experts.",
             start_now: "Start Now",
             diagnose_now: "Diagnose Now",
+            learning_title: "System needs your help!",
+            learning_desc: "AI has collected {{count}} new risk areas. Verify them to help AI get smarter.",
             footer: "© 2026 PlantGuard AI • Smart Solutions",
         },
         profile: {

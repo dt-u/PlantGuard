@@ -187,7 +187,7 @@ const MonitorScreen = () => {
                     <Text style={[styles.tabText, activeTab === 'upload' && styles.activeTabText]}>{t('monitor.drone')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'dataset' && styles.activeTab]} 
+                    style={[styles.tab, activeTab === 'dataset' && styles.activeTab, { flex: 1.4 }]} 
                     onPress={() => setActiveTab('dataset')}
                 >
                     <Database color={activeTab === 'dataset' ? '#3B82F6' : '#9CA3AF'} size={18} />
@@ -321,8 +321,8 @@ const styles = StyleSheet.create({
     headerTitle: { fontSize: 24, fontFamily: 'Vietnam-Bold', color: '#111827' },
     headerSubtitle: { fontSize: 13, color: '#6B7280', marginTop: 2 },
     historyBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5 },
-    tabContainer: { flexDirection: 'row', paddingHorizontal: 20, gap: 12, marginBottom: 20 },
-    tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 12, backgroundColor: '#F3F4F6', gap: 6 },
+    tabContainer: { flexDirection: 'row', paddingHorizontal: 20, gap: 8, marginBottom: 20 },
+    tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 12, backgroundColor: '#F3F4F6', gap: 4 },
     activeTab: { backgroundColor: '#EBF5FF', borderWidth: 1, borderColor: '#BFDBFE' },
     tabText: { fontSize: 12, fontFamily: 'Vietnam-Medium', color: '#6B7280' },
     activeTabText: { color: '#3B82F6', fontFamily: 'Vietnam-Bold' },
@@ -340,8 +340,8 @@ const styles = StyleSheet.create({
     input: { backgroundColor: '#F3F4F6', borderRadius: 10, padding: 8, fontSize: 12 },
     autoScanMiniContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#EFF6FF', paddingHorizontal: 6, borderRadius: 10, height: 36, borderWidth: 1, borderColor: '#DBEAFE' }, 
     infoBtn: { padding: 4, marginRight: 2 },
-    startBtn: { backgroundColor: '#3B82F6', flexDirection: 'row', padding: 10, borderRadius: 10, justifyContent: 'center', gap: 6 },
-    stopBtn: { backgroundColor: '#EF4444', flexDirection: 'row', padding: 10, borderRadius: 10, justifyContent: 'center', gap: 6 },
+    startBtn: { backgroundColor: '#3B82F6', flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 10, justifyContent: 'center', gap: 6 },
+    stopBtn: { backgroundColor: '#EF4444', flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 10, justifyContent: 'center', gap: 6 },
     btnText: { color: '#FFF', fontFamily: 'Vietnam-Bold', fontSize: 13 },
     monitorView: { backgroundColor: '#000', borderRadius: 16, height: 220, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
     placeholder: { alignItems: 'center', gap: 8 },
