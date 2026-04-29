@@ -20,6 +20,7 @@ import {
 import { AuthProvider } from './src/contexts/AuthContext';
 import { NotificationProvider, useNotifications } from './src/contexts/NotificationContext';
 import { LanguageProvider, useLanguage } from './src/contexts/LanguageContext';
+import { CameraProvider } from './src/contexts/CameraContext';
 
 // Screens
 import HomeScreen from './src/screens/HomeScreen';
@@ -162,22 +163,24 @@ export default function App() {
       <LanguageProvider>
         <AuthProvider>
           <NotificationProvider>
-            <NavigationContainer ref={navigationRef} onReady={onLayoutRootView}>
-              <Stack.Navigator screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="MainTabs" component={TabNavigator} />
-                <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="Register" component={RegisterScreen} />
-                <Stack.Screen name="History" component={HistoryScreen} />
-                <Stack.Screen name="DiagnosisDetail" component={DiagnosisDetailScreen} />
-                <Stack.Screen name="Notifications" component={NotificationSettingsScreen} />
-                <Stack.Screen name="NotificationCenter" component={SystemNotificationsScreen} />
-                <Stack.Screen name="Privacy" component={PrivacySettingsScreen} />
-                <Stack.Screen name="AppSettings" component={AppSettingsScreen} />
-                <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-                <Stack.Screen name="CareRoutines" component={CareRoutinesScreen} />
-                <Stack.Screen name="RoutineDetail" component={RoutineDetailScreen} />
-              </Stack.Navigator>
-            </NavigationContainer>
+            <CameraProvider>
+              <NavigationContainer ref={navigationRef} onReady={onLayoutRootView}>
+                <Stack.Navigator screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="MainTabs" component={TabNavigator} />
+                  <Stack.Screen name="Login" component={LoginScreen} />
+                  <Stack.Screen name="Register" component={RegisterScreen} />
+                  <Stack.Screen name="History" component={HistoryScreen} />
+                  <Stack.Screen name="DiagnosisDetail" component={DiagnosisDetailScreen} />
+                  <Stack.Screen name="Notifications" component={NotificationSettingsScreen} />
+                  <Stack.Screen name="NotificationCenter" component={SystemNotificationsScreen} />
+                  <Stack.Screen name="Privacy" component={PrivacySettingsScreen} />
+                  <Stack.Screen name="AppSettings" component={AppSettingsScreen} />
+                  <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                  <Stack.Screen name="CareRoutines" component={CareRoutinesScreen} />
+                  <Stack.Screen name="RoutineDetail" component={RoutineDetailScreen} />
+                </Stack.Navigator>
+              </NavigationContainer>
+            </CameraProvider>
           </NotificationProvider>
         </AuthProvider>
       </LanguageProvider>

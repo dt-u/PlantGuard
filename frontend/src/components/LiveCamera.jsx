@@ -4,40 +4,42 @@ import { useTranslation } from 'react-i18next';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { useCamera } from '../contexts/CameraContext';
 
 const LiveCamera = ({ onLogEvent }) => {
     const { t, i18n } = useTranslation();
     const { translateDiseaseName } = useDiseaseTranslator();
     const { user } = useAuth();
+    
+    // Use Global Camera Context
+    const {
+        cameraUrl, setCameraUrl,
+        isStreaming,
+        status,
+        frame,
+        wsError, setWsError,
+        isAutoScan, setIsAutoScan,
+        startStream, stopStream,
+        liveLogs
+    } = useCamera();
 
+    const containerRef = useRef(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    
     // Dynamic API Base URL detection
     const host = window.location.hostname;
     const API_BASE = `http://${host}:8000`;
-    const WS_BASE = `ws://${host}:8000`;
 
-    const [cameraUrl, setCameraUrl] = useState("http://192.168.1.34:4747/video");
-    const [isStreaming, setIsStreaming] = useState(false);
-    const [status, setStatus] = useState("disconnected");
-    const [frame, setFrame] = useState(null);
-    const [wsError, setWsError] = useState(null);
-    const [isFullscreen, setIsFullscreen] = useState(false);
-    const [isAutoScan, setIsAutoScan] = useState(false);
-
-    const wsRef = useRef(null);
-    const containerRef = useRef(null);
-    const isStreamingRef = useRef(false);
-    const reconnectTimeoutRef = useRef(null);
-
-    // Load initial auto-scan status
+    // Load initial auto-scan status from backend
     useEffect(() => {
         if (user && user.id) {
             axios.get(`${API_BASE}/api/monitor/auto-scan/status/${user.id}`)
                 .then(res => setIsAutoScan(res.data.active))
                 .catch(console.error);
         }
-    }, [user, API_BASE]);
+    }, [user, API_BASE, setIsAutoScan]);
 
-    const toggleAutoScan = async () => {
+    const handleToggleAutoScan = async () => {
         if (!user || (!user.id && user.id !== 'tmp')) return;
         const uId = user.id || "anonymous";
         const targetState = !isAutoScan;
@@ -55,90 +57,6 @@ const LiveCamera = ({ onLogEvent }) => {
         }
     };
 
-    useEffect(() => {
-        const handleFullscreenChange = () => {
-            setIsFullscreen(!!document.fullscreenElement);
-        };
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => {
-            document.removeEventListener('fullscreenchange', handleFullscreenChange);
-            if (wsRef.current) wsRef.current.close();
-        };
-    }, []);
-
-    const startStream = () => {
-        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-        setWsError(null);
-        setIsStreaming(true);
-        isStreamingRef.current = true;
-        setStatus("connecting");
-
-        const wsUrl = `${WS_BASE}/api/monitor/ws/live`;
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
-
-        ws.onopen = () => {
-            setStatus("connected");
-            setTimeout(() => {
-                if (ws.readyState === WebSocket.OPEN) {
-                    ws.send(cameraUrl);
-                }
-            }, 500);
-        };
-
-        ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data.image) {
-                    setFrame(`data:image/jpeg;base64,${data.image}`);
-                }
-                if (data.detections && data.detections.length > 0 && onLogEvent) {
-                    data.detections.forEach(d => {
-                        onLogEvent({
-                            id: Date.now() + Math.random(),
-                            time: new Date().toLocaleTimeString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', { hour12: false }),
-                            msg: t('logs.live_alert', {
-                                label: translateDiseaseName(d.label, d.label).toUpperCase(),
-                                confidence: (d.confidence * 100).toFixed(0)
-                            }),
-                            label: d.label,
-                            type: 'alert'
-                        });
-                    });
-                }
-            } catch (e) {
-                setFrame(`data:image/jpeg;base64,${event.data}`);
-            }
-        };
-
-        ws.onclose = (e) => {
-            setStatus("disconnected");
-            if (isStreamingRef.current) {
-                setWsError(t('monitor.error_reconnecting'));
-                reconnectTimeoutRef.current = setTimeout(() => {
-                    if (isStreamingRef.current) startStream();
-                }, 3000);
-            } else {
-                setIsStreaming(false);
-                if (!e.wasClean) setWsError(t('monitor.error_connection'));
-            }
-        };
-
-        ws.onerror = () => {
-            setStatus("disconnected");
-            setWsError(t('monitor.error_connection'));
-        };
-    };
-
-    const stopStream = () => {
-        isStreamingRef.current = false;
-        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-        if (wsRef.current) wsRef.current.close();
-        setIsStreaming(false);
-        setStatus("disconnected");
-        setFrame(null);
-    };
-
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
             containerRef.current?.requestFullscreen();
@@ -146,6 +64,16 @@ const LiveCamera = ({ onLogEvent }) => {
             document.exitFullscreen();
         }
     };
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        };
+    }, []);
 
     return (
         <div className="space-y-4">
@@ -186,7 +114,7 @@ const LiveCamera = ({ onLogEvent }) => {
                             </div>
 
                             <label className="relative inline-flex items-center cursor-pointer ml-1">
-                                <input type="checkbox" className="sr-only peer" checked={isAutoScan} onChange={toggleAutoScan} />
+                                <input type="checkbox" className="sr-only peer" checked={isAutoScan} onChange={handleToggleAutoScan} />
                                 <div className="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600 shadow-inner"></div>
                             </label>
                         </div>
@@ -196,7 +124,7 @@ const LiveCamera = ({ onLogEvent }) => {
                 <div className="flex items-center gap-2 w-full md:w-auto pt-1 md:pt-4">
                     {!isStreaming ? (
                         <button
-                            onClick={startStream}
+                            onClick={() => startStream(cameraUrl)}
                             className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white font-black py-2 px-6 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100 active:scale-95 text-xs"
                         >
                             <Play className="w-4 h-4 fill-current" /> {t('monitor.start_btn')}

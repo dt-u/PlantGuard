@@ -121,12 +121,16 @@ function MainApp() {
     );
 }
 
+import { CameraProvider } from './contexts/CameraContext';
+
 function App() {
     return (
         <Router>
             <AuthProvider>
                 <NotificationProvider>
-                    <MainApp />
+                    <CameraProvider>
+                        <MainApp />
+                    </CameraProvider>
                 </NotificationProvider>
             </AuthProvider>
         </Router>

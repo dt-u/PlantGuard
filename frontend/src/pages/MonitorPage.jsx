@@ -9,44 +9,24 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
 
+import { useCamera } from '../contexts/CameraContext';
+
 const MonitorPage = ({ jobState, setJobState }) => {
     const { t } = useTranslation();
     const { translateDiseaseName } = useDiseaseTranslator();
+    const { 
+        status, frame, liveLogs, setLiveLogs, 
+        liveAlertCount, setLiveAlertCount,
+        cameraUrl, setCameraUrl,
+        isStreaming, setIsStreaming
+    } = useCamera();
     const location = useLocation();
     
     // Tab State: 'upload', 'live', or 'dataset'
     const [activeTab, setActiveTab] = useState(location.state?.tab || 'live'); // Default to live
 
-    React.useEffect(() => {
-        if (location.state?.tab) {
-            setActiveTab(location.state.tab);
-        }
-    }, [location.state?.ts]); // React on timestamp change to allow re-clicking on the same tab path
-
-    React.useEffect(() => {
-        setJobState(prev => ({ ...prev, monitorTab: activeTab }));
-    }, [activeTab, setJobState]);
-
-    const [liveLogs, setLiveLogs] = useState([]);
-    const [liveAlertCount, setLiveAlertCount] = useState(0);
-
-    // Download dropdown state
-    const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
-    const videoRef = useRef(null);
-
-    const seekToVideoTime = (timeStr) => {
-        if (!videoRef.current) return;
-        const [m, s] = timeStr.split(':').map(Number);
-        const totalSeconds = m * 60 + s;
-        videoRef.current.currentTime = totalSeconds;
-        videoRef.current.play();
-    };
-
     const handleLiveLog = (newLog) => {
-        if (newLog.type === 'alert') {
-            setLiveAlertCount(prev => prev + 1);
-        }
-        setLiveLogs(prev => [newLog, ...prev].slice(0, 50));
+        // Log is already managed by CameraContext, but we can add local UI logic here if needed
     };
 
     // Upload State
@@ -153,8 +133,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                     {/* Main Content Area */}
                     <div className="lg:col-span-3">
                         {/* TAB CONTENT: UPLOAD VIDEO */}
-                        {activeTab === 'upload' && (
-                            <div className="animate-in fade-in zoom-in-95 duration-300">
+                        <div className={`${activeTab !== 'upload' ? 'hidden' : 'animate-in fade-in zoom-in-95 duration-300'}`}>
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-bold text-agri-dark text-sm uppercase tracking-wider flex items-center gap-2">
                                         <Video className="w-4 h-4" /> {t('monitor.drone_data')}
@@ -281,22 +260,23 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                         </div>
                                     </div>
                                 )}
-                            </div>
-                        )}
+                        </div>
 
                         {/* TAB CONTENT: LIVE CAMERA */}
-                        {activeTab === 'live' && (
-                            <div className="animate-in fade-in zoom-in-95 duration-300">
-                                <LiveCamera onLogEvent={handleLiveLog} />
-                            </div>
-                        )}
+                        <div className={`${activeTab !== 'live' ? 'hidden' : 'animate-in fade-in zoom-in-95 duration-300'}`}>
+                            <LiveCamera 
+                                onLogEvent={handleLiveLog} 
+                                externalUrl={cameraUrl} 
+                                setExternalUrl={setCameraUrl}
+                                externalIsStreaming={isStreaming}
+                                setExternalIsStreaming={setIsStreaming}
+                            />
+                        </div>
 
                         {/* TAB CONTENT: DATASET REVIEW */}
-                        {activeTab === 'dataset' && (
-                            <div className="animate-in fade-in zoom-in-95 duration-300">
-                                <DatasetReview />
-                            </div>
-                        )}
+                        <div className={`${activeTab !== 'dataset' ? 'hidden' : 'animate-in fade-in zoom-in-95 duration-300'}`}>
+                            <DatasetReview />
+                        </div>
 
                         {/* Disclaimer: Moved down */}
                         <div className="mt-8 bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex items-start gap-3">

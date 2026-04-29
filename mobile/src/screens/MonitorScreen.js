@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image, ActivityIndicator, Alert, Modal, StatusBar, Keyboard, Switch } from 'react-native';
-import { Radio, Upload, Play, Square, AlertTriangle, Activity, Maximize, Minimize, Trash2, Download, Video as VideoIcon, FileText, Archive, ChevronRight, Zap, Info } from 'lucide-react-native';
+import { Radio, Upload, Play, Square, AlertTriangle, Activity, Maximize, Minimize, Trash2, Download, Video as VideoIcon, FileText, Archive, ChevronRight, Zap, Info, Database, Clock, Check, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,6 +31,7 @@ const SimpleBadge = memo(({ status, hasFrame }) => {
 
 import { useRoute } from '@react-navigation/native';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
+import { useCamera } from '../contexts/CameraContext';
 
 const DatasetReviewList = ({ userId }) => {
     const { t } = useLanguage();
@@ -114,15 +115,16 @@ const MonitorScreen = () => {
         if (route.params?.tab) setActiveTab(route.params.tab);
     }, [route.params?.tab]);
     
-    // Live Stream state
-    const [cameraUrl, setCameraUrl] = useState("http://192.168.1.34:4747/video");
-    const [isStreaming, setIsStreaming] = useState(false);
-    const [status, setStatus] = useState("disconnected");
-    const [droneLogs, setDroneLogs] = useState([]);
-    const wsRef = useRef(null);
-    const [hasFrame, setHasFrame] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
-    const [isAutoScan, setIsAutoScan] = useState(false);
+    // Use Camera Context
+    const {
+        cameraUrl, setCameraUrl,
+        isStreaming,
+        status,
+        hasFrame,
+        droneLogs,
+        isAutoScan, setIsAutoScan,
+        startStream, stopStream
+    } = useCamera();
 
     useEffect(() => {
         if (user && user.id) {
@@ -130,9 +132,9 @@ const MonitorScreen = () => {
                 .then(res => setIsAutoScan(res.data.active))
                 .catch(console.error);
         }
-    }, [user]);
+    }, [user, setIsAutoScan]);
 
-    const toggleAutoScan = async (value) => {
+    const handleToggleAutoScan = async (value) => {
         if (!user || (!user.id && user.id !== 'tmp')) return;
         const uId = user.id || "anonymous";
         const endpoint = value ? 'start' : 'stop';
@@ -154,46 +156,6 @@ const MonitorScreen = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadResult, setUploadResult] = useState(null);
     const [showDownloadSheet, setShowDownloadSheet] = useState(false);
-
-    const startStream = () => {
-        if (!cameraUrl) return;
-        setIsStreaming(true);
-        setStatus("connecting");
-        setDroneLogs([]);
-        setHasFrame(false);
-
-        wsRef.current = new WebSocket(`${WS_BASE_URL}/api/monitor/ws/live`);
-        
-        wsRef.current.onopen = () => {
-            wsRef.current.send(cameraUrl);
-            setStatus("connected");
-        };
-
-        wsRef.current.onmessage = (e) => {
-            const data = JSON.parse(e.data);
-            if (data.frame) setHasFrame(true);
-            if (data.detections && data.detections.length > 0) {
-                const newLogs = data.detections.map(d => ({
-                    id: Math.random().toString(),
-                    time: new Date().toLocaleTimeString(),
-                    label: d.label,
-                    conf: (d.confidence * 100).toFixed(1)
-                }));
-                setDroneLogs(prev => [...newLogs, ...prev].slice(0, 50));
-            }
-        };
-
-        wsRef.current.onerror = () => setStatus("error");
-        wsRef.current.onclose = () => {
-            setIsStreaming(false);
-            setStatus("disconnected");
-            setHasFrame(false);
-        };
-    };
-
-    const stopStream = () => {
-        if (wsRef.current) wsRef.current.close();
-    };
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -234,24 +196,120 @@ const MonitorScreen = () => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-                {activeTab === 'live' ? (
-                    <View style={styles.tabContent}>
-                        {/* ... existing live content ... */}
-                        <View style={styles.statusBannerContainer}>
-                            <SimpleBadge status={status} hasFrame={hasFrame} />
-                        </View>
-                        {/* ... the rest of the live tab content remains same as before but wrapped in if */}
-                        <View style={styles.configBox}>
-                            {/* ... */}
-                        </View>
+                {/* LIVE TAB */}
+                <View style={[styles.tabContent, { display: activeTab === 'live' ? 'flex' : 'none' }]}>
+                    <View style={styles.statusBannerContainer}>
+                        <SimpleBadge status={status} hasFrame={hasFrame} />
                     </View>
-                ) : activeTab === 'upload' ? (
-                    <View style={styles.tabContent}><Text style={styles.placeholderText}>Upload Section</Text></View>
-                ) : (
-                    <View style={styles.tabContent}>
-                        <DatasetReviewList userId={user?.id || 'anonymous'} />
+
+                    <View style={styles.configBox}>
+                        <View style={styles.inputRow}>
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.inputLabel}>{t('monitor.url_label')}</Text>
+                                <TextInput 
+                                    style={styles.input}
+                                    value={cameraUrl}
+                                    onChangeText={setCameraUrl}
+                                    placeholder="http://192.168.x.x:4747/video"
+                                    editable={!isStreaming}
+                                />
+                            </View>
+                            
+                            {user && (
+                                <View style={styles.autoScanMiniContainer}>
+                                    <TouchableOpacity 
+                                        style={styles.infoBtn}
+                                        onPress={() => Alert.alert("Trực canh AI", "Hệ thống sẽ tự động giám sát vườn qua camera ngay cả khi bạn đóng ứng dụng.")}
+                                    >
+                                        <Info size={14} color="#3B82F6" />
+                                    </TouchableOpacity>
+                                    <Zap size={14} color={isAutoScan ? "#3B82F6" : "#D1D5DB"} />
+                                    <Switch
+                                        trackColor={{ false: '#D1D5DB', true: '#BFDBFE' }}
+                                        thumbColor={isAutoScan ? '#3B82F6' : '#9CA3AF'}
+                                        onValueChange={handleToggleAutoScan}
+                                        value={isAutoScan}
+                                        style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
+                                    />
+                                </View>
+                            )}
+                        </View>
+
+                        {!isStreaming ? (
+                            <TouchableOpacity style={styles.startBtn} onPress={() => startStream(cameraUrl)}>
+                                <Play color="#FFFFFF" size={18} />
+                                <Text style={styles.btnText}>{t('monitor.start_monitor')}</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity style={styles.stopBtn} onPress={stopStream}>
+                                <Square color="#FFFFFF" size={16} />
+                                <Text style={styles.btnText}>{t('monitor.stop_stream')}</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
-                )}
+
+                    <View style={styles.monitorView}>
+                        {!hasFrame ? (
+                            <View style={styles.placeholder}>
+                                {status === 'connecting' ? <ActivityIndicator color="#3B82F6" size="large" /> : <Activity color="#D1D5DB" size={48} />}
+                                <Text style={styles.placeholderText}>{status === 'connecting' ? t('monitor.connecting') : t('monitor.no_signal')}</Text>
+                            </View>
+                        ) : (
+                            <View style={styles.liveWrapper}>
+                                <Image 
+                                    source={{ uri: `${cameraUrl}?${new Date().getTime()}` }} 
+                                    style={styles.liveFrame} 
+                                    resizeMode="cover" 
+                                />
+                                <View style={styles.liveBadge}>
+                                    <View style={styles.liveDot} />
+                                    <Text style={styles.liveLabel}>{t('monitor.live')}</Text>
+                                </View>
+                                
+                                {isAutoScan && (
+                                    <View style={styles.autoScanBadge}>
+                                        <Zap size={14} color="#FFF" />
+                                    </View>
+                                )}
+                            </View>
+                        )}
+                    </View>
+
+                    <View style={styles.logsSection}>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.logTitle}>{t('monitor.event_logs')}</Text>
+                            <Zap color="#F59E0B" size={16} />
+                        </View>
+                        
+                        {droneLogs.length === 0 ? (
+                            <View style={styles.emptyLogs}>
+                                <Text style={styles.emptyText}>{t('monitor.empty_logs')}</Text>
+                            </View>
+                        ) : (
+                            droneLogs.map((log) => (
+                                <View key={log.id} style={styles.logItem}>
+                                    <AlertTriangle color="#EF4444" size={16} />
+                                    <View style={styles.logContent}>
+                                        <Text style={styles.logText}>
+                                            Phát hiện rủi ro: <Text style={styles.logTarget}>[{log.label}]</Text>
+                                        </Text>
+                                        <Text style={styles.logTime}>{log.time} • Tin cậy: {log.conf}%</Text>
+                                    </View>
+                                </View>
+                            ))
+                        )}
+                    </View>
+                </View>
+
+                {/* UPLOAD TAB */}
+                <View style={[styles.tabContent, { display: activeTab === 'upload' ? 'flex' : 'none' }]}>
+                    <Text style={styles.placeholderText}>Chức năng Drone đang được hoàn thiện trên Mobile.</Text>
+                </View>
+
+                {/* DATASET TAB */}
+                <View style={[styles.tabContent, { display: activeTab === 'dataset' ? 'flex' : 'none' }]}>
+                    <DatasetReviewList userId={user?.id || 'anonymous'} />
+                </View>
             </ScrollView>
         </View>
     );
