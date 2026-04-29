@@ -1,11 +1,13 @@
-import React from 'react';
-import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar } from 'react-native';
-import { Leaf, Eye, ArrowRight, Sprout, LogIn } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, Animated } from 'react-native';
+import { Leaf, Eye, ArrowRight, Sprout, LogIn, Database, Sparkles } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import HeaderBell from '../components/HeaderBell';
 import ScreenHeader from '../components/ScreenHeader';
+import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 
 const { width } = Dimensions.get('window');
 
@@ -13,6 +15,15 @@ const HomeScreen = ({ navigation }) => {
     const { user, isAuthenticated } = useAuth();
     const { t } = useLanguage();
     const insets = useSafeAreaInsets();
+    const [pendingCount, setPendingCount] = useState(0);
+
+    useEffect(() => {
+        if (isAuthenticated()) {
+            axios.get(`${API_BASE_URL}/api/monitor/pending-captures?user_id=${user.id}`)
+                .then(res => setPendingCount(res.data.length))
+                .catch(err => console.log("Error fetching pending:", err));
+        }
+    }, [isAuthenticated, user]);
 
     const handleProfilePress = () => {
         if (isAuthenticated()) {
@@ -65,6 +76,30 @@ const HomeScreen = ({ navigation }) => {
                         {t('home.desc')}
                     </Text>
                 </View>
+
+                {/* Active Learning Banner */}
+                {pendingCount > 0 && (
+                    <TouchableOpacity 
+                        style={styles.activeLearningBanner}
+                        onPress={() => navigation.navigate('Giám sát', { screen: 'Monitor', params: { tab: 'dataset' } })}
+                    >
+                        <LinearGradient
+                            colors={['#3B82F6', '#2563EB']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.bannerGradient}
+                        >
+                            <View style={styles.bannerIconBox}>
+                                <Sparkles color="#3B82F6" size={20} />
+                            </View>
+                            <View style={styles.bannerContent}>
+                                <Text style={styles.bannerTitle}>Hệ thống cần bạn giúp đỡ!</Text>
+                                <Text style={styles.bannerDesc}>AI đã thu thập {pendingCount} vùng rủi ro mới. Hãy xác nhận để giúp AI thông minh hơn.</Text>
+                            </View>
+                            <ArrowRight color="#FFFFFF" size={20} />
+                        </LinearGradient>
+                    </TouchableOpacity>
+                )}
 
 
                 {/* Options List - Stacked for better readability */}
@@ -285,6 +320,45 @@ const styles = StyleSheet.create({
         fontFamily: 'Vietnam-Medium',
         color: '#CBD5E1',
         marginTop: 40,
+    },
+    activeLearningBanner: {
+        marginHorizontal: 24,
+        marginTop: 20,
+        borderRadius: 20,
+        overflow: 'hidden',
+        elevation: 4,
+        shadowColor: '#3B82F6',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+    },
+    bannerGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        gap: 12,
+    },
+    bannerIconBox: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    bannerContent: {
+        flex: 1,
+    },
+    bannerTitle: {
+        fontSize: 14,
+        fontFamily: 'Vietnam-Bold',
+        color: '#FFFFFF',
+    },
+    bannerDesc: {
+        fontSize: 11,
+        fontFamily: 'Vietnam-Medium',
+        color: 'rgba(255, 255, 255, 0.8)',
+        marginTop: 2,
     }
 });
 

@@ -3,7 +3,8 @@ import axios from 'axios';
 import FileUpload from '../components/FileUpload';
 import Loader from '../components/Loader';
 import LiveCamera from '../components/LiveCamera';
-import { Video, AlertTriangle, Upload, Radio, Download, Trash2, Zap } from 'lucide-react';
+import DatasetReview from '../components/DatasetReview';
+import { Video, AlertTriangle, Upload, Radio, Download, Trash2, Zap, Database } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
@@ -13,7 +14,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
     const { translateDiseaseName } = useDiseaseTranslator();
     const location = useLocation();
     
-    // Tab State: 'upload' or 'live'
+    // Tab State: 'upload', 'live', or 'dataset'
     const [activeTab, setActiveTab] = useState(location.state?.tab || 'live'); // Default to live
 
     React.useEffect(() => {
@@ -129,6 +130,12 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'upload' ? 'bg-[#3B82F6] text-white shadow-sm' : 'text-gray-500'}`}
                             >
                                 <Upload className="w-3 h-3 inline mr-1" /> {t('monitor.drone')}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('dataset')}
+                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'dataset' ? 'bg-[#3B82F6] text-white shadow-sm' : 'text-gray-500'}`}
+                            >
+                                <Database className="w-3 h-3 inline mr-1" /> {t('monitor.dataset')}
                             </button>
                         </div>
 
@@ -281,6 +288,13 @@ const MonitorPage = ({ jobState, setJobState }) => {
                         {activeTab === 'live' && (
                             <div className="animate-in fade-in zoom-in-95 duration-300">
                                 <LiveCamera onLogEvent={handleLiveLog} />
+                            </div>
+                        )}
+
+                        {/* TAB CONTENT: DATASET REVIEW */}
+                        {activeTab === 'dataset' && (
+                            <div className="animate-in fade-in zoom-in-95 duration-300">
+                                <DatasetReview />
                             </div>
                         )}
 

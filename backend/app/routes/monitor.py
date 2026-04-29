@@ -18,11 +18,11 @@ from ..database.mongodb import mongodb, captures_collection
 router = APIRouter()
 ai_engine = AIEngine()
 
-UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
 
-RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "results")
 PENDING_DIR = os.path.join(RESULTS_DIR, "user_dataset", "pending")
 VERIFIED_DIR = os.path.join(RESULTS_DIR, "user_dataset", "verified")
 
