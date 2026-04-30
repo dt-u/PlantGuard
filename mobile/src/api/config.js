@@ -55,5 +55,22 @@ export const ENDPOINTS = {
     // History
     HISTORY_LIST: `${API_BASE_URL}/api/history/list`,
     HISTORY_SAVE: `${API_BASE_URL}/api/history/save`,
-    HISTORY_DELETE: (id) => `${API_BASE_URL}/api/history/${id}`
+    HISTORY_DELETE: (id) => `${API_BASE_URL}/api/history/${id}`,
+
+    // Routine
+    ROUTINE_LIST: `${API_BASE_URL}/api/routine`,
+    ROUTINE_DETAIL: (id) => `${API_BASE_URL}/api/routine/${id}`,
+    ROUTINE_CREATE: `${API_BASE_URL}/api/routine/save`,
+    ROUTINE_GENERATE: `${API_BASE_URL}/api/routine/generate`,
+    ROUTINE_UPDATE_EVENT: (id, eventId) => `${API_BASE_URL}/api/routine/${id}/event/${eventId}`,
+    ROUTINE_UPDATE_SETTINGS: (id) => `${API_BASE_URL}/api/routine/${id}/settings`,
+    ROUTINE_DELETE: (id) => `${API_BASE_URL}/api/routine/${id}`,
+
+    // Notifications
+    NOTIFICATIONS_LIST: `${API_BASE_URL}/api/notifications/`,
+    NOTIFICATIONS_UNREAD_COUNT: `${API_BASE_URL}/api/notifications/unread-count`,
+    NOTIFICATIONS_MARK_READ: (id) => `${API_BASE_URL}/api/notifications/${id}/read`,
+    NOTIFICATIONS_READ_ALL: `${API_BASE_URL}/api/notifications/read-all`,
+    NOTIFICATIONS_CLEAR: `${API_BASE_URL}/api/notifications/clear`,
+    WS_NOTIFICATIONS: (userId) => `${WS_BASE_URL}/ws/${userId}`
 };

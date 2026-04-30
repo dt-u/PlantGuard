@@ -1,12 +1,76 @@
 import React, { useState } from 'react';
-import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, XCircle, Calendar as CalendarIcon, Leaf, Info, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
 
-const TreatmentCard = ({ treatments = [], onBuyAction }) => {
+const TreatmentCard = ({ treatments = [], onBuyAction, diseaseName = "Unknown" }) => {
     const { t } = useTranslation();
+    const { user } = useAuth();
     const [expandedId, setExpandedId] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedTreatment, setSelectedTreatment] = useState(null);
+    const [plantName, setPlantName] = useState('');
+    const [isStrictTracking, setIsStrictTracking] = useState(true);
+    const [remindViaEmail, setRemindViaEmail] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState(false);
 
     if (!treatments || treatments.length === 0) return null;
+
+    const openRoutineModal = (treatment, e) => {
+        e.stopPropagation();
+        if (!user) {
+            alert("Vui lòng đăng nhập để sử dụng tính năng này.");
+            return;
+        }
+        setSelectedTreatment(treatment);
+        setSaveSuccess(false);
+        setIsModalOpen(true);
+    };
+
+    const downloadICS = (events) => {
+        const encodedFilename = encodeURIComponent(`routine_${diseaseName.replace(/ /g, '_')}.ics`);
+        window.location.href = `http://127.0.0.1:8000/api/routine/export_ics?disease_name=${encodeURIComponent(diseaseName)}&events=${encodeURIComponent(JSON.stringify(events))}`;
+    };
+
+    const handleSaveRoutine = async () => {
+        if (!plantName.trim()) {
+            alert("Vui lòng nhập tên cây.");
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            
+            // 1. Generate events
+            const genRes = await axios.post('http://127.0.0.1:8000/api/routine/generate', {
+                disease_name: diseaseName,
+                level: selectedTreatment.level,
+                action: selectedTreatment.action,
+                product: selectedTreatment.product_name || selectedTreatment.product
+            });
+
+            if (genRes.data.status === 'success') {
+                // 2. Save to DB
+                await axios.post('http://127.0.0.1:8000/api/routine/save', {
+                    user_id: user.id,
+                    plant_name: plantName,
+                    disease_name: diseaseName,
+                    is_strict_tracking: isStrictTracking,
+                    remind_via_email: remindViaEmail,
+                    events: genRes.data.events
+                });
+
+                setSaveSuccess(true);
+            }
+        } catch (error) {
+            console.error("Error saving routine:", error);
+            alert("Đã xảy ra lỗi khi lưu lịch trình.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const translateLevel = (level) => {
         switch (level.toLowerCase()) {
@@ -44,106 +108,237 @@ const TreatmentCard = ({ treatments = [], onBuyAction }) => {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            {treatments.map((treatment, index) => {
-                const level = treatment.level || treatment.severity || 'unknown';
-                
-                return (
-                <div
-                    key={index}
-                    onClick={() => setExpandedId(expandedId === index ? null : index)}
-                    className={`glass-panel p-4 cursor-pointer transition-all duration-300 hover:scale-[1.02] border-2 ${expandedId === index ? 'ring-2 ring-offset-2 ring-agri-green scale-[1.02]' : 'border-transparent'
-                        }`}
-                >
-                    <div className={`flex items-center justify-between p-3 rounded-lg mb-2 ${getLevelColor(level)}`}>
-                        <div className="flex flex-col">
-                            {level.toLowerCase() === 'maintenance' ? (
-                                <span className="font-bold uppercase tracking-wide text-[14px] whitespace-nowrap">{t('treatment.maintenance')}</span>
+        <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                {treatments.map((treatment, index) => {
+                    const level = treatment.level || treatment.severity || 'unknown';
+                    const productName = treatment.product_name || treatment.product;
+                    
+                    return (
+                    <div
+                        key={index}
+                        onClick={() => setExpandedId(expandedId === index ? null : index)}
+                        className={`glass-panel p-4 cursor-pointer transition-all duration-300 hover:scale-[1.02] border-2 ${expandedId === index ? 'ring-2 ring-offset-2 ring-agri-green scale-[1.02]' : 'border-transparent'
+                            }`}
+                    >
+                        <div className={`flex items-center justify-between p-3 rounded-lg mb-2 ${getLevelColor(level)}`}>
+                            <div className="flex flex-col">
+                                {level.toLowerCase() === 'maintenance' ? (
+                                    <span className="font-bold uppercase tracking-wide text-[14px] whitespace-nowrap">{t('treatment.maintenance')}</span>
+                                ) : (
+                                    <>
+                                        <span className="text-[12px] opacity-70 font-semibold uppercase">{t('treatment.suggestion')}</span>
+                                        <span className="font-bold uppercase tracking-wide text-lg -mt-1">
+                                            {translateLevel(level)}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                            {getIcon(level)}
+                        </div>
+
+                        <div className={`space-y-3 overflow-hidden transition-all duration-300 ${expandedId === index ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
+                            }`}>
+                            <div>
+                                <p className="text-xs text-gray-500 uppercase font-semibold flex items-center gap-1 mb-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                                    {t('treatment.id_guide')}
+                                </p>
+                                <p className="text-gray-700 text-sm leading-relaxed italic">"{treatment.identification_guide}"</p>
+                            </div>
+                            <div className="pt-2 border-t border-gray-100">
+                                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('treatment.action')}</p>
+                                <p className="text-gray-800 text-sm">{treatment.action}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('treatment.product')}</p>
+                                <p className="text-agri-green font-medium text-sm">{productName}</p>
+                            </div>
+                            
+                            <div className="pt-4 pb-1 space-y-2">
+                                <button 
+                                    onClick={(e) => openRoutineModal(treatment, e)}
+                                    className="w-full flex items-center justify-center gap-2 bg-agri-green/10 text-agri-green hover:bg-agri-green hover:text-white transition-colors duration-300 py-2.5 px-4 rounded-lg font-bold text-sm"
+                                >
+                                    <CalendarIcon size={16} />
+                                    Lập kế hoạch chăm sóc
+                                </button>
+
+                                {productName && 
+                                 productName !== 'N/A' && 
+                                 productName !== 'n/a' && 
+                                 productName !== null && 
+                                 productName !== 'Dọn dẹp tàn dư rơm rạ' && 
+                                 productName !== 'Dừng canh tác cây họ cà một vụ' && 
+                                 productName !== 'Không có thuốc chữa (Virus)' && 
+                                 productName !== 'Luân canh cây không cùng họ (Đậu, Lạc)' && 
+                                 productName !== 'Nước sạch' && 
+                                 productName !== 'Vệ sinh đồng ruộng' && 
+                                 productName !== 'Ánh sáng tự nhiên' && 
+                                 onBuyAction && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onBuyAction(treatment); }}
+                                        style={{ 
+                                            backgroundColor: '#ee4d2d', 
+                                            color: 'white', 
+                                            padding: '10px 16px', 
+                                            borderRadius: '8px',
+                                            fontSize: '13px',
+                                            fontWeight: 'bold',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            transition: 'all 0.2s ease',
+                                            width: '100%',
+                                            justifyContent: 'center'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#d6381c';
+                                            e.currentTarget.style.transform = 'translateY(-1px)';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#ee4d2d';
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                        }}
+                                    >
+                                        🛒 Mua ngay trên Shopee
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {expandedId !== index && (
+                            <p className="text-center text-sm text-gray-400 mt-2">{t('treatment.click_detail')}</p>
+                        )}
+                    </div>
+                    );
+                })}
+            </div>
+
+            {/* Routine Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[80vh]">
+                        <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-agri-green/5">
+                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <Leaf className="text-agri-green w-5 h-5" />
+                                Lịch trình chăm sóc
+                            </h3>
+                            <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-white rounded-full transition-colors">
+                                <X size={18} className="text-gray-400" />
+                            </button>
+                        </div>
+
+                        <div className="p-5 space-y-4 overflow-y-auto">
+                            {saveSuccess ? (
+                                <div className="text-center py-4">
+                                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <CheckCircle2 className="w-8 h-8 text-green-600" />
+                                    </div>
+                                    <h4 className="text-lg font-bold text-gray-900 mb-2">Lưu thành công!</h4>
+                                    <p className="text-sm text-gray-500 mb-6">
+                                        Lịch trình đã được lưu vào hệ thống Smart Care của PlantGuard.
+                                    </p>
+                                    <button 
+                                        onClick={() => downloadICS(selectedTreatment)}
+                                        className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 py-3 rounded-xl font-bold text-sm transition-colors mb-3"
+                                    >
+                                        <CalendarIcon size={18} />
+                                        Thêm vào Google Calendar (.ics)
+                                    </button>
+                                </div>
                             ) : (
                                 <>
-                                    <span className="text-[12px] opacity-70 font-semibold uppercase">{t('treatment.suggestion')}</span>
-                                    <span className="font-bold uppercase tracking-wide text-lg -mt-1">
-                                        {translateLevel(level)}
-                                    </span>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-gray-700">Tên cây cần theo dõi</label>
+                                        <div className="relative">
+                                            <input 
+                                                type="text" 
+                                                value={plantName}
+                                                onChange={(e) => setPlantName(e.target.value)}
+                                                placeholder="Ví dụ: Cà chua ban công, Hoa hồng chậu 1..."
+                                                className="w-full pl-4 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-agri-green focus:border-transparent outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-4 p-4 bg-agri-green/5 rounded-2xl border border-agri-green/10">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-sm font-bold text-gray-900">Theo dõi nghiêm ngặt</span>
+                                                <Info size={14} className="text-gray-400" />
+                                            </div>
+                                            <p className="text-xs text-gray-500 leading-relaxed">
+                                                Yêu cầu xác nhận hoàn thành mỗi ngày để tính điểm tiến độ.
+                                            </p>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                className="sr-only peer" 
+                                                checked={isStrictTracking}
+                                                onChange={() => setIsStrictTracking(!isStrictTracking)}
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-agri-green"></div>
+                                        </label>
+                                    </div>
+
+                                    <div className="flex items-start gap-4 p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-sm font-bold text-gray-900">Nhắc nhở qua Email</span>
+                                                <Info size={14} className="text-gray-400" />
+                                            </div>
+                                            <p className="text-xs text-gray-500 leading-relaxed">
+                                                Nhận thông báo lịch chăm sóc hàng ngày qua Gmail (hữu ích khi không mở Web).
+                                            </p>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                className="sr-only peer" 
+                                                checked={remindViaEmail}
+                                                onChange={() => setRemindViaEmail(!remindViaEmail)}
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                                        </label>
+                                    </div>
                                 </>
                             )}
                         </div>
-                        {getIcon(level)}
-                    </div>
 
-                    <div className={`space-y-3 overflow-hidden transition-all duration-300 ${expandedId === index ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
-                        }`}>
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold flex items-center gap-1 mb-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                                {t('treatment.id_guide')}
-                            </p>
-                            <p className="text-gray-700 text-sm leading-relaxed italic">"{treatment.identification_guide}"</p>
-                        </div>
-                        <div className="pt-2 border-t border-gray-100">
-                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('treatment.action')}</p>
-                            <p className="text-gray-800 text-sm">{treatment.action}</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('treatment.product')}</p>
-                            <p className="text-agri-green font-medium text-sm">{treatment.product_name || treatment.product}</p>
-                        </div>
-                        
-                        {(treatment.product_name || treatment.product) && 
-                         (treatment.product_name || treatment.product) !== 'N/A' && 
-                         (treatment.product_name || treatment.product) !== 'n/a' && 
-                         (treatment.product_name || treatment.product) !== 'N/a' && 
-                         (treatment.product_name || treatment.product) !== null && 
-                         (treatment.product_name || treatment.product) !== undefined && 
-                         (treatment.product_name || treatment.product) !== 'Dọn dẹp tàn dư rơm rạ' && 
-                         (treatment.product_name || treatment.product) !== 'Dừng canh tác cây họ cà một vụ' && 
-                         (treatment.product_name || treatment.product) !== 'Không có thuốc chữa (Virus)' && 
-                         (treatment.product_name || treatment.product) !== 'Luân canh cây không cùng họ (Đậu, Lạc)' && 
-                         (treatment.product_name || treatment.product) !== 'Nước sạch' && 
-                         (treatment.product_name || treatment.product) !== 'Vệ sinh đồng ruộng' && 
-                         (treatment.product_name || treatment.product) !== 'Ánh sáng tự nhiên' && 
-                         onBuyAction && (
-                            <div className="pt-3 border-t border-gray-100">
-                                <button
-                                    onClick={() => onBuyAction(treatment)}
-                                    style={{ 
-                                        backgroundColor: '#ee4d2d', 
-                                        color: 'white', 
-                                        padding: '8px 16px', 
-                                        borderRadius: '6px',
-                                        fontSize: '11px',
-                                        fontWeight: 'bold',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        transition: 'all 0.2s ease',
-                                        width: '100%',
-                                        justifyContent: 'center'
-                                    }}
-                                    onMouseOver={(e) => {
-                                        e.target.style.backgroundColor = '#d6381c';
-                                        e.target.style.transform = 'translateY(-1px)';
-                                    }}
-                                    onMouseOut={(e) => {
-                                        e.target.style.backgroundColor = '#ee4d2d';
-                                        e.target.style.transform = 'translateY(0)';
-                                    }}
+                        <div className="p-6 bg-gray-50 flex gap-3">
+                            {saveSuccess ? (
+                                <button 
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="w-full bg-agri-green text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-agri-green/30 transition-all"
                                 >
-                                    🛒 Mua ngay trên Shopee
+                                    Hoàn tất
                                 </button>
-                            </div>
-                        )}
+                            ) : (
+                                <>
+                                    <button 
+                                        onClick={() => setIsModalOpen(false)}
+                                        className="flex-1 px-6 py-3 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button 
+                                        onClick={handleSaveRoutine}
+                                        disabled={isSaving}
+                                        className="flex-[2] bg-agri-green text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-agri-green/30 transition-all disabled:opacity-50"
+                                    >
+                                        {isSaving ? 'Đang lưu...' : 'Lưu lịch trình'}
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
-
-                    {expandedId !== index && (
-                        <p className="text-center text-sm text-gray-400 mt-2">{t('treatment.click_detail')}</p>
-                    )}
                 </div>
-                );
-            })}
-        </div>
+            )}
+        </>
     );
 };
 

@@ -342,7 +342,11 @@ const DoctorPage = () => {
                                         </h3>
                                     </div>
 
-                                    <TreatmentCard treatments={translateTreatments(result.disease.name, result.disease.treatments)} onBuyAction={handleBuyAction} />
+                                    <TreatmentCard 
+                                        diseaseName={result.disease.common_name} 
+                                        treatments={translateTreatments(result.disease.name, result.disease.treatments)} 
+                                        onBuyAction={handleBuyAction} 
+                                    />
                                 </div>
                             </div>
 

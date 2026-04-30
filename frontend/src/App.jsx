@@ -5,9 +5,12 @@ import Home from './pages/Home';
 import MonitorPage from './pages/MonitorPage';
 import DoctorPage from './pages/DoctorPage';
 import HistoryPage from './pages/HistoryPage';
+import CareRoutinesPage from './pages/CareRoutinesPage';
 import DiagnosisDetailPage from './pages/DiagnosisDetailPage';
 import { AuthProvider } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import NotificationsPage from './pages/NotificationsPage';
 import { useTranslation } from 'react-i18next';
 
 function GlobalProgressIndicator({ jobState, setJobState }) {
@@ -102,17 +105,33 @@ function MainApp() {
                         <DiagnosisDetailPage />
                     </ProtectedRoute>
                 } />
+                <Route path="/routines" element={
+                    <ProtectedRoute>
+                        <CareRoutinesPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/notifications" element={
+                    <ProtectedRoute>
+                        <NotificationsPage />
+                    </ProtectedRoute>
+                } />
             </Routes>
             <GlobalProgressIndicator jobState={jobState} setJobState={setJobState} />
         </>
     );
 }
 
+import { CameraProvider } from './contexts/CameraContext';
+
 function App() {
     return (
         <Router>
             <AuthProvider>
-                <MainApp />
+                <NotificationProvider>
+                    <CameraProvider>
+                        <MainApp />
+                    </CameraProvider>
+                </NotificationProvider>
             </AuthProvider>
         </Router>
     );

@@ -97,6 +97,7 @@
   "history": {
     "title": "Diagnosis History",
     "subtitle": "Review all your crop diagnosis records",
+    "detail_title": "Diagnosis Detail",
     "search_placeholder": "Search by disease name, symptoms...",
     "empty": "No diagnosis history found.",
     "delete_confirm": "Delete this record?",

@@ -2,9 +2,10 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { User, History, LogOut, ChevronRight, Settings, Shield, Bell, LogIn, ArrowLeft, UserPlus, Globe, Check, Edit2 } from 'lucide-react-native';
+import { User, History, LogOut, ChevronRight, Settings, Shield, Bell, LogIn, ArrowLeft, UserPlus, Globe, Check, Edit2, Calendar } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import HeaderBell from '../components/HeaderBell';
 
 const ProfileScreen = ({ navigation }) => {
     const { user, logout, isAuthenticated } = useAuth();
@@ -82,6 +83,7 @@ const ProfileScreen = ({ navigation }) => {
                 colors={['#2E7D32', '#10B981']}
                 style={[styles.header, { paddingTop: insets.top + 20, paddingBottom: 20 }]}
             >
+
                 {user ? (
                     <View style={styles.profileInfo}>
                         <TouchableOpacity style={styles.avatarContainer} onPress={() => navigation.navigate('EditProfile')}>
@@ -126,10 +128,16 @@ const ProfileScreen = ({ navigation }) => {
                     <ChevronRight color="#CBD5E1" size={20} />
                 </TouchableOpacity>
 
+                <TouchableOpacity style={styles.menuItem} onPress={() => isAuthenticated() ? navigation.navigate('CareRoutines') : setShowGuestView(true)}>
+                    <View style={styles.menuIconContainer}><Calendar color="#2E7D32" size={20} /></View>
+                    <Text style={styles.menuLabel}>{t('profile.routines')}</Text>
+                    <ChevronRight color="#CBD5E1" size={20} />
+                </TouchableOpacity>
+
                 <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
                 <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Notifications')}>
                     <View style={styles.menuIconContainer}><Bell color="#2E7D32" size={20} /></View>
-                    <Text style={styles.menuLabel}>{language === 'vi' ? 'Cài đặt thông báo' : 'Notification Settings'}</Text>
+                    <Text style={styles.menuLabel}>{t('profile.notifications')}</Text>
                     <ChevronRight color="#CBD5E1" size={20} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem} onPress={() => setShowLanguageModal(true)}>
@@ -187,7 +195,7 @@ const ProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8FAFC' },
     header: {
-        paddingHorizontal: 24,
+        paddingHorizontal: 20,
         borderBottomLeftRadius: 32,
         borderBottomRightRadius: 32,
         justifyContent: 'center',

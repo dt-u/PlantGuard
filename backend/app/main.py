@@ -1,13 +1,17 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from .database import seed_db
+from .database import seed_db, connect_to_mongodb, disconnect_from_mongodb
 from .seed_treatments import seed_treatments
-from .routes import monitor, doctor, admin, auth, history, admin_affiliate, treatments
+from .routes import monitor, doctor, admin, auth, history, admin_affiliate, treatments, notification, routine
 from .websocket import manager
+from .jobs.scheduler import setup_scheduler
 import os
 
 app = FastAPI(title="PlantGuard API")
+
+# Scheduler
+scheduler = setup_scheduler()
 
 # CORS
 app.add_middleware(
@@ -48,21 +52,35 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(history.router, prefix="/api/history", tags=["History"])
 app.include_router(treatments.router, prefix="/api/treatments", tags=["Treatments"])
 app.include_router(admin_affiliate.router, prefix="/api/admin", tags=["Admin Affiliate"])
+app.include_router(notification.router, prefix="/api/notifications", tags=["Notifications"])
+app.include_router(routine.router, prefix="/api/routine", tags=["Routine"])
 
 # Static Mounts
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "..", "results")
-if not os.path.exists(RESULTS_DIR):
-    os.makedirs(RESULTS_DIR)
-    
+DATASET_DIR = os.path.join(RESULTS_DIR, "user_dataset")
+PENDING_DIR = os.path.join(DATASET_DIR, "pending")
+VERIFIED_DIR = os.path.join(DATASET_DIR, "verified")
+
+for d in [RESULTS_DIR, DATASET_DIR, PENDING_DIR, VERIFIED_DIR]:
+    if not os.path.exists(d):
+        os.makedirs(d)
+
 app.mount("/results", StaticFiles(directory=RESULTS_DIR), name="results")
 
 @app.on_event("startup")
 async def startup_event():
+    await connect_to_mongodb()
     await seed_db()
     await seed_treatments()
     # Thêm logic tự động cập nhật link affiliate nếu cần
     from .seed_treatments import update_affiliate_links
     await update_affiliate_links()
+    scheduler.start()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await disconnect_from_mongodb()
+    scheduler.shutdown()
 
 @app.get("/")
 async def root():

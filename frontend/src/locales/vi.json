@@ -4,7 +4,12 @@
     "doctor": "Bác sĩ",
     "login": "Đăng nhập",
     "history": "Lịch sử chẩn đoán",
+    "routines": "Tiến độ chăm sóc",
     "logout": "Đăng xuất"
+  },
+  "routines": {
+    "title": "Tiến độ chăm sóc",
+    "subtitle": "Theo dõi và quản lý quá trình điều trị cho cây của bạn"
   },
   "home": {
     "title": "Nông Nghiệp Thông Minh",
@@ -60,6 +65,11 @@
     "stop_btn": "Dừng Luồng",
     "camera_disconnected": "Camera chưa kết nối",
     "camera_desc": "Nhập URL và nhấn Bắt đầu để quét thực địa",
+    "auto_scan": {
+      "title": "Trực canh AI",
+      "tooltip": "Hệ thống sẽ tự động giám sát vườn qua camera theo chu kỳ ngay cả khi bạn đóng trình duyệt. Nếu phát hiện dấu hiệu bất thường, hệ thống sẽ lưu lại hình ảnh và gửi thông báo đến bạn.",
+      "status_running": "Đang trực canh..."
+    },
     "fullscreen": "Toàn màn hình",
     "exit_fullscreen": "Thoát toàn màn hình",
     "error_upload": "Lỗi khi phân tích video. Vui lòng thử lại.",
@@ -72,7 +82,19 @@
       "view_result": "Xem Kết Quả",
       "close": "Đóng",
       "error": "Có lỗi xảy ra khi phân tích."
-    }
+    },
+    "dataset": "Bộ dữ liệu AI",
+    "dataset_title": "Trung tâm Duyệt dữ liệu AI",
+    "dataset_subtitle": "Xác nhận hoặc loại bỏ các vùng rủi ro do AI tự động thu thập để cải thiện độ chính xác.",
+    "dataset_empty": "Hiện chưa có dữ liệu mới cần duyệt.",
+    "dataset_pending": "Đang chờ duyệt",
+    "dataset_verified": "Đã xác nhận",
+    "dataset_confirm_correct": "Xác nhận đúng",
+    "dataset_reject_wrong": "Báo cáo sai",
+    "dataset_loading": "Đang tải dữ liệu...",
+    "dataset_success_verify": "Đã xác nhận dữ liệu chính xác!",
+    "dataset_success_reject": "Đã loại bỏ dữ liệu sai.",
+    "dataset_stats": "Thống kê thu thập"
   },
   "doctor": {
     "title": "Bác Sĩ Cây Trồng",
@@ -195,8 +217,19 @@
     "or_click": "hoặc click để chọn file"
   },
   "logs": {
-    "detected_at": "Tại {{time}} phát hiện rủi ro: [{{label}}]",
-    "live_alert": "Cảnh báo đối tượng: [{{label}}] - Độ tin cậy: {{confidence}}%"
+    "detected_at": "Tại {{time}} phát hiện vùng bệnh tại [{{location}}]",
+    "live_alert": "Cảnh báo: Vùng bệnh tại {{location}} - {{confidence}}%"
+  },
+  "monitor_location": {
+    "center": "Trung tâm",
+    "top_left": "Phía trên bên trái",
+    "top_right": "Phía trên bên phải",
+    "bottom_left": "Phía dưới bên trái",
+    "bottom_right": "Phía dưới bên phải",
+    "top_center": "Phía trên",
+    "bottom_center": "Phía dưới",
+    "left_center": "Bên trái",
+    "right_center": "Bên phải"
   },
   "diseases": {
     "Apple Healthy": {

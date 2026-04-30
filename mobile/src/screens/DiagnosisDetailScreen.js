@@ -15,7 +15,7 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
 
     const openPurchaseLink = (treatment) => {
         const targetUrl = treatment.affiliate_url || 
-                         `https://shopee.vn/search?keyword=${encodeURIComponent(treatment.search_fallback_keyword || treatment.product || treatment.name)}`;
+                         `https://shopee.vn/search?keyword=${encodeURIComponent(treatment.search_fallback_keyword || treatment.product_name || treatment.product || treatment.name)}`;
         
         Linking.canOpenURL(targetUrl).then(supported => {
             if (supported) {
@@ -120,7 +120,9 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
                         </View>
                         <TreatmentCard 
                             treatments={translateTreatments(diagnosis.disease_slug || diagnosis.disease_name, diagnosis.treatments || [])} 
+                            diseaseKey={diagnosis.disease_slug || diagnosis.disease_name}
                             onBuyPress={openPurchaseLink}
+                            imageUrl={diagnosis.image_url.startsWith('http') ? diagnosis.image_url : `${API_BASE_URL}${diagnosis.image_url}`}
                         />
                     </View>
 

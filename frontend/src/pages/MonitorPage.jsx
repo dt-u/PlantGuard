@@ -3,54 +3,96 @@ import axios from 'axios';
 import FileUpload from '../components/FileUpload';
 import Loader from '../components/Loader';
 import LiveCamera from '../components/LiveCamera';
-import { Video, AlertTriangle, Upload, Radio, Download, Trash2, Zap } from 'lucide-react';
+import DatasetReview from '../components/DatasetReview';
+import { Video, AlertTriangle, Upload, Radio, Download, Trash2, Zap, Database, Save } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
+import { useAuth } from '../contexts/AuthContext';
+
+import { useCamera } from '../contexts/CameraContext';
 
 const MonitorPage = ({ jobState, setJobState }) => {
     const { t } = useTranslation();
+    const { user, getUserId } = useAuth();
     const { translateDiseaseName } = useDiseaseTranslator();
+    const { 
+        status, frame, liveLogs, setLiveLogs, 
+        liveAlertCount, setLiveAlertCount,
+        cameraUrl, setCameraUrl,
+        isStreaming, setIsStreaming
+    } = useCamera();
     const location = useLocation();
+
+    const [cameraHistory, setCameraHistory] = useState([]);
+    const [toastConfig, setToastConfig] = useState({ show: false, title: '', message: '', type: 'success' });
+
+    const showToastMsg = (title, message, type = 'success') => {
+        setToastConfig({ show: true, title, message, type });
+        setTimeout(() => setToastConfig(prev => ({ ...prev, show: false })), 3000);
+    };
+
+    // Fetch saved camera URL if logged in
+    React.useEffect(() => {
+        const fetchSavedUrl = async () => {
+            const userId = getUserId();
+            if (userId && userId !== 'anonymous') {
+                try {
+                    const res = await axios.get(`http://127.0.0.1:8000/api/monitor/camera-url/${userId}`);
+                    if (res.data.camera_url) {
+                        setCameraUrl(res.data.camera_url);
+                    }
+                    if (res.data.history) {
+                        setCameraHistory(res.data.history);
+                    }
+                } catch (e) {
+                    console.error("Error fetching saved URL:", e);
+                }
+            }
+        };
+        fetchSavedUrl();
+    }, [getUserId, setCameraUrl]);
+
+    const handleSaveUrl = async () => {
+        const userId = getUserId();
+        if (!userId || userId === 'anonymous') {
+            showToastMsg('Yêu cầu đăng nhập', 'Vui lòng đăng nhập để lưu URL camera vào danh sách của bạn.', 'error');
+            return;
+        }
+        
+        try {
+            const res = await axios.post('http://127.0.0.1:8000/api/monitor/camera-url/save', {
+                user_id: userId,
+                camera_url: cameraUrl
+            });
+            if (res.data.urls) setCameraHistory(res.data.urls);
+            
+            showToastMsg('Thành công!', 'Đã lưu URL camera vào danh sách của bạn.', 'success');
+        } catch (e) {
+            console.error("Error saving URL:", e);
+            showToastMsg('Lỗi', 'Không thể lưu URL camera lúc này.', 'error');
+        }
+    };
     
-    // Tab State: 'upload' or 'live'
+    // Tab State: 'upload', 'live', or 'dataset'
     const [activeTab, setActiveTab] = useState(location.state?.tab || 'live'); // Default to live
 
-    React.useEffect(() => {
-        if (location.state?.tab) {
-            setActiveTab(location.state.tab);
-        }
-    }, [location.state?.ts]); // React on timestamp change to allow re-clicking on the same tab path
+    const handleLiveLog = (newLog) => {
+        // Log is already managed by CameraContext, but we can add local UI logic here if needed
+    };
 
-    React.useEffect(() => {
-        setJobState(prev => ({ ...prev, monitorTab: activeTab }));
-    }, [activeTab, setJobState]);
-
-    const [liveLogs, setLiveLogs] = useState([]);
-    const [liveAlertCount, setLiveAlertCount] = useState(0);
-
-    // Download dropdown state
+    // Upload State
+    const [video, setVideo] = useState(null);
+    const [uploadError, setUploadError] = useState(null);
     const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
     const videoRef = useRef(null);
 
     const seekToVideoTime = (timeStr) => {
         if (!videoRef.current) return;
         const [m, s] = timeStr.split(':').map(Number);
-        const totalSeconds = m * 60 + s;
-        videoRef.current.currentTime = totalSeconds;
+        videoRef.current.currentTime = m * 60 + s;
         videoRef.current.play();
     };
-
-    const handleLiveLog = (newLog) => {
-        if (newLog.type === 'alert') {
-            setLiveAlertCount(prev => prev + 1);
-        }
-        setLiveLogs(prev => [newLog, ...prev].slice(0, 50));
-    };
-
-    // Upload State
-    const [video, setVideo] = useState(null);
-    const [uploadError, setUploadError] = useState(null);
 
     const result = jobState?.result;
     const loading = jobState?.status === 'processing';
@@ -100,8 +142,33 @@ const MonitorPage = ({ jobState, setJobState }) => {
     const statusColor = isNoData ? "text-gray-400" : (hasIssues ? "text-red-500" : "text-[#3B82F6]");
     const dotColor = isNoData ? "bg-gray-400" : (hasIssues ? "bg-red-500" : "bg-[#3B82F6]");
 
+    const getLocationName = (x, y) => {
+        if (x === undefined || y === undefined) return 'center';
+        const horizontal = x < 0.33 ? 'left' : (x > 0.66 ? 'right' : 'center');
+        const vertical = y < 0.33 ? 'top' : (y > 0.66 ? 'bottom' : 'center');
+        if (horizontal === 'center' && vertical === 'center') return 'center';
+        if (horizontal === 'center') return `${vertical}_center`;
+        if (vertical === 'center') return `${horizontal}_center`;
+        return `${vertical}_${horizontal}`;
+    };
+
     return (
-        <div className="min-h-screen pb-12">
+        <div className="min-h-screen pb-12 relative">
+            {/* Custom Toast Notification */}
+            {toastConfig.show && (
+                <div className="fixed top-20 right-4 z-[9999] animate-in slide-in-from-right-10 fade-in duration-300">
+                    <div className={`${toastConfig.type === 'error' ? 'bg-red-500 shadow-red-200' : 'bg-[#10B981] shadow-green-200'} text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/20 backdrop-blur-md`}>
+                        <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                            {toastConfig.type === 'error' ? <AlertTriangle className="w-3 h-3" /> : <Save className="w-3 h-3" />}
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold tracking-wide">{toastConfig.title}</p>
+                            <p className="text-[10px] opacity-90">{toastConfig.message}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-7xl mx-auto px-4 mt-4">
                 {/* Header Section: Now more compact */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
@@ -130,6 +197,12 @@ const MonitorPage = ({ jobState, setJobState }) => {
                             >
                                 <Upload className="w-3 h-3 inline mr-1" /> {t('monitor.drone')}
                             </button>
+                            <button
+                                onClick={() => setActiveTab('dataset')}
+                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'dataset' ? 'bg-[#3B82F6] text-white shadow-sm' : 'text-gray-500'}`}
+                            >
+                                <Database className="w-3 h-3 inline mr-1" /> {t('monitor.dataset')}
+                            </button>
                         </div>
 
                         <div className="h-8 w-px bg-gray-200 hidden lg:block"></div>
@@ -146,8 +219,7 @@ const MonitorPage = ({ jobState, setJobState }) => {
                     {/* Main Content Area */}
                     <div className="lg:col-span-3">
                         {/* TAB CONTENT: UPLOAD VIDEO */}
-                        {activeTab === 'upload' && (
-                            <div className="animate-in fade-in zoom-in-95 duration-300">
+                        <div className={`${activeTab !== 'upload' ? 'hidden' : 'animate-in fade-in zoom-in-95 duration-300'}`}>
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-bold text-agri-dark text-sm uppercase tracking-wider flex items-center gap-2">
                                         <Video className="w-4 h-4" /> {t('monitor.drone_data')}
@@ -274,15 +346,25 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                         </div>
                                     </div>
                                 )}
-                            </div>
-                        )}
+                        </div>
 
                         {/* TAB CONTENT: LIVE CAMERA */}
-                        {activeTab === 'live' && (
-                            <div className="animate-in fade-in zoom-in-95 duration-300">
-                                <LiveCamera onLogEvent={handleLiveLog} />
-                            </div>
-                        )}
+                        <div className={`${activeTab !== 'live' ? 'hidden' : 'animate-in fade-in zoom-in-95 duration-300'}`}>
+                            <LiveCamera 
+                                onLogEvent={handleLiveLog} 
+                                onSaveUrl={handleSaveUrl}
+                                cameraHistory={cameraHistory}
+                                externalUrl={cameraUrl} 
+                                setExternalUrl={setCameraUrl}
+                                externalIsStreaming={isStreaming}
+                                setExternalIsStreaming={setIsStreaming}
+                            />
+                        </div>
+
+                        {/* TAB CONTENT: DATASET REVIEW */}
+                        <div className={`${activeTab !== 'dataset' ? 'hidden' : 'animate-in fade-in zoom-in-95 duration-300'}`}>
+                            <DatasetReview isActive={activeTab === 'dataset'} />
+                        </div>
 
                         {/* Disclaimer: Moved down */}
                         <div className="mt-8 bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex items-start gap-3">
@@ -330,10 +412,10 @@ const MonitorPage = ({ jobState, setJobState }) => {
                                             </span>
                                         </div>
                                         <p className="text-[11px] text-gray-300 leading-snug">
-                                            {log.type === 'alert' && (log.msg.includes('Tại') || log.msg.includes('At'))
+                                            {log.type === 'alert'
                                                 ? t('logs.detected_at', { 
                                                     time: log.time, 
-                                                    label: translateDiseaseName(log.label || log.msg.split('[')[1]?.split(']')[0] || '', log.label || log.msg.split('[')[1]?.split(']')[0] || '') 
+                                                    location: t(`monitor_location.${log.location || getLocationName(log.x, log.y)}`) 
                                                   })
                                                 : log.msg}
                                         </p>

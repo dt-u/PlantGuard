@@ -15,6 +15,8 @@ if not os.path.exists(RESULTS_DIR):
 
 class AIEngine:
     def __init__(self):
+        # ... existing code ...
+        self.shared_frames = {} # {camera_url: latest_frame}
         # Load the trained YOLO26 model
         model_path = os.path.join(os.path.dirname(__file__), "models", "best.pt")
         if os.path.exists(model_path):
@@ -173,6 +175,9 @@ class AIEngine:
                                 detailed_logs.append({
                                     "time": time_str,
                                     "msg": f"Tại {time_str} phát hiện rủi ro: [{label}]",
+                                    "label": label,
+                                    "x": (x1 + x2) / 2 / width,
+                                    "y": (y1 + y2) / 2 / height,
                                     "type": "alert"
                                 })
 
@@ -200,36 +205,64 @@ class AIEngine:
              print(f"Error in detect_video: {e}")
              raise e
 
-    async def generate_frames(self, camera_url: str):
-        """
-        Generates frames from a camera stream (URL).
-        Yields base64 encoded frames for WebSocket streaming.
-        Uses background threading to prevent frame buffer lag and YOLO bottleneck.
-        """
-        import time
-        import threading
-        
+    async def save_capture(self, frame, label, conf, x, y, w, h):
+        """Saves a frame as a pending capture for the dataset collector"""
+        try:
+            capture_id = str(uuid.uuid4())
+            filename = f"cap_{capture_id}.jpg"
+            captures_dir = os.path.join(RESULTS_DIR, "captures")
+            if not os.path.exists(captures_dir):
+                os.makedirs(captures_dir)
+            
+            filepath = os.path.join(captures_dir, filename)
+            cv2.imwrite(filepath, frame)
+            
+            # Here we would normally save metadata to a database
+            # For this implementation, we'll return the metadata to be handled by routes
+            return {
+                "capture_id": capture_id,
+                "image_url": f"/results/captures/{filename}",
+                "disease_name": label,
+                "confidence": float(conf),
+                "coordinates": {"cx": float(x), "cy": float(y), "w": float(w), "h": float(h)},
+                "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            }
+        except Exception as e:
+            print(f"Error saving capture: {e}")
+            return None
+
+    def _fix_url(self, camera_url: str):
         # Ensure protocol exists
         if not camera_url.startswith("http://") and not camera_url.startswith("https://"):
             camera_url = "http://" + camera_url
-            print(f"Added missing protocol: {camera_url}")
 
         # Auto-fix for DroidCam URLs
         if "4747" in camera_url and not any(x in camera_url for x in ["/video", "/mjpegfeed", "/video.force"]):
             if not camera_url.endswith("/"): camera_url += "/"
             camera_url += "video"
-            print(f"Auto-fixed DroidCam URL to: {camera_url}")
+        return camera_url
+
+    async def generate_frames(self, camera_url: str):
+        """
+        Generates frames from a camera stream (URL).
+        Yields base64 encoded frames for WebSocket streaming.
+        Uses background threading to prevent frame buffer lag and YOLO26 bottleneck.
+        """
+        import time
+        import threading
+        
+        fixed_url = self._fix_url(camera_url)
 
         # Use a thread for the blocking VideoCapture.open() call
         def open_cap(url):
             return cv2.VideoCapture(url)
 
-        print(f"Attempting to connect to camera: {camera_url}...")
-        cap = await asyncio.to_thread(open_cap, camera_url)
+        print(f"Attempting to connect to camera: {fixed_url}...")
+        cap = await asyncio.to_thread(open_cap, fixed_url)
         
         is_mock = not cap.isOpened()
         if is_mock:
-            print(f"Failed to open camera: {camera_url}. Switching to Simulation Mode.")
+            print(f"Failed to open camera: {fixed_url}. Switching to Simulation Mode.")
 
         # State for Threading
         running = True
@@ -246,6 +279,7 @@ class AIEngine:
                 ret, frame = cap.read()
                 if ret:
                     latest_frame = frame
+                    self.shared_frames[fixed_url] = frame # Share with auto-scan
                 else:
                     print("Lost connection to camera in read thread.")
                     is_mock = True
@@ -317,12 +351,21 @@ class AIEngine:
                     if random.random() > 0.8:
                         x1 = random.randint(100, 500)
                         y1 = random.randint(100, 300)
-                        cv2.rectangle(frame, (x1, y1), (x1+100, y1+100), (0, 255, 0), 2)
+                        w = 100
+                        h = 100
+                        cv2.rectangle(frame, (x1, y1), (x1+w, y1+h), (0, 255, 0), 2)
                         cv2.putText(frame, "Mock Object", (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                         
                         mock_label = "Vật thể Mô phỏng"
                         if current_time - last_logged_time.get(mock_label, 0) > 3.0:
-                            detections_to_send.append({"label": mock_label, "confidence": 0.99})
+                            detections_to_send.append({
+                                "label": mock_label, 
+                                "confidence": 0.99,
+                                "x": (x1 + w/2) / 640,
+                                "y": (y1 + h/2) / 480,
+                                "w": w / 640,
+                                "h": h / 480
+                            })
                             last_logged_time[mock_label] = current_time
                             
                     frame_to_send = frame
@@ -351,7 +394,14 @@ class AIEngine:
                         # Throttle the event logs (once every 3.0 seconds per label)
                         if conf >= 0.5:
                             if current_time - last_logged_time.get(label, 0) > 3.0:
-                                detections_to_send.append({"label": label, "confidence": conf})
+                                detections_to_send.append({
+                                    "label": label, 
+                                    "confidence": conf,
+                                    "x": (x1 + x2) / 2 / 640,
+                                    "y": (y1 + y2) / 2 / 480,
+                                    "w": (x2 - x1) / 640,
+                                    "h": (y2 - y1) / 480
+                                })
                                 last_logged_time[label] = current_time
                                 
                     # Target roughly 30 FPS for the video stream
@@ -376,3 +426,59 @@ class AIEngine:
             t_yolo.join(timeout=1.0)
             if cap and cap.isOpened():
                 cap.release()
+
+    async def scan_single_frame(self, camera_url: str):
+        """
+        Connects to the camera stream, grabs a single frame, runs YOLO26,
+        and returns the frame and detected boxes.
+        Used by the background auto-scan task.
+        """
+        fixed_url = self._fix_url(camera_url)
+        
+        # Check if we have a shared frame first (avoids connection conflict)
+        if fixed_url in self.shared_frames:
+            frame = self.shared_frames[fixed_url].copy()
+            print(f"Using shared frame for auto-scan: {fixed_url}")
+        else:
+            def capture_frame():
+                # Add timeout/optimization flags if possible, or just standard read
+                cap = cv2.VideoCapture(fixed_url)
+                ret, frame = cap.read()
+                cap.release()
+                return frame if ret else None
+
+            frame = await asyncio.to_thread(capture_frame)
+            
+        if frame is None:
+            return None, []
+
+        height, width, _ = frame.shape
+        frame_resized = cv2.resize(frame, (640, 640))
+        boxes_data = []
+
+        if self.model:
+            try:
+                res = self.model(frame_resized, verbose=False)
+                h_ratio = height / 640.0
+                w_ratio = width / 640.0
+                for box in res[0].boxes:
+                    rx1, ry1, rx2, ry2 = box.xyxy[0].tolist()
+                    x1, y1 = int(rx1 * w_ratio), int(ry1 * h_ratio)
+                    x2, y2 = int(rx2 * w_ratio), int(ry2 * h_ratio)
+                    conf = float(box.conf[0].item())
+                    cls = int(box.cls[0].item())
+                    boxes_data.append((x1, y1, x2, y2, conf, cls))
+            except Exception as e:
+                print("YOLO26 Scan Error:", e)
+        else:
+            # Simulation Mode for Wide Monitoring (Unhealthy Zone)
+            if random.random() > 0.5: # 50% chance to detect something for demo
+                x1 = random.randint(10, width // 2)
+                y1 = random.randint(10, height // 2)
+                x2 = x1 + random.randint(100, 300)
+                y2 = y1 + random.randint(100, 300)
+                x2 = min(x2, width - 10)
+                y2 = min(y2, height - 10)
+                boxes_data.append((x1, y1, x2, y2, random.uniform(0.7, 0.99), -2)) # -2 implies Unhealthy Zone pseudo-class
+
+        return frame, boxes_data

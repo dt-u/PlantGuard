@@ -1,44 +1,24 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image, ActivityIndicator, Alert, Modal, StatusBar, Keyboard } from 'react-native';
-import { Radio, Upload, Play, Square, AlertTriangle, Activity, Maximize, Minimize, Trash2, Download, Video as VideoIcon, FileText, Archive, ChevronRight, Zap } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image, ActivityIndicator, Alert, Modal, StatusBar, Keyboard, Switch } from 'react-native';
+import { Radio, Upload, Play, Square, AlertTriangle, Activity, Maximize, Minimize, Trash2, Download, Video as VideoIcon, FileText, Archive, ChevronRight, Zap, Info, Database, Clock, Check, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Video } from 'expo-av';
 import axios from 'axios';
-import { API_BASE_URL, WS_BASE_URL, ENDPOINTS } from '../api/config';
-
-// --- Sub-components to prevent full screen re-renders ---
-
-const LiveClock = memo(() => {
-    const [time, setTime] = useState(new Date());
-    useEffect(() => {
-        const timer = setInterval(() => setTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
-    return (
-        <View>
-            <Text style={{ color: '#FFFFFF', fontSize: 11, fontFamily: 'Vietnam-Medium' }}>
-                {time.toLocaleTimeString()}
-            </Text>
-            <Text style={{ color: '#FFFFFF', fontSize: 9, fontFamily: 'Vietnam-Regular', opacity: 0.8 }}>
-                {time.toLocaleDateString()}
-            </Text>
-        </View>
-    );
-});
+import { API_BASE_URL, WS_BASE_URL } from '../api/config';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const SimpleBadge = memo(({ status, hasFrame }) => {
     const { t } = useLanguage();
     const isConnected = status === 'connected' && hasFrame;
     return (
         <View style={styles.statusBanner}>
-            <View style={styles.dotContainer}>
-                <View style={[styles.dot, { backgroundColor: isConnected ? '#3B82F6' : '#9CA3AF' }]} />
-            </View>
+            <View style={[styles.statusDot, { backgroundColor: isConnected ? '#10B981' : '#9CA3AF' }]} />
             <View style={styles.statusInfo}>
                 <Text style={styles.statusLabel}>{t('monitor.garden_status')}</Text>
                 <Text style={[styles.statusValue, { color: isConnected ? '#3B82F6' : '#9CA3AF' }]}>
@@ -49,534 +29,351 @@ const SimpleBadge = memo(({ status, hasFrame }) => {
     );
 });
 
-const LiveCameraView = memo(({ imageRef, isFullscreen }) => {
-    return (
-        <Image
-            ref={imageRef}
-            source={{ uri: 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=' }}
-            style={isFullscreen ? { width: '100%', height: '100%' } : styles.frame}
-            resizeMode={isFullscreen ? "cover" : "contain"}
-            fadeDuration={0}
-        />
+import { useRoute } from '@react-navigation/native';
+import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
+import { useCamera } from '../contexts/CameraContext';
+
+const DatasetReviewList = ({ userId }) => {
+    const { t } = useLanguage();
+    const { translateDiseaseName } = useDiseaseTranslator();
+    const [captures, setCaptures] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [actionId, setActionId] = useState(null);
+
+    const fetchCaptures = async () => {
+        try {
+            setLoading(true);
+            const res = await axios.get(`${API_BASE_URL}/api/monitor/pending-captures?user_id=${userId}`);
+            setCaptures(res.data);
+        } catch (e) { console.log(e); }
+        finally { setLoading(false); }
+    };
+
+    const getLocationName = (x, y) => {
+        if (x === undefined || y === undefined) return 'center';
+        const horizontal = x < 0.33 ? 'left' : (x > 0.66 ? 'right' : 'center');
+        const vertical = y < 0.33 ? 'top' : (y > 0.66 ? 'bottom' : 'center');
+        if (horizontal === 'center' && vertical === 'center') return 'center';
+        if (horizontal === 'center') return `${vertical}_center`;
+        if (vertical === 'center') return `${horizontal}_center`;
+        return `${vertical}_${horizontal}`;
+    };
+
+    useEffect(() => { fetchCaptures(); }, [userId]);
+
+    const handleVerify = async (id, correct) => {
+        setActionId(id);
+        try {
+            await axios.post(`${API_BASE_URL}/api/monitor/verify-capture`, { capture_id: id, is_correct: correct });
+            setCaptures(prev => prev.filter(c => c.capture_id !== id));
+        } catch (e) { Alert.alert("Lỗi", "Không thể thực hiện xác nhận."); }
+        finally { setActionId(null); }
+    };
+
+    if (loading) return <ActivityIndicator size="large" color="#3B82F6" style={{ marginTop: 40 }} />;
+    if (captures.length === 0) return (
+        <View style={styles.emptyDataset}>
+            <Database size={48} color="#D1D5DB" />
+            <Text style={styles.emptyText}>{t('monitor.dataset_empty')}</Text>
+        </View>
     );
-}, () => true);
+
+    return (
+        <View style={styles.datasetGrid}>
+            {captures.map(cap => (
+                <View key={cap.capture_id} style={styles.datasetCard}>
+                    <View style={styles.datasetImgContainer}>
+                        <Image source={{ uri: `${API_BASE_URL}${cap.image_url}` }} style={styles.datasetImg} />
+                        {cap.coordinates && (
+                            <View 
+                                style={[
+                                    styles.datasetBoundingBox,
+                                    {
+                                        left: `${(cap.coordinates.cx - cap.coordinates.w/2) * 100}%`,
+                                        top: `${(cap.coordinates.cy - cap.coordinates.h/2) * 100}%`,
+                                        width: `${cap.coordinates.w * 100}%`,
+                                        height: `${cap.coordinates.h * 100}%`
+                                    }
+                                ]}
+                            />
+                        )}
+                    </View>
+                    <View style={styles.datasetInfo}>
+                        <Text style={styles.datasetDisease}>{translateDiseaseName(cap.disease_name || `Class ${cap.class_id}`)}</Text>
+                        <View style={styles.datasetMetaRow}>
+                            <View style={styles.datasetMeta}>
+                                <Clock size={10} color="#9CA3AF" />
+                                <Text style={styles.datasetTime}>{new Date(cap.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                            </View>
+                            <View style={styles.datasetMeta}>
+                                <Info size={10} color="#9CA3AF" />
+                                <Text style={styles.datasetTime}>{t(`monitor.location.${getLocationName(cap.coordinates?.cx, cap.coordinates?.cy)}`)}</Text>
+                            </View>
+                        </View>
+                    </View>
+                    <View style={styles.datasetActions}>
+                        <TouchableOpacity 
+                            style={[styles.actionBtn, styles.confirmBtn]} 
+                            onPress={() => handleVerify(cap.capture_id, true)}
+                            disabled={actionId === cap.capture_id}
+                        >
+                            <Check color="#FFF" size={16} />
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            style={[styles.actionBtn, styles.rejectBtn]} 
+                            onPress={() => handleVerify(cap.capture_id, false)}
+                            disabled={actionId === cap.capture_id}
+                        >
+                            <X color="#FFF" size={16} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            ))}
+        </View>
+    );
+};
 
 const MonitorScreen = () => {
     const insets = useSafeAreaInsets();
-    const { t } = useLanguage();
-    const [activeTab, setActiveTab] = useState('live');
-    const [cameraUrl, setCameraUrl] = useState("http://192.168.5.100:4747/video");
-    const [isStreaming, setIsStreaming] = useState(false);
-    const [status, setStatus] = useState("disconnected");
-    const [liveLogs, setLiveLogs] = useState([]);
-    const [droneLogs, setDroneLogs] = useState([]);
-    const [liveAlertCount, setLiveAlertCount] = useState(0);
+    const { t, language } = useLanguage();
+    const { user } = useAuth();
+    const route = useRoute();
+    
+    // Tab state
+    const [activeTab, setActiveTab] = useState(route.params?.tab || 'live'); // 'live', 'upload' or 'dataset'
+    
+    useEffect(() => {
+        if (route.params?.tab) setActiveTab(route.params.tab);
+    }, [route.params?.tab]);
+    
+    // Use Camera Context
+    const {
+        cameraUrl, setCameraUrl,
+        isStreaming,
+        status,
+        hasFrame,
+        droneLogs,
+        isAutoScan, setIsAutoScan,
+        startStream, stopStream
+    } = useCamera();
 
-    const isStreamingRef = useRef(false);
-    const reconnectTimeoutRef = useRef(null);
-    const lastFrameTimeRef = useRef(0);
-    const frameImageRef = useRef(null);
-    const fullscreenImageRef = useRef(null);
-    const wsRef = useRef(null);
-    const [hasFrame, setHasFrame] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
+    useEffect(() => {
+        if (user && user.id) {
+            axios.get(`${API_BASE_URL}/api/monitor/auto-scan/status/${user.id}`)
+                .then(res => setIsAutoScan(res.data.active))
+                .catch(console.error);
+            
+            // Fetch saved camera URL
+            axios.get(`${API_BASE_URL}/api/monitor/camera-url/${user.id}`)
+                .then(res => {
+                    if (res.data.camera_url) setCameraUrl(res.data.camera_url);
+                })
+                .catch(console.error);
+        }
+    }, [user, setIsAutoScan, setCameraUrl]);
+
+    const handleSaveCameraUrl = async () => {
+        if (!user || !user.id) return;
+        try {
+            await axios.post(`${API_BASE_URL}/api/monitor/camera-url/save`, {
+                user_id: user.id,
+                camera_url: cameraUrl
+            });
+            Alert.alert(t('common.success'), "Đã lưu URL camera làm mặc định.");
+        } catch (e) {
+            Alert.alert("Lỗi", "Không thể lưu URL camera.");
+        }
+    };
+
+    const handleToggleAutoScan = async (value) => {
+        if (!user || (!user.id && user.id !== 'tmp')) return;
+        const uId = user.id || "anonymous";
+        const endpoint = value ? 'start' : 'stop';
+        
+        setIsAutoScan(value);
+        try {
+            await axios.post(`${API_BASE_URL}/api/monitor/auto-scan/${endpoint}`, {
+                camera_url: cameraUrl,
+                user_id: uId
+            });
+        } catch (e) {
+            setIsAutoScan(!value); 
+            console.error(e);
+        }
+    };
 
     // Upload state
     const [uploadLoading, setUploadLoading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadResult, setUploadResult] = useState(null);
-    const [currentJobId, setCurrentJobId] = useState(null);
-    const [showDownloadModal, setShowDownloadModal] = useState(false);
-    const videoRef = useRef(null);
-    const uploadJobIntervalRef = useRef(null);
-
-    useEffect(() => {
-        return () => {
-            if (wsRef.current) wsRef.current.close();
-            if (uploadJobIntervalRef.current) clearInterval(uploadJobIntervalRef.current);
-        };
-    }, []);
-
-    useEffect(() => {
-        async function changeOrientation() {
-            try {
-                if (isFullscreen) {
-                    await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-                } else {
-                    await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-                }
-            } catch (err) {
-                console.error("Orientation lock failed", err);
-            }
-        }
-        changeOrientation();
-    }, [isFullscreen]);
-
-    const translateDiseaseLabel = (label) => {
-        const translated = t(`diseases.${label}`);
-        if (typeof translated === 'object') {
-            return translated.name || label;
-        }
-        return translated || label;
-    };
-
-    const translateLogMsg = (msg) => {
-        // Match: "Tại 00:05: phát hiện rủi ro [Corn Common Rust]"
-        const droneRegex = /(?:Tại|At) ([\d:]+):?\s*(?:phát hiện rủi ro|detected risk) \[(.+)\]/;
-        const droneMatch = msg.match(droneRegex);
-        if (droneMatch) {
-            const time = droneMatch[1];
-            const label = droneMatch[2];
-            return t('logs.detected_at')
-                .replace('{{time}}', time)
-                .replace('{{label}}', translateDiseaseLabel(label));
-        }
-
-        // Match: "Cảnh báo: [Apple Scab] - 85%"
-        const liveRegex = /(?:Cảnh báo|Alert): \[(.+)\] - (\d+)%/;
-        const liveMatch = msg.match(liveRegex);
-        if (liveMatch) {
-            const label = liveMatch[1];
-            const confidence = liveMatch[2];
-            return t('logs.live_alert')
-                .replace('{{label}}', translateDiseaseLabel(label))
-                .replace('{{confidence}}', confidence);
-        }
-
-        return msg;
-    };
-
-    const startStream = () => {
-        Keyboard.dismiss();
-        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-        setIsStreaming(true);
-        isStreamingRef.current = true;
-        setStatus("connecting");
-        setHasFrame(false);
-
-        const ws = new WebSocket(`${WS_BASE_URL}/api/monitor/ws/live`);
-        wsRef.current = ws;
-
-        ws.onopen = () => {
-            setStatus("connected");
-            ws.send(cameraUrl);
-        };
-
-        ws.onmessage = (event) => {
-            try {
-                const now = Date.now();
-                if (now - lastFrameTimeRef.current < 16) return;
-                lastFrameTimeRef.current = now;
-
-                let frameData = null;
-                const rawData = event.data;
-                
-                if (rawData.startsWith('{')) {
-                    const data = JSON.parse(rawData);
-                    if (data.image) frameData = data.image;
-                    if (data.detections && data.detections.length > 0) {
-                        const newLogs = data.detections.map(d => ({
-                            id: Date.now() + Math.random(),
-                            time: new Date().toLocaleTimeString(),
-                            msg: `Cảnh báo: [${d.label}] - ${Math.round(d.confidence*100)}%`,
-                            type: 'alert'
-                        }));
-                        setLiveAlertCount(prev => prev + data.detections.length);
-                        setLiveLogs(prev => [...newLogs, ...prev].slice(0, 50));
-                    }
-                } else {
-                    frameData = rawData;
-                }
-
-                if (frameData) {
-                    const uri = `data:image/jpeg;base64,${frameData}`;
-                    if (frameImageRef.current) frameImageRef.current.setNativeProps({ source: [{ uri }] });
-                    if (fullscreenImageRef.current) fullscreenImageRef.current.setNativeProps({ source: [{ uri }] });
-                    
-                    if (!hasFrame) setHasFrame(true);
-                }
-            } catch (e) {
-                console.error("WS Message Error", e);
-            }
-        };
-
-        ws.onclose = () => {
-            setStatus("disconnected");
-            setHasFrame(false);
-            if (isStreamingRef.current) {
-                reconnectTimeoutRef.current = setTimeout(() => {
-                    if (isStreamingRef.current) startStream();
-                }, 3000);
-            }
-        };
-    };
-
-    const stopStream = () => {
-        isStreamingRef.current = false;
-        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-        if (wsRef.current) wsRef.current.close();
-        setIsStreaming(false);
-        setStatus("disconnected");
-        setHasFrame(false);
-    };
-
-    const handleClearLogs = () => {
-        if (activeTab === 'live') {
-            setLiveLogs([]);
-            setLiveAlertCount(0);
-        } else {
-            setDroneLogs([]);
-        }
-    };
-
-    const pickVideo = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-            allowsEditing: true,
-            quality: 1,
-        });
-        if (!result.canceled) handleUpload(result.assets[0]);
-    };
-
-    const handleUpload = async (fileAsset) => {
-        setUploadLoading(true);
-        setUploadProgress(0);
-        setUploadResult(null);
-        setDroneLogs([]);
-
-        const formData = new FormData();
-        formData.append('file', {
-            uri: fileAsset.uri,
-            name: 'video.mp4',
-            type: 'video/mp4',
-        });
-
-        try {
-            const response = await axios.post(ENDPOINTS.ANALYZE_VIDEO, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-            const jobId = response.data.job_id;
-            setCurrentJobId(jobId);
-            
-            uploadJobIntervalRef.current = setInterval(async () => {
-                try {
-                    const statusRes = await axios.get(`${API_BASE_URL}/api/monitor/job-status/${jobId}`);
-                    if (statusRes.data.status === 'completed') {
-                        clearInterval(uploadJobIntervalRef.current);
-                        setUploadResult(statusRes.data.result);
-                        setDroneLogs(statusRes.data.result.detailed_logs || []);
-                        setUploadLoading(false);
-                    } else if (statusRes.data.status === 'failed') {
-                        clearInterval(uploadJobIntervalRef.current);
-                        setUploadLoading(false);
-                        Alert.alert(t('common.error'), t('monitor.job_failed'));
-                    } else {
-                        setUploadProgress(statusRes.data.progress);
-                    }
-                } catch(e) {}
-            }, 2000);
-            
-        } catch (err) {
-            console.error(err);
-            Alert.alert(t('common.error'), t('monitor.upload_error'));
-            setUploadLoading(false);
-        }
-    };
-
-    const downloadFile = async (type) => {
-        if (!uploadResult || !currentJobId) return;
-        
-        setShowDownloadModal(false);
-        let url = '';
-        let fileName = '';
-        const shortId = currentJobId.slice(0, 8);
-
-        if (type === 'video') {
-            url = `${API_BASE_URL}${uploadResult.video_url}`;
-            fileName = `PG_Video_${shortId}.mp4`;
-        } else if (type === 'excel') {
-            url = `${API_BASE_URL}/api/monitor/logs/excel/${currentJobId}`;
-            fileName = `PG_Logs_${shortId}.xlsx`;
-        } else if (type === 'zip') {
-            url = `${API_BASE_URL}/api/monitor/zip/${currentJobId}`;
-            fileName = `PG_Full_${shortId}.zip`;
-        }
-
-        try {
-            const fileUri = FileSystem.cacheDirectory + fileName;
-            const downloadRes = await FileSystem.downloadAsync(url, fileUri);
-            
-            if (downloadRes.status === 200) {
-                await Sharing.shareAsync(downloadRes.uri);
-            } else {
-                Alert.alert(t('common.error'), t('monitor.download_error'));
-            }
-        } catch (error) {
-            console.error(error);
-            Alert.alert(t('common.error'), t('monitor.sharing_error'));
-        }
-    };
-
-    const seekToTime = async (timeStr) => {
-        if (!videoRef.current || activeTab !== 'upload') return;
-        const [m, s] = timeStr.split(':').map(Number);
-        const totalMillis = (m * 60 + s) * 1000;
-        try {
-            await videoRef.current.setPositionAsync(totalMillis);
-            await videoRef.current.playAsync();
-        } catch (e) {
-            console.error("Seek Error:", e);
-        }
-    };
-
-    const currentLogs = activeTab === 'live' ? liveLogs : droneLogs;
+    const [showDownloadSheet, setShowDownloadSheet] = useState(false);
 
     return (
-        <View style={[styles.container, { paddingTop: Math.max(insets.top + 20, 60) }]}>
-            <View style={[styles.header, { marginBottom: 25 }]}>
+        <View style={[styles.container, { paddingTop: insets.top }]}>
+            <StatusBar barStyle="dark-content" />
+            
+            <View style={styles.header}>
                 <View>
-                    <Text style={styles.title}>{t('monitor.title')}</Text>
-                    <Text style={styles.subtitle}>{t('monitor.subtitle')}</Text>
+                    <Text style={styles.headerTitle}>{t('monitor.title')}</Text>
+                    <Text style={styles.headerSubtitle}>{t('monitor.subtitle')}</Text>
                 </View>
+                <TouchableOpacity style={styles.historyBtn} onPress={() => setDroneLogs([])}>
+                    <Trash2 color="#6B7280" size={20} />
+                </TouchableOpacity>
             </View>
 
-            <View style={styles.statusBannerContainer}>
-                <SimpleBadge status={status} hasFrame={hasFrame} />
-            </View>
-
-            <View style={styles.tabBar}>
-                <TouchableOpacity style={[styles.tab, activeTab === 'live' && styles.activeTab]} onPress={() => setActiveTab('live')}>
-                    <Radio color={activeTab === 'live' ? '#FFFFFF' : '#6B7280'} size={18} />
+            <View style={styles.tabContainer}>
+                <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'live' && styles.activeTab]} 
+                    onPress={() => setActiveTab('live')}
+                >
+                    <Radio color={activeTab === 'live' ? '#3B82F6' : '#9CA3AF'} size={18} />
                     <Text style={[styles.tabText, activeTab === 'live' && styles.activeTabText]}>{t('monitor.live_cam')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.tab, activeTab === 'upload' && styles.activeTab]} onPress={() => setActiveTab('upload')}>
-                    <Upload color={activeTab === 'upload' ? '#FFFFFF' : '#6B7280'} size={18} />
-                    <Text style={[styles.tabText, activeTab === 'upload' && styles.activeTabText]}>{t('monitor.upload')}</Text>
+                <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'upload' && styles.activeTab]} 
+                    onPress={() => setActiveTab('upload')}
+                >
+                    <Upload color={activeTab === 'upload' ? '#3B82F6' : '#9CA3AF'} size={18} />
+                    <Text style={[styles.tabText, activeTab === 'upload' && styles.activeTabText]}>{t('monitor.drone')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'dataset' && styles.activeTab, { flex: 1.4 }]} 
+                    onPress={() => setActiveTab('dataset')}
+                >
+                    <Database color={activeTab === 'dataset' ? '#3B82F6' : '#9CA3AF'} size={18} />
+                    <Text style={[styles.tabText, activeTab === 'dataset' && styles.activeTabText]}>{t('monitor.dataset')}</Text>
                 </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.content}>
-                {activeTab === 'live' ? (
-                    <View style={styles.liveSection}>
-                        <View style={styles.configBox}>
-                            <Text style={styles.inputLabel}>{t('monitor.url_label')}</Text>
-                            <TextInput 
-                                style={styles.input}
-                                value={cameraUrl}
-                                onChangeText={setCameraUrl}
-                                placeholder="http://192.168.x.x:4747/video"
-                                editable={!isStreaming}
-                            />
-                            {!isStreaming ? (
-                                <TouchableOpacity style={styles.startBtn} onPress={startStream}>
-                                    <Play color="#FFFFFF" size={20} />
-                                    <Text style={styles.btnText}>{t('monitor.start_monitor')}</Text>
-                                </TouchableOpacity>
-                            ) : (
-                                <TouchableOpacity style={styles.stopBtn} onPress={stopStream}>
-                                    <Square color="#FFFFFF" size={20} />
-                                    <Text style={styles.btnText}>{t('monitor.stop_stream')}</Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+                {/* LIVE TAB */}
+                <View style={[styles.tabContent, { display: activeTab === 'live' ? 'flex' : 'none' }]}>
+                    <View style={styles.statusBannerContainer}>
+                        <SimpleBadge status={status} hasFrame={hasFrame} />
+                    </View>
 
-                        <Modal visible={isFullscreen} onRequestClose={() => setIsFullscreen(false)} statusBarTranslucent animationType="fade">
-                            <StatusBar hidden={isFullscreen} />
-                            <View style={{ flex: 1, backgroundColor: '#000' }}>
-                                <LiveCameraView imageRef={fullscreenImageRef} isFullscreen={true} />
-                                <TouchableOpacity
-                                    onPress={() => setIsFullscreen(false)}
-                                    style={{ position: 'absolute', top: 40, right: 20, backgroundColor: '#000000BA', borderRadius: 22, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', zIndex: 100 }}
-                                >
-                                    <Minimize color="#fff" size={24} />
-                                </TouchableOpacity>
-                                <View style={{ position: 'absolute', top: 40, left: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: '#000000AA', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, gap: 12, zIndex: 100 }}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#EF4444', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 6 }}>
-                                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' }} />
-                                        <Text style={{ color: '#FFFFFF', fontSize: 11, fontFamily: 'Vietnam-Bold' }}>{t('monitor.live')}</Text>
-                                    </View>
-                                    <LiveClock />
+                    <View style={styles.configBox}>
+                        <View style={styles.inputRow}>
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.inputLabel}>{t('monitor.url_label')}</Text>
+                                <View style={styles.inputWithActions}>
+                                    <TextInput 
+                                        style={[styles.input, { flex: 1 }]}
+                                        value={cameraUrl}
+                                        onChangeText={setCameraUrl}
+                                        placeholder="http://192.168.x.x:4747/video"
+                                        editable={!isStreaming}
+                                    />
+                                    {user && (
+                                        <TouchableOpacity 
+                                            style={styles.saveUrlBtn} 
+                                            onPress={handleSaveCameraUrl}
+                                            title="Lưu URL"
+                                        >
+                                            <Save color="#3B82F6" size={18} />
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
                             </View>
-                        </Modal>
-
-                        <View style={styles.monitorView}>
-                            <LiveCameraView imageRef={frameImageRef} isFullscreen={false} />
                             
-                            {!hasFrame && (
-                                <View style={styles.placeholderContainer}>
-                                    {status === 'connecting' ? <ActivityIndicator color="#3B82F6" size="large" /> : <Activity color="#D1D5DB" size={64} />}
-                                    <Text style={styles.placeholderText}>{status === 'connecting' ? t('monitor.connecting') : t('monitor.no_signal')}</Text>
+                            {user && (
+                                <View style={styles.autoScanMiniContainer}>
+                                    <TouchableOpacity 
+                                        style={styles.infoBtn}
+                                        onPress={() => Alert.alert("Trực canh AI", "Hệ thống sẽ tự động giám sát vườn qua camera ngay cả khi bạn đóng ứng dụng.")}
+                                    >
+                                        <Info size={14} color="#3B82F6" />
+                                    </TouchableOpacity>
+                                    <Zap size={14} color={isAutoScan ? "#3B82F6" : "#D1D5DB"} />
+                                    <Switch
+                                        trackColor={{ false: '#D1D5DB', true: '#BFDBFE' }}
+                                        thumbColor={isAutoScan ? '#3B82F6' : '#9CA3AF'}
+                                        onValueChange={handleToggleAutoScan}
+                                        value={isAutoScan}
+                                        style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
+                                    />
                                 </View>
-                            )}
-
-                            {status === 'connected' && hasFrame && (
-                                <View style={styles.liveOverlayBadge}>
-                                    <View style={styles.liveIndicator}>
-                                        <View style={styles.liveDot} />
-                                        <Text style={styles.liveLabel}>{t('monitor.live')}</Text>
-                                    </View>
-                                </View>
-                            )}
-
-                            {status === 'connected' && hasFrame && (
-                                <TouchableOpacity onPress={() => setIsFullscreen(true)} style={styles.fullscreenBtn}>
-                                    <Maximize color="#fff" size={18} />
-                                </TouchableOpacity>
                             )}
                         </View>
-                    </View>
-                ) : (
-                    <View style={styles.uploadSection}>
-                        {!uploadLoading && !uploadResult ? (
-                            <TouchableOpacity style={styles.mockUpload} onPress={pickVideo}>
-                                <Upload color="#3B82F6" size={48} />
-                                <Text style={styles.placeholderText}>{t('monitor.pick_video')}</Text>
+
+                        {!isStreaming ? (
+                            <TouchableOpacity style={styles.startBtn} onPress={() => startStream(cameraUrl)}>
+                                <Play color="#FFFFFF" size={18} />
+                                <Text style={styles.btnText}>{t('monitor.start_monitor')}</Text>
                             </TouchableOpacity>
-                        ) : uploadLoading ? (
-                            <View style={styles.mockUpload}>
-                                <ActivityIndicator size="large" color="#3B82F6" />
-                                <Text>{t('monitor.analyzing_video')} {uploadProgress}%</Text>
+                        ) : (
+                            <TouchableOpacity style={styles.stopBtn} onPress={stopStream}>
+                                <Square color="#FFFFFF" size={16} />
+                                <Text style={styles.btnText}>{t('monitor.stop_stream')}</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    <View style={styles.monitorView}>
+                        {!hasFrame ? (
+                            <View style={styles.placeholder}>
+                                {status === 'connecting' ? <ActivityIndicator color="#3B82F6" size="large" /> : <Activity color="#D1D5DB" size={48} />}
+                                <Text style={styles.placeholderText}>{status === 'connecting' ? t('monitor.connecting') : t('monitor.no_signal')}</Text>
                             </View>
                         ) : (
-                            <View style={styles.resultCard}>
-                                <View style={styles.resultHeader}>
-                                    <View style={styles.resultStatus}>
-                                        <View style={styles.successDot} />
-                                        <Text style={styles.resultLabel}>{t('monitor.analysis_complete')}</Text>
-                                    </View>
-                                    <TouchableOpacity style={styles.mainDownloadBtn} onPress={() => setShowDownloadModal(true)}>
-                                        <Download color="#FFFFFF" size={14} />
-                                        <Text style={styles.mainDownloadText}>{t('monitor.download')}</Text>
-                                    </TouchableOpacity>
+                            <View style={styles.liveWrapper}>
+                                <Image 
+                                    source={{ uri: `${cameraUrl}?${new Date().getTime()}` }} 
+                                    style={styles.liveFrame} 
+                                    resizeMode="cover" 
+                                />
+                                <View style={styles.liveBadge}>
+                                    <View style={styles.liveDot} />
+                                    <Text style={styles.liveLabel}>{t('monitor.live')}</Text>
                                 </View>
                                 
-                                {uploadResult?.video_url && (
-                                    <View style={styles.mobileVideoContainer}>
-                                        <Video
-                                            key={`${API_BASE_URL}${uploadResult.video_url}`}
-                                            ref={videoRef}
-                                            source={{ uri: `${API_BASE_URL}${uploadResult.video_url}` }}
-                                            useNativeControls
-                                            resizeMode="contain"
-                                            isLooping={false}
-                                            shouldPlay={false}
-                                            style={styles.mobileVideo}
-                                        />
+                                {isAutoScan && (
+                                    <View style={styles.autoScanBadge}>
+                                        <Zap size={14} color="#FFF" />
                                     </View>
                                 )}
-
-                                <View style={styles.resultSummary}>
-                                    <View style={styles.summaryItem}>
-                                        <Text style={styles.summaryValue}>{uploadResult?.alert_count || 0}</Text>
-                                        <Text style={styles.summaryLabel}>{t('monitor.alerts')}</Text>
-                                    </View>
-                                    <View style={styles.summaryDivider} />
-                                    <TouchableOpacity onPress={() => setUploadResult(null)} style={styles.summaryAction}>
-                                        <Text style={styles.reuploadText}>{t('common.retry')}</Text>
-                                        <ChevronRight color="#3B82F6" size={16} />
-                                    </TouchableOpacity>
-                                </View>
                             </View>
                         )}
                     </View>
-                )}
 
-                {/* Download Modal */}
-                <Modal visible={showDownloadModal} transparent animationType="slide" onRequestClose={() => setShowDownloadModal(false)}>
-                    <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowDownloadModal(false)}>
-                        <View style={styles.bottomSheet}>
-                            <View style={styles.sheetHandle} />
-                            <Text style={styles.sheetTitle}>{t('monitor.download_options')}</Text>
-                            
-                            <TouchableOpacity style={styles.sheetItem} onPress={() => downloadFile('video')}>
-                                <View style={[styles.sheetIconBox, { backgroundColor: '#DBEAFE' }]}>
-                                    <VideoIcon color="#3B82F6" size={20} />
-                                </View>
-                                <View style={styles.sheetItemText}>
-                                    <Text style={styles.sheetItemTitle}>{t('monitor.video_only')}</Text>
-                                    <Text style={styles.sheetItemDesc}>{t('monitor.video_desc')}</Text>
-                                </View>
-                                <ChevronRight color="#D1D5DB" size={18} />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={styles.sheetItem} onPress={() => downloadFile('excel')}>
-                                <View style={[styles.sheetIconBox, { backgroundColor: '#DCFCE7' }]}>
-                                    <FileText color="#10B981" size={20} />
-                                </View>
-                                <View style={styles.sheetItemText}>
-                                    <Text style={styles.sheetItemTitle}>{t('monitor.logs_only')}</Text>
-                                    <Text style={styles.sheetItemDesc}>{t('monitor.logs_desc')}</Text>
-                                </View>
-                                <ChevronRight color="#D1D5DB" size={18} />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={styles.sheetItem} onPress={() => downloadFile('zip')}>
-                                <View style={[styles.sheetIconBox, { backgroundColor: '#F3E8FF' }]}>
-                                    <Archive color="#8B5CF6" size={20} />
-                                </View>
-                                <View style={styles.sheetItemText}>
-                                    <Text style={styles.sheetItemTitle}>{t('monitor.full_set')}</Text>
-                                    <Text style={styles.sheetItemDesc}>{t('monitor.full_set_desc')}</Text>
-                                </View>
-                                <ChevronRight color="#D1D5DB" size={18} />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={styles.closeSheetBtn} onPress={() => setShowDownloadModal(false)}>
-                                <Text style={styles.closeSheetText}>{t('common.cancel')}</Text>
-                            </TouchableOpacity>
+                    <View style={styles.logsSection}>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.logTitle}>{t('monitor.event_logs')}</Text>
+                            <Zap color="#F59E0B" size={16} />
                         </View>
-                    </TouchableOpacity>
-                </Modal>
-
-                <View style={styles.logSection}>
-                    <View style={styles.logHeader}>
-                        <Text style={styles.logTitle}>{t('monitor.event_logs')}</Text>
-                        {currentLogs.length > 0 && (
-                            <TouchableOpacity onPress={handleClearLogs}>
-                                <Trash2 color="#9CA3AF" size={16} />
-                            </TouchableOpacity>
+                        
+                        {droneLogs.length === 0 ? (
+                            <View style={styles.emptyLogs}>
+                                <Text style={styles.emptyText}>{t('monitor.empty_logs')}</Text>
+                            </View>
+                        ) : (
+                            droneLogs.map((log) => (
+                                <View key={log.id} style={styles.logItem}>
+                                    <AlertTriangle color="#EF4444" size={16} />
+                                    <View style={styles.logContent}>
+                                        <Text style={styles.logText}>
+                                            {t('monitor.alert_at', { 
+                                                time: '', 
+                                                location: t(`monitor.location.${log.location}`) 
+                                            }).replace(': ', '')}
+                                        </Text>
+                                        <Text style={styles.logTime}>{log.time} • Tin cậy: {log.conf}%</Text>
+                                    </View>
+                                </View>
+                            ))
                         )}
                     </View>
-                    {currentLogs.map((log, index) => (
-                        <TouchableOpacity 
-                            key={log.id || index} 
-                            style={styles.logItem}
-                            onPress={() => activeTab === 'upload' && seekToTime(log.time)}
-                            activeOpacity={activeTab === 'upload' ? 0.6 : 1}
-                        >
-                            <View style={styles.logMetaRow}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                    {activeTab === 'upload' && <Zap color="#3B82F6" size={10} />}
-                                    <Text style={[styles.logTime, activeTab === 'upload' && { color: '#3B82F6', fontFamily: 'Vietnam-Bold' }]}>{log.time}</Text>
-                                </View>
-                                <View style={[styles.typeBadge, log.type === 'alert' ? styles.badgeAlert : styles.badgeInfo]}>
-                                    <Text style={styles.badgeText}>{(log.type || 'info').toUpperCase()}</Text>
-                                </View>
-                            </View>
-                            <Text style={styles.logMsg}>{translateLogMsg(log.msg)}</Text>
-                        </TouchableOpacity>
-                    ))}
-                    {currentLogs.length === 0 && (
-                        <Text style={styles.emptyLogsText}>
-                            {activeTab === 'live' ? t('monitor.empty_logs') : t('monitor.empty_upload_logs')}
-                        </Text>
-                    )}
                 </View>
 
-                {/* Technical Disclaimer */}
-                <View style={styles.disclaimerSection}>
-                    <View style={styles.disclaimerCard}>
-                        <View style={styles.disclaimerHeader}>
-                            <View style={styles.warningCircle}>
-                                <Activity color="#92400E" size={14} />
-                            </View>
-                            <Text style={styles.disclaimerTitle}>{t('monitor.tech_disclaimer')}</Text>
-                        </View>
-                        <Text style={styles.disclaimerBody}>
-                            {t('monitor.tech_desc')}
-                        </Text>
-                    </View>
+                {/* UPLOAD TAB */}
+                <View style={[styles.tabContent, { display: activeTab === 'upload' ? 'flex' : 'none' }]}>
+                    <Text style={styles.placeholderText}>Chức năng Drone đang được hoàn thiện trên Mobile.</Text>
+                </View>
+
+                {/* DATASET TAB */}
+                <View style={[styles.tabContent, { display: activeTab === 'dataset' ? 'flex' : 'none' }]}>
+                    <DatasetReviewList userId={user?.id || 'anonymous'} />
                 </View>
             </ScrollView>
         </View>
@@ -585,139 +382,71 @@ const MonitorScreen = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F9FAFB' },
-    header: { paddingHorizontal: 20, marginBottom: 20 },
-    title: { fontSize: 28, fontFamily: 'Vietnam-Bold', color: '#111827' },
-    subtitle: { fontSize: 13, color: '#6B7280', marginTop: 2 },
-    statusBannerContainer: { paddingHorizontal: 20, marginBottom: 15 },
-    statusBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 12, borderRadius: 16, elevation: 1 },
-    dotContainer: { marginRight: 10 },
-    dot: { width: 8, height: 8, borderRadius: 4 },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
+    headerTitle: { fontSize: 24, fontFamily: 'Vietnam-Bold', color: '#111827' },
+    headerSubtitle: { fontSize: 13, color: '#6B7280', marginTop: 2 },
+    historyBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5 },
+    tabContainer: { flexDirection: 'row', paddingHorizontal: 20, gap: 8, marginBottom: 20 },
+    tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 12, backgroundColor: '#F3F4F6', gap: 4 },
+    activeTab: { backgroundColor: '#EBF5FF', borderWidth: 1, borderColor: '#BFDBFE' },
+    tabText: { fontSize: 12, fontFamily: 'Vietnam-Medium', color: '#6B7280' },
+    activeTabText: { color: '#3B82F6', fontFamily: 'Vietnam-Bold' },
+    tabContent: { paddingHorizontal: 20 },
+    statusBannerContainer: { marginBottom: 15 },
+    statusBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 10, borderRadius: 12, elevation: 1 },
+    statusDot: { width: 6, height: 6, borderRadius: 3, marginRight: 8 },
     statusInfo: { flex: 1, flexDirection: 'row', justifyContent: 'space-between' },
-    statusLabel: { fontSize: 11, color: '#6B7280' },
-    statusValue: { fontSize: 11, fontFamily: 'Vietnam-Bold' },
-    tabBar: { flexDirection: 'row', backgroundColor: '#E5E7EB66', marginHorizontal: 20, borderRadius: 12, padding: 4, marginBottom: 15 },
-    tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, gap: 6, borderRadius: 8 },
-    activeTab: { backgroundColor: '#3B82F6' },
-    tabText: { fontSize: 13, color: '#6B7280', fontFamily: 'Vietnam-SemiBold' },
-    activeTabText: { color: '#FFFFFF' },
-    content: { flex: 1, paddingHorizontal: 20 },
-    configBox: { backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 15 },
-    inputLabel: { fontSize: 11, fontFamily: 'Vietnam-Bold', color: '#6B7280', marginBottom: 6 },
-    input: { backgroundColor: '#F3F4F6', borderRadius: 10, padding: 10, fontSize: 13, marginBottom: 12 },
-    startBtn: { backgroundColor: '#3B82F6', flexDirection: 'row', padding: 12, borderRadius: 10, justifyContent: 'center', gap: 8 },
-    stopBtn: { backgroundColor: '#EF4444', flexDirection: 'row', padding: 12, borderRadius: 10, justifyContent: 'center', gap: 8 },
-    btnText: { color: '#FFF', fontFamily: 'Vietnam-Bold' },
-    monitorView: { backgroundColor: '#000', borderRadius: 16, height: 240, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
-    frame: { width: '100%', height: '100%' },
-    placeholderContainer: { position: 'absolute', alignItems: 'center', gap: 10 },
+    statusLabel: { fontSize: 10, color: '#6B7280' },
+    statusValue: { fontSize: 10, fontFamily: 'Vietnam-Bold' },
+    configBox: { backgroundColor: '#FFF', borderRadius: 16, padding: 12, marginBottom: 15, elevation: 2 },
+    inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginBottom: 10 },
+    inputContainer: { flex: 1 },
+    inputLabel: { fontSize: 10, fontFamily: 'Vietnam-Bold', color: '#6B7280', marginBottom: 4 },
+    inputWithActions: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 10, paddingRight: 4 },
+    input: { padding: 8, fontSize: 12, color: '#1F2937' },
+    saveUrlBtn: { padding: 8, borderRadius: 8, backgroundColor: '#FFF', elevation: 1, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 2 },
+    autoScanMiniContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#EFF6FF', paddingHorizontal: 6, borderRadius: 10, height: 36, borderWidth: 1, borderColor: '#DBEAFE' }, 
+    infoBtn: { padding: 4, marginRight: 2 },
+    startBtn: { backgroundColor: '#3B82F6', flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 10, justifyContent: 'center', gap: 6 },
+    stopBtn: { backgroundColor: '#EF4444', flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 10, justifyContent: 'center', gap: 6 },
+    btnText: { color: '#FFF', fontFamily: 'Vietnam-Bold', fontSize: 13 },
+    monitorView: { backgroundColor: '#000', borderRadius: 16, height: 220, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
+    placeholder: { alignItems: 'center', gap: 8 },
     placeholderText: { color: '#6B7280', fontSize: 12 },
-    liveOverlayBadge: { position: 'absolute', top: 12, left: 12 },
-    liveIndicator: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#00000080', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, gap: 5 },
-    liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#EF4444' },
-    liveLabel: { color: '#FFF', fontSize: 9, fontFamily: 'Inter-Bold' },
-    fullscreenBtn: { position: 'absolute', bottom: 12, right: 12, backgroundColor: '#00000080', padding: 8, borderRadius: 20 },
-    logSection: { marginTop: 20, paddingBottom: 40 },
-    logHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-    logTitle: { fontSize: 15, fontFamily: 'Inter-Bold' },
-    logItem: { 
-        borderLeftWidth: 2,
-        borderLeftColor: '#E5E7EB',
-        paddingLeft: 12,
-        paddingVertical: 10,
-        marginBottom: 8,
-    },
-    logMetaRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 4,
-    },
-    typeBadge: {
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 4,
-    },
-    badgeAlert: { backgroundColor: '#FEE2E2' },
-    badgeInfo: { backgroundColor: '#F3F4F6' },
-    badgeText: { fontSize: 8, fontFamily: 'Inter-Bold', color: '#4B5563' },
-    logTime: { fontSize: 10, color: '#9CA3AF' },
-    emptyLogsText: {
-        color: '#9CA3AF',
-        fontSize: 12,
-        marginTop: 10,
-        fontStyle: 'italic',
-        textAlign: 'center'
-    },
-    disclaimerSection: {
-        paddingHorizontal: 10,
-        paddingBottom: 40,
-        marginTop: 10,
-    },
-    disclaimerCard: {
-        backgroundColor: '#FFFBEB',
-        borderRadius: 16,
-        padding: 16,
-        borderWidth: 1,
-        borderColor: '#FEF3C7',
-    },
-    disclaimerHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        marginBottom: 8,
-    },
-    warningCircle: {
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        backgroundColor: '#FEF3C7',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    disclaimerTitle: {
-        fontSize: 10,
-        fontFamily: 'Vietnam-Bold',
-        color: '#92400E',
-        letterSpacing: 0.5,
-    },
-    disclaimerBody: {
-        fontSize: 11,
-        color: '#92400E',
-        lineHeight: 16,
-        fontFamily: 'Vietnam-Regular',
-        opacity: 0.8,
-    },
-    logMsg: { fontSize: 13, color: '#4B5563', marginTop: 2, fontFamily: 'Vietnam-Regular' },
-    mockUpload: { padding: 30, borderWidth: 2, borderColor: '#E5E7EB', borderStyle: 'dashed', borderRadius: 16, alignItems: 'center', gap: 10 },
-    resultCard: { backgroundColor: '#FFF', borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
-    resultHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-    resultStatus: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#F0F9FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-    successDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#3B82F6' },
-    resultLabel: { fontSize: 10, fontFamily: 'Vietnam-Bold', color: '#3B82F6', letterSpacing: 0.5 },
-    mainDownloadBtn: { backgroundColor: '#3B82F6', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10, shadowColor: '#3B82F6', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 3 },
-    mainDownloadText: { color: '#FFF', fontSize: 12, fontFamily: 'Vietnam-Bold' },
-    resultSummary: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', borderRadius: 12, padding: 12 },
-    summaryItem: { flex: 1, alignItems: 'center' },
-    summaryValue: { fontSize: 20, fontFamily: 'Vietnam-Bold', color: '#111827' },
-    summaryLabel: { fontSize: 11, color: '#6B7280', fontFamily: 'Vietnam-Medium' },
-    summaryDivider: { width: 1, height: 30, backgroundColor: '#E5E7EB', marginHorizontal: 10 },
-    summaryAction: { flex: 1.5, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
-    reuploadText: { color: '#3B82F6', fontSize: 13, fontFamily: 'Vietnam-Bold' },
-
-    mobileVideoContainer: { height: 200, backgroundColor: '#000', borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
-    mobileVideo: { width: '100%', height: '100%' },
-
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-    bottomSheet: { backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 40 },
-    sheetHandle: { width: 40, height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
-    sheetTitle: { fontSize: 18, fontFamily: 'Vietnam-Bold', color: '#111827', marginBottom: 20, textAlign: 'center' },
-    sheetItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-    sheetIconBox: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-    sheetItemText: { flex: 1 },
-    sheetItemTitle: { fontSize: 15, fontFamily: 'Vietnam-Bold', color: '#374151' },
-    sheetItemDesc: { fontSize: 12, color: '#6B7280', fontFamily: 'Vietnam-Regular', marginTop: 2 },
-    closeSheetBtn: { marginTop: 20, paddingVertical: 15, backgroundColor: '#F3F4F6', borderRadius: 14, alignItems: 'center' },
-    closeSheetText: { fontSize: 15, fontFamily: 'Vietnam-Bold', color: '#4B5563' }
+    liveWrapper: { width: '100%', height: '100%' },
+    liveFrame: { width: '100%', height: '100%' },
+    liveBadge: { position: 'absolute', top: 10, left: 10, backgroundColor: 'rgba(239, 68, 68, 0.9)', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, gap: 4 },
+    liveDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#FFF' },
+    liveLabel: { color: '#FFF', fontSize: 9, fontFamily: 'Vietnam-Bold' },
+    autoScanBadge: { position: 'absolute', top: 10, right: 10, backgroundColor: 'rgba(59, 130, 246, 0.9)', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, gap: 4 },
+    autoScanBadgeText: { color: '#FFF', fontSize: 9, fontFamily: 'Vietnam-Bold' },
+    fullscreenBtn: { position: 'absolute', bottom: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.5)', padding: 6, borderRadius: 8 },
+    logsSection: { marginTop: 15 },
+    sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+    logTitle: { fontSize: 14, fontFamily: 'Vietnam-Bold', color: '#374151' },
+    emptyLogs: { backgroundColor: '#FFF', borderRadius: 12, padding: 20, alignItems: 'center', borderStyle: 'dashed', borderWidth: 1, borderColor: '#D1D5DB' },
+    emptyText: { color: '#9CA3AF', fontSize: 12 },
+    logItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 10, borderRadius: 10, marginBottom: 8, gap: 10 },
+    logContent: { flex: 1 },
+    logText: { fontSize: 12, color: '#374151', fontFamily: 'Vietnam-Medium' },
+    logTarget: { fontFamily: 'Vietnam-Bold', color: '#EF4444' },
+    logTime: { fontSize: 10, color: '#9CA3AF', marginTop: 2 },
+    // Dataset Styles
+    emptyDataset: { padding: 40, alignItems: 'center', gap: 10 },
+    datasetGrid: { gap: 15, marginTop: 10 },
+    datasetCard: { backgroundColor: '#FFF', borderRadius: 16, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5 },
+    datasetImgContainer: { width: '100%', height: 160, backgroundColor: '#F3F4F6' },
+    datasetImg: { width: '100%', height: '100%' },
+    datasetBoundingBox: { position: 'absolute', borderWidth: 2, borderColor: '#EF4444', borderRadius: 4, borderStyle: 'dashed' },
+    datasetInfo: { padding: 12 },
+    datasetDisease: { fontSize: 14, fontFamily: 'Vietnam-Bold', color: '#1F2937' },
+    datasetMetaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+    datasetMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    datasetTime: { fontSize: 11, color: '#9CA3AF' },
+    datasetActions: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#F3F4F6' },
+    actionBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
+    confirmBtn: { backgroundColor: '#10B981' },
+    rejectBtn: { backgroundColor: '#EF4444' }
 });
 
 export default MonitorScreen;

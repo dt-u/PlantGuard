@@ -10,6 +10,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
 import { useHistorySync } from '../hooks/useHistorySync';
+import HeaderBell from '../components/HeaderBell';
+import ScreenHeader from '../components/ScreenHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -154,11 +156,12 @@ const DoctorScreen = ({ navigation }) => {
     };
 
     return (
-        <ScrollView contentContainerStyle={[styles.container, { paddingTop: Math.max(insets.top + 20, 60) }]} showsVerticalScrollIndicator={false}>
-            <View style={[styles.header, { marginBottom: 25 }]}>
-                <Text style={styles.title}>{t('doctor.title')}</Text>
-                <Text style={styles.subtitle}>{t('doctor.subtitle')}</Text>
-            </View>
+        <View style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
+            <ScreenHeader 
+                title={t('doctor.title')}
+                subtitle={t('doctor.subtitle')}
+            />
+            <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
             {!image && !loading && (
                 <View style={styles.uploadSection}>
@@ -241,7 +244,8 @@ const DoctorScreen = ({ navigation }) => {
                             )}
                         </View>
                         <TreatmentCard 
-                            treatments={translateTreatments(result.disease.name, result.disease.treatments)} 
+                            treatments={translateTreatments(result.disease.name, result.disease.treatments)}
+                            diseaseKey={result.disease.name}
                         />
                     </View>
 
@@ -255,14 +259,23 @@ const DoctorScreen = ({ navigation }) => {
                 </View>
             )}
         </ScrollView>
+    </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: { padding: 20, paddingBottom: 40, backgroundColor: '#F3F4F6' },
-    header: { marginBottom: 25 },
-    title: { fontSize: 28, fontFamily: 'Vietnam-Bold', color: '#111827', letterSpacing: -0.5 },
-    subtitle: { fontSize: 13, fontFamily: 'Vietnam-Regular', color: '#6B7280', marginTop: 6, lineHeight: 20 },
+    header: { 
+        paddingBottom: 15,
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        alignItems: 'center' 
+    },
+    headerTitleContainer: {
+        flex: 1,
+    },
+    title: { fontSize: 24, fontFamily: 'Vietnam-Bold', color: '#111827', letterSpacing: -0.5 },
+    subtitle: { fontSize: 13, fontFamily: 'Vietnam-Regular', color: '#6B7280', marginTop: 2, lineHeight: 20 },
     uploadSection: { marginTop: 20, gap: 16 },
     mainUploadBtn: { backgroundColor: '#2E7D32', borderRadius: 28, padding: 30, alignItems: 'center', shadowColor: '#2E7D32', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 10 },
     iconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },

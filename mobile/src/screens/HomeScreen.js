@@ -1,9 +1,13 @@
-import React from 'react';
-import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar } from 'react-native';
-import { Leaf, Eye, ArrowRight, Sprout, LogIn } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, Animated } from 'react-native';
+import { Leaf, Eye, ArrowRight, Sprout, LogIn, Database, Sparkles } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import HeaderBell from '../components/HeaderBell';
+import ScreenHeader from '../components/ScreenHeader';
+import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 
 const { width } = Dimensions.get('window');
 
@@ -11,6 +15,15 @@ const HomeScreen = ({ navigation }) => {
     const { user, isAuthenticated } = useAuth();
     const { t } = useLanguage();
     const insets = useSafeAreaInsets();
+    const [pendingCount, setPendingCount] = useState(0);
+
+    useEffect(() => {
+        if (isAuthenticated()) {
+            axios.get(`${API_BASE_URL}/api/monitor/pending-captures?user_id=${user.id}`)
+                .then(res => setPendingCount(res.data.length))
+                .catch(err => console.log("Error fetching pending:", err));
+        }
+    }, [isAuthenticated, user]);
 
     const handleProfilePress = () => {
         if (isAuthenticated()) {
@@ -22,32 +35,34 @@ const HomeScreen = ({ navigation }) => {
 
     return (
         <View style={[styles.container, { backgroundColor: '#F8FAFC' }]}>
-            {/* Header / Profile */}
-            <View style={[styles.header, { paddingTop: insets.top + 10, paddingBottom: 15 }]}>
-                <View style={styles.logoContainer}>
-                    <Sprout color="#2E7D32" size={28} />
-                    <Text style={styles.logoText}>PlantGuard</Text>
-                </View>
-                
-                <TouchableOpacity 
-                    onPress={handleProfilePress}
-                    style={styles.profileButton}
-                >
-                    {user ? (
-                        <View style={styles.userBadge}>
-                            <View style={styles.avatarMini}>
-                                <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
-                            </View>
-                            <Text style={styles.userNameMini} numberOfLines={1}>{user.name}</Text>
-                        </View>
-                    ) : (
-                        <View style={styles.loginBadge}>
-                            <LogIn color="#2E7D32" size={16} />
-                            <Text style={styles.loginTextMini}>{t('common.login')}</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-            </View>
+            <ScreenHeader 
+                paddingHorizontal={20}
+                leftElement={
+                    <View style={styles.logoContainer}>
+                        <Sprout color="#2E7D32" size={28} />
+                        <Text style={styles.logoText}>PlantGuard</Text>
+                    </View>
+                }
+                rightElement={
+                    <View style={styles.headerRight}>
+                        <HeaderBell style={{ marginRight: 8 }} />
+                        <TouchableOpacity 
+                            onPress={handleProfilePress}
+                            style={styles.profileButton}
+                        >
+                            {user ? (
+                                <View style={styles.avatarMini}>
+                                    <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
+                                </View>
+                            ) : (
+                                <View style={styles.guestAvatar}>
+                                    <LogIn color="#2E7D32" size={14} />
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                }
+            />
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {/* Hero Section */}
@@ -61,6 +76,31 @@ const HomeScreen = ({ navigation }) => {
                         {t('home.desc')}
                     </Text>
                 </View>
+
+                {/* Active Learning Banner */}
+                {pendingCount > 0 && (
+                    <TouchableOpacity 
+                        style={styles.activeLearningBanner}
+                        onPress={() => navigation.navigate('Giám sát', { screen: 'Monitor', params: { tab: 'dataset' } })}
+                    >
+                        <LinearGradient
+                            colors={['#3B82F6', '#2563EB']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.bannerGradient}
+                        >
+                            <View style={styles.bannerIconBox}>
+                                <Sparkles color="#3B82F6" size={20} />
+                            </View>
+                            <View style={styles.bannerContent}>
+                                <Text style={styles.bannerTitle}>{t('home.learning_title')}</Text>
+                                <Text style={styles.bannerDesc}>{t('home.learning_desc', { count: pendingCount })}</Text>
+                            </View>
+                            <ArrowRight color="#FFFFFF" size={20} />
+                        </LinearGradient>
+                    </TouchableOpacity>
+                )}
+
 
                 {/* Options List - Stacked for better readability */}
                 <View style={styles.menuList}>
@@ -144,6 +184,11 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 5,
         elevation: 2,
+    },
+
+    headerRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     userBadge: {
         flexDirection: 'row',
@@ -275,6 +320,45 @@ const styles = StyleSheet.create({
         fontFamily: 'Vietnam-Medium',
         color: '#CBD5E1',
         marginTop: 40,
+    },
+    activeLearningBanner: {
+        marginHorizontal: 24,
+        marginTop: 20,
+        borderRadius: 20,
+        overflow: 'hidden',
+        elevation: 4,
+        shadowColor: '#3B82F6',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+    },
+    bannerGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        gap: 12,
+    },
+    bannerIconBox: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    bannerContent: {
+        flex: 1,
+    },
+    bannerTitle: {
+        fontSize: 14,
+        fontFamily: 'Vietnam-Bold',
+        color: '#FFFFFF',
+    },
+    bannerDesc: {
+        fontSize: 11,
+        fontFamily: 'Vietnam-Medium',
+        color: 'rgba(255, 255, 255, 0.8)',
+        marginTop: 2,
     }
 });
 

@@ -4,7 +4,12 @@
     "doctor": "Doctor",
     "login": "Login",
     "history": "Diagnosis History",
+    "routines": "Care Routines",
     "logout": "Logout"
+  },
+  "routines": {
+    "title": "Care Routines",
+    "subtitle": "Monitor and manage the treatment process for your plants"
   },
   "home": {
     "title": "Smart Agriculture",
@@ -195,8 +200,19 @@
     "or_click": "or click to select file"
   },
   "logs": {
-    "detected_at": "At {{time}} detected risk: [{{label}}]",
-    "live_alert": "Object detected: [{{label}}] - Confidence: {{confidence}}%"
+    "detected_at": "At {{time}} detected diseased area at [{{location}}]",
+    "live_alert": "Alert: Diseased area at {{location}} - {{confidence}}%"
+  },
+  "monitor_location": {
+    "center": "Center",
+    "top_left": "Top Left",
+    "top_right": "Top Right",
+    "bottom_left": "Bottom Left",
+    "bottom_right": "Bottom Right",
+    "top_center": "Top Center",
+    "bottom_center": "Bottom Center",
+    "left_center": "Left",
+    "right_center": "Right"
   },
   "diseases": {
     "Apple Healthy": {
