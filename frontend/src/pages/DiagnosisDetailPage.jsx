@@ -323,23 +323,10 @@ const DiagnosisDetailPage = () => {
                                                      productName !== 'Ánh sáng tự nhiên' && (
                                                         <button
                                                             onClick={() => handleBuyAction(treatment)}
-                                                            style={{ 
-                                                                backgroundColor: '#ee4d2d', 
-                                                                color: 'white', 
-                                                                padding: '8px 16px', 
-                                                                borderRadius: '8px',
-                                                                fontSize: '11px',
-                                                                fontWeight: 'bold',
-                                                                border: 'none',
-                                                                cursor: 'pointer',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '8px',
-                                                                transition: 'all 0.2s ease',
-                                                                justifyContent: 'center'
-                                                            }}
+                                                            className="w-full flex items-center justify-center gap-2 bg-[#2980B9] hover:bg-[#3498db] text-white py-2.5 px-4 rounded-lg font-bold text-sm transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]"
                                                         >
-                                                            🛒 Mua ngay trên Shopee
+                                                            <ShoppingBag size={16} />
+                                                            Mua ngay
                                                         </button>
                                                     )}
                                                 </div>

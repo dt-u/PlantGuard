@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertCircle, CheckCircle2, XCircle, Calendar as CalendarIcon, Leaf, Info, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, XCircle, Calendar as CalendarIcon, Leaf, Info, X, ShoppingBag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -178,32 +178,10 @@ const TreatmentCard = ({ treatments = [], onBuyAction, diseaseName = "Unknown" }
                                  onBuyAction && (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); onBuyAction(treatment); }}
-                                        style={{ 
-                                            backgroundColor: '#ee4d2d', 
-                                            color: 'white', 
-                                            padding: '10px 16px', 
-                                            borderRadius: '8px',
-                                            fontSize: '13px',
-                                            fontWeight: 'bold',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px',
-                                            transition: 'all 0.2s ease',
-                                            width: '100%',
-                                            justifyContent: 'center'
-                                        }}
-                                        onMouseOver={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#d6381c';
-                                            e.currentTarget.style.transform = 'translateY(-1px)';
-                                        }}
-                                        onMouseOut={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#ee4d2d';
-                                            e.currentTarget.style.transform = 'translateY(0)';
-                                        }}
+                                        className="w-full flex items-center justify-center gap-2 bg-[#2980B9] hover:bg-[#3498db] text-white py-2.5 px-4 rounded-lg font-bold text-sm transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]"
                                     >
-                                        🛒 Mua ngay trên Shopee
+                                        <ShoppingBag size={16} />
+                                        Mua ngay
                                     </button>
                                 )}
                             </div>

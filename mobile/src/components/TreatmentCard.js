@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager, Alert, Modal, ScrollView, TextInput, Switch, Linking } from 'react-native';
 import * as Calendar from 'expo-calendar';
-import { AlertCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Beaker, ShieldCheck, Zap, Info, Calendar as CalendarIcon, Leaf, Sprout } from 'lucide-react-native';
+import { AlertCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Beaker, ShieldCheck, Zap, Info, Calendar as CalendarIcon, Leaf, Sprout, ShoppingBag } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -281,11 +281,14 @@ const TreatmentCard = ({ treatments = [], diseaseKey, onBuyPress, imageUrl }) =>
                                          productName !== 'Ánh sáng tự nhiên' && 
                                          onBuyPress && (
                                             <TouchableOpacity 
-                                                style={styles.buyButton}
+                                                style={[styles.buyButton, { backgroundColor: '#2980B9' }]}
                                                 onPress={() => onBuyPress(item)}
                                                 activeOpacity={0.8}
                                             >
-                                                <Text style={styles.buyButtonText}>🛒 Mua ngay trên Shopee</Text>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                                    <ShoppingBag size={18} color="white" />
+                                                    <Text style={styles.buyButtonText}>Mua ngay</Text>
+                                                </View>
                                             </TouchableOpacity>
                                         )}
                                     </View>
