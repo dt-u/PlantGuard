@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Calendar, User, Activity, AlertCircle, Leaf, Clock, CalendarPlus } from 'lucide-react';
+import { Calendar, User, Activity, AlertCircle, Leaf, Clock, CalendarPlus, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useDiseaseTranslator } from '../hooks/useDiseaseTranslator';
