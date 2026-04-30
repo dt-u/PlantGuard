@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Clock, AlertCircle, Leaf, Trash2, Filter, Search, Eye } from 'lucide-react';
@@ -13,7 +13,7 @@ const HistoryPage = () => {
     const { t, i18n } = useTranslation();
     const { translateDiseaseName, translateDescription } = useDiseaseTranslator();
     const navigate = useNavigate();
-    const { isAuthenticated, login, getUserId } = useAuth();
+    const { isAuthenticated, getUserId } = useAuth();
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -22,30 +22,7 @@ const HistoryPage = () => {
     const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
     const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, recordId: null });
 
-    // Handle WebSocket sync events
-    useHistorySync(
-        () => {
-            // Re-fetch on any remote save
-            fetchHistory();
-        },
-        (deletedId) => {
-            // Remove deleted item from list locally
-            setHistory(prev => prev.filter(item => item.id !== deletedId));
-            setPagination(prev => ({ ...prev, total: Math.max(0, prev.total - 1) }));
-        }
-    );
-
-    useEffect(() => {
-        // Check authentication before fetching history
-        if (!isAuthenticated()) {
-            // Redirect to home page instead of showing dialog
-            navigate('/');
-            return;
-        }
-        fetchHistory();
-    }, [pagination.page, filter, isAuthenticated, navigate]);
-
-    const fetchHistory = async () => {
+    const fetchHistory = useCallback(async () => {
         if (!isAuthenticated()) return;
         
         try {
@@ -66,7 +43,34 @@ const HistoryPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [isAuthenticated, getUserId, pagination.page, pagination.limit, t]);
+
+    // Handle WebSocket sync events
+    const handleRemoteSave = useCallback(() => {
+        // Re-fetch on any remote save
+        fetchHistory();
+    }, [fetchHistory]);
+
+    const handleRemoteDelete = useCallback((deletedId) => {
+        // Remove deleted item from list locally
+        setHistory(prev => prev.filter(item => item.id !== deletedId));
+        setPagination(prev => ({ ...prev, total: Math.max(0, prev.total - 1) }));
+    }, []);
+
+    useHistorySync(
+        handleRemoteSave,
+        handleRemoteDelete
+    );
+
+    useEffect(() => {
+        // Check authentication before fetching history
+        if (!isAuthenticated()) {
+            // Redirect to home page instead of showing dialog
+            navigate('/');
+            return;
+        }
+        fetchHistory();
+    }, [pagination.page, filter, isAuthenticated, navigate, fetchHistory]);
 
     const deleteRecord = async (id) => {
         setDeleteDialog({ isOpen: true, recordId: id });

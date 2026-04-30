@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import FileUpload from '../components/FileUpload';
 import Loader from '../components/Loader';
@@ -42,14 +42,16 @@ const DoctorPage = () => {
     const [image, setImage] = useState(null);
 
     // Sync remote deletes (e.g. from History tab)
+    const handleRemoteDelete = useCallback((deletedId) => {
+        if (savedId === deletedId) {
+            setSavedToHistory(false);
+            setSavedId(null);
+        }
+    }, [savedId]);
+
     useHistorySync(
         null, // ignore saves
-        (deletedId) => {
-            if (savedId === deletedId) {
-                setSavedToHistory(false);
-                setSavedId(null);
-            }
-        }
+        handleRemoteDelete
     );
 
     // Effect to trigger save after login if pending

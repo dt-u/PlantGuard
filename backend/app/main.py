@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from .database import seed_db
+from .seed_treatments import seed_treatments
 from .routes import monitor, doctor, admin, auth, history, admin_affiliate, treatments
 from .websocket import manager
 import os
@@ -58,6 +59,10 @@ app.mount("/results", StaticFiles(directory=RESULTS_DIR), name="results")
 @app.on_event("startup")
 async def startup_event():
     await seed_db()
+    await seed_treatments()
+    # Thêm logic tự động cập nhật link affiliate nếu cần
+    from .seed_treatments import update_affiliate_links
+    await update_affiliate_links()
 
 @app.get("/")
 async def root():

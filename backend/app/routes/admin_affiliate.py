@@ -18,6 +18,7 @@ async def get_all_treatments():
         treatments = []
         cursor = treatments_collection.find({})
         async for document in cursor:
+            document["_id"] = str(document["_id"])
             treatments.append(Treatment(**document))
         return treatments
     except Exception as e:
@@ -27,10 +28,14 @@ async def get_all_treatments():
 async def get_treatment_by_id(treatment_id: str):
     """Get treatment by ID for affiliate management"""
     try:
-        treatment = await treatments_collection.find_one({"id": treatment_id})
+        if not ObjectId.is_valid(treatment_id):
+            raise HTTPException(status_code=400, detail="Invalid treatment ID")
+            
+        treatment = await treatments_collection.find_one({"_id": ObjectId(treatment_id)})
         if not treatment:
             raise HTTPException(status_code=404, detail="Treatment not found")
         
+        treatment["_id"] = str(treatment["_id"])
         return Treatment(**treatment)
     except HTTPException:
         raise
@@ -62,8 +67,11 @@ async def create_treatment(treatment: TreatmentCreate):
 async def update_treatment(treatment_id: str, treatment_update: TreatmentUpdate):
     """Update treatment with affiliate link"""
     try:
+        if not ObjectId.is_valid(treatment_id):
+            raise HTTPException(status_code=400, detail="Invalid treatment ID")
+            
         # Check if treatment exists
-        existing = await treatments_collection.find_one({"id": treatment_id})
+        existing = await treatments_collection.find_one({"_id": ObjectId(treatment_id)})
         if not existing:
             raise HTTPException(status_code=404, detail="Treatment not found")
         
@@ -73,12 +81,13 @@ async def update_treatment(treatment_id: str, treatment_update: TreatmentUpdate)
         
         # Update in database
         await treatments_collection.update_one(
-            {"id": treatment_id},
+            {"_id": ObjectId(treatment_id)},
             {"$set": update_data}
         )
         
         # Retrieve updated document
-        updated_treatment = await treatments_collection.find_one({"id": treatment_id})
+        updated_treatment = await treatments_collection.find_one({"_id": ObjectId(treatment_id)})
+        updated_treatment["_id"] = str(updated_treatment["_id"])
         
         return Treatment(**updated_treatment)
     except HTTPException:
@@ -90,13 +99,16 @@ async def update_treatment(treatment_id: str, treatment_update: TreatmentUpdate)
 async def delete_treatment(treatment_id: str):
     """Delete treatment"""
     try:
+        if not ObjectId.is_valid(treatment_id):
+            raise HTTPException(status_code=400, detail="Invalid treatment ID")
+            
         # Check if treatment exists
-        existing = await treatments_collection.find_one({"id": treatment_id})
+        existing = await treatments_collection.find_one({"_id": ObjectId(treatment_id)})
         if not existing:
             raise HTTPException(status_code=404, detail="Treatment not found")
         
         # Delete from database
-        result = await treatments_collection.delete_one({"id": treatment_id})
+        result = await treatments_collection.delete_one({"_id": ObjectId(treatment_id)})
         
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Treatment not found")
@@ -111,8 +123,11 @@ async def delete_treatment(treatment_id: str):
 async def update_affiliate_link(treatment_id: str, affiliate_data: dict):
     """Update affiliate link for a treatment"""
     try:
+        if not ObjectId.is_valid(treatment_id):
+            raise HTTPException(status_code=400, detail="Invalid treatment ID")
+            
         # Check if treatment exists
-        existing = await treatments_collection.find_one({"id": treatment_id})
+        existing = await treatments_collection.find_one({"_id": ObjectId(treatment_id)})
         if not existing:
             raise HTTPException(status_code=404, detail="Treatment not found")
         
@@ -129,12 +144,13 @@ async def update_affiliate_link(treatment_id: str, affiliate_data: dict):
         }
         
         await treatments_collection.update_one(
-            {"id": treatment_id},
+            {"_id": ObjectId(treatment_id)},
             {"$set": update_data}
         )
         
         # Retrieve updated document
-        updated_treatment = await treatments_collection.find_one({"id": treatment_id})
+        updated_treatment = await treatments_collection.find_one({"_id": ObjectId(treatment_id)})
+        updated_treatment["_id"] = str(updated_treatment["_id"])
         
         return Treatment(**updated_treatment)
     except HTTPException:
@@ -149,6 +165,7 @@ async def get_treatments_by_disease(disease_id: str):
         treatments = []
         cursor = treatments_collection.find({"disease_id": disease_id})
         async for document in cursor:
+            document["_id"] = str(document["_id"])
             treatments.append(Treatment(**document))
         return treatments
     except Exception as e:

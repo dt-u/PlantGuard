@@ -15,6 +15,7 @@ async def get_all_treatments_admin():
         treatments = []
         cursor = treatments_collection.find({})
         async for document in cursor:
+            document["_id"] = str(document["_id"])
             treatments.append(Treatment(**document))
         return treatments
     except Exception as e:
@@ -36,6 +37,7 @@ async def create_treatment_admin(treatment: TreatmentCreate):
         
         # Return created treatment
         created_treatment = await treatments_collection.find_one({"_id": result.inserted_id})
+        created_treatment["_id"] = str(created_treatment["_id"])
         return Treatment(**created_treatment)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating treatment: {str(e)}")

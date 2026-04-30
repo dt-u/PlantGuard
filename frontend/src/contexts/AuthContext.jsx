@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext();
 
@@ -53,13 +53,13 @@ export const AuthProvider = ({ children }) => {
 
     const closeRegister = () => setIsRegisterOpen(false);
 
-    const isAuthenticated = () => {
+    const isAuthenticated = useCallback(() => {
         return user !== null;
-    };
+    }, [user]);
 
-    const getUserId = () => {
+    const getUserId = useCallback(() => {
         return user?.id || 'anonymous';
-    };
+    }, [user]);
 
     const value = {
         user,

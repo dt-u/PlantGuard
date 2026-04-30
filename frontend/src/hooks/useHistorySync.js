@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 export const useHistorySync = (onSave, onDelete) => {
@@ -6,13 +6,35 @@ export const useHistorySync = (onSave, onDelete) => {
     const wsRef = useRef(null);
     const reconnectTimeoutRef = useRef(null);
     const reconnectAttemptsRef = useRef(0);
+    const onSaveRef = useRef(onSave);
+    const onDeleteRef = useRef(onDelete);
+    const lastUserIdRef = useRef(null);
+    
     const maxReconnectAttempts = 5;
     const reconnectDelay = 3000; // 3 seconds
 
-    const connectWebSocket = () => {
-        if (!isAuthenticated()) return;
+    // Update refs when callbacks change
+    useEffect(() => {
+        onSaveRef.current = onSave;
+        onDeleteRef.current = onDelete;
+    }, [onSave, onDelete]);
+
+    const connectWebSocket = useCallback(() => {
+        if (!isAuthenticated()) {
+            if (wsRef.current) wsRef.current.close(1000, 'User logged out');
+            return;
+        }
 
         const userId = getUserId();
+        
+        // If already connecting or open for the SAME user, don't restart
+        if (wsRef.current && 
+            (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING) &&
+            lastUserIdRef.current === userId) {
+            return;
+        }
+
+        lastUserIdRef.current = userId;
         
         // Clear any existing reconnection timeout
         if (reconnectTimeoutRef.current) {
@@ -20,8 +42,8 @@ export const useHistorySync = (onSave, onDelete) => {
         }
 
         // Close existing connection if any
-        if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
-            wsRef.current.close();
+        if (wsRef.current) {
+            wsRef.current.close(1000, 'Reconnecting for new session');
         }
 
         // Create new WebSocket connection
@@ -39,10 +61,10 @@ export const useHistorySync = (onSave, onDelete) => {
             try {
                 const data = JSON.parse(event.data);
                 if (data.action === 'history_updated') {
-                    if (data.type === 'save' && onSave) {
-                        onSave(data.record_id);
-                    } else if (data.type === 'delete' && onDelete) {
-                        onDelete(data.record_id);
+                    if (data.type === 'save' && onSaveRef.current) {
+                        onSaveRef.current(data.record_id);
+                    } else if (data.type === 'delete' && onDeleteRef.current) {
+                        onDeleteRef.current(data.record_id);
                     }
                 }
             } catch (err) {
@@ -53,44 +75,50 @@ export const useHistorySync = (onSave, onDelete) => {
         wsRef.current.onclose = (event) => {
             console.log(`❌ WebSocket disconnected. Code: ${event.code}, Reason: ${event.reason}`);
             
-            // Attempt to reconnect if not explicitly closed and user is still authenticated
-            if (event.code !== 1000 && isAuthenticated && reconnectAttemptsRef.current < maxReconnectAttempts) {
+            // Only reconnect if it was an abnormal closure and user is still logged in
+            if (event.code !== 1000 && isAuthenticated() && reconnectAttemptsRef.current < maxReconnectAttempts) {
                 reconnectAttemptsRef.current++;
                 console.log(`🔄 Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts}) in ${reconnectDelay/1000} seconds...`);
                 
                 reconnectTimeoutRef.current = setTimeout(() => {
                     connectWebSocket();
                 }, reconnectDelay);
-            } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-                console.log('❌ Max reconnection attempts reached. Stopping reconnection attempts.');
             }
         };
 
         wsRef.current.onerror = (error) => {
             console.error('❌ WebSocket error:', error);
         };
-    };
+    }, [isAuthenticated, getUserId]);
 
     useEffect(() => {
-        if (isAuthenticated()) {
+        const isAuth = isAuthenticated();
+        const userId = getUserId();
+
+        if (isAuth) {
             connectWebSocket();
+        } else {
+            if (wsRef.current) {
+                wsRef.current.close(1000, 'User not authenticated');
+                wsRef.current = null;
+            }
         }
 
         return () => {
-            // Cleanup on unmount
+            // No-op cleanup here, we handle it in connectWebSocket and the final cleanup
+        };
+    }, [user?.id, isAuthenticated, getUserId, connectWebSocket]);
+
+    // Final cleanup on unmount
+    useEffect(() => {
+        return () => {
             if (reconnectTimeoutRef.current) {
                 clearTimeout(reconnectTimeoutRef.current);
             }
-            if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
+            if (wsRef.current) {
                 wsRef.current.close(1000, 'Component unmounted');
+                wsRef.current = null;
             }
         };
-    }, [user, isAuthenticated, onSave, onDelete]);
-
-    // Reconnect when user changes
-    useEffect(() => {
-        if (isAuthenticated()) {
-            connectWebSocket();
-        }
-    }, [getUserId()]);
+    }, []);
 };

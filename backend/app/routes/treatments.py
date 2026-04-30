@@ -18,6 +18,8 @@ async def get_all_treatments():
         treatments = []
         cursor = treatments_collection.find({})
         async for document in cursor:
+            # Convert _id to string for the model
+            document["_id"] = str(document["_id"])
             treatments.append(Treatment(**document))
         return treatments
     except Exception as e:
@@ -30,6 +32,8 @@ async def get_treatments_by_disease_id(disease_id: str):
         treatments_data = await get_treatments_by_disease(disease_id)
         treatments = []
         for document in treatments_data:
+            # Convert _id to string
+            document["_id"] = str(document["_id"])
             treatments.append(Treatment(**document))
         return treatments
     except Exception as e:
