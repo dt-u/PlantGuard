@@ -33,22 +33,16 @@ const treatmentService = {
       // Get product name from correct field - treatment object has product_name
       const productName = treatment.product_name || treatment.product;
       
-      console.log('Handling purchase for treatment:', treatment);
-      console.log('Product name:', productName);
-      
       let targetUrl = null;
 
       // Priority 1: Use affiliate URL from treatment object (direct product link)
       if (treatment.affiliate_url) {
-        console.log('Using affiliate URL from treatment:', treatment.affiliate_url);
         targetUrl = treatment.affiliate_url;
       } else {
         // Priority 2: Try to fetch affiliate link by product name from database
         if (productName && productName !== 'undefined') {
-          console.log('Fetching affiliate link for product:', productName);
           const affiliateData = await treatmentService.getAffiliateLink(productName);
           if (affiliateData && affiliateData.affiliate_url) {
-            console.log('Using fetched affiliate URL:', affiliateData.affiliate_url);
             targetUrl = affiliateData.affiliate_url;
           }
         }
@@ -56,7 +50,6 @@ const treatmentService = {
 
       // Priority 3: Fallback to search if no affiliate link available
       if (!targetUrl) {
-        console.log('No affiliate link found, using search fallback');
         const keyword = treatment.search_fallback_keyword || productName;
         targetUrl = `https://shopee.vn/search?keyword=${encodeURIComponent(keyword)}`;
       }
@@ -67,14 +60,11 @@ const treatmentService = {
       if (supported) {
         await Linking.openURL(targetUrl);
       } else {
-        console.log("Đéo mở được link: " + targetUrl);
         // Ultimate fallback - try simple search
         const fallbackUrl = `https://shopee.vn/search?keyword=${encodeURIComponent(productName)}`;
         const fallbackSupported = await Linking.canOpenURL(fallbackUrl);
         if (fallbackSupported) {
           await Linking.openURL(fallbackUrl);
-        } else {
-          console.log("Đéo mở được link fallback: " + fallbackUrl);
         }
       }
     } catch (error) {
@@ -86,11 +76,9 @@ const treatmentService = {
         const fallbackSupported = await Linking.canOpenURL(fallbackUrl);
         if (fallbackSupported) {
           await Linking.openURL(fallbackUrl);
-        } else {
-          console.log("Đéo mở được link fallback: " + fallbackUrl);
         }
       } catch (fallbackError) {
-        console.log("Đéo mở được link fallback: " + fallbackError);
+        // Silently fail if even fallback fails
       }
     }
   }

@@ -97,7 +97,6 @@ const DoctorPage = () => {
         const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
         try {
-            console.log('📤 Starting image upload...');
             const response = await axios.post('http://127.0.0.1:8000/api/doctor/diagnose', formData, {
                 headers: { 
                     'Content-Type': 'multipart/form-data',
@@ -107,7 +106,6 @@ const DoctorPage = () => {
             });
             
             clearTimeout(timeoutId);
-            console.log('✅ Upload successful:', response.data);
             
             setResult(response.data);
             setSavedToHistory(false);
@@ -118,7 +116,7 @@ const DoctorPage = () => {
             
         } catch (err) {
             clearTimeout(timeoutId);
-            console.error('❌ Upload error:', err);
+            console.error('Upload error:', err);
             
             // Handle different error types
             if (err.name === 'AbortError') {

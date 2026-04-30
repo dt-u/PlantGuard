@@ -48,12 +48,10 @@ export const useHistorySync = (onSave, onDelete) => {
 
         // Create new WebSocket connection
         const wsUrl = `ws://127.0.0.1:8000/ws/${userId}`;
-        console.log(`🔌 Connecting to WebSocket: ${wsUrl}`);
         
         wsRef.current = new WebSocket(wsUrl);
 
         wsRef.current.onopen = () => {
-            console.log('✅ Connected to History Sync WebSocket');
             reconnectAttemptsRef.current = 0; // Reset reconnection attempts
         };
 
@@ -68,17 +66,15 @@ export const useHistorySync = (onSave, onDelete) => {
                     }
                 }
             } catch (err) {
-                console.error('❌ Error parsing websocket message:', err);
+                console.error('Error parsing websocket message:', err);
             }
         };
 
         wsRef.current.onclose = (event) => {
-            console.log(`❌ WebSocket disconnected. Code: ${event.code}, Reason: ${event.reason}`);
-            
             // Only reconnect if it was an abnormal closure and user is still logged in
             if (event.code !== 1000 && isAuthenticated() && reconnectAttemptsRef.current < maxReconnectAttempts) {
                 reconnectAttemptsRef.current++;
-                console.log(`🔄 Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts}) in ${reconnectDelay/1000} seconds...`);
+                console.log(`Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts}) in ${reconnectDelay/1000} seconds...`);
                 
                 reconnectTimeoutRef.current = setTimeout(() => {
                     connectWebSocket();
@@ -87,7 +83,7 @@ export const useHistorySync = (onSave, onDelete) => {
         };
 
         wsRef.current.onerror = (error) => {
-            console.error('❌ WebSocket error:', error);
+            console.error('WebSocket error:', error);
         };
     }, [isAuthenticated, getUserId]);
 

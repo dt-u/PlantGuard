@@ -20,8 +20,6 @@ const DiagnosisDetailScreen = ({ route, navigation }) => {
         Linking.canOpenURL(targetUrl).then(supported => {
             if (supported) {
                 Linking.openURL(targetUrl);
-            } else {
-                console.log("Đéo mở được link: " + targetUrl);
             }
         });
     };

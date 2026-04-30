@@ -192,8 +192,6 @@ async def seed_treatments():
         treatments_count = await treatments_collection.count_documents({})
         
         if treatments_count == 0:
-            print("🌱 Seeding treatments collection...")
-            
             # Add timestamps to each treatment
             for treatment in TREATMENTS_SEED_DATA:
                 treatment["created_at"] = datetime.utcnow()
@@ -201,12 +199,9 @@ async def seed_treatments():
             
             # Insert treatments
             result = await treatments_collection.insert_many(TREATMENTS_SEED_DATA)
-            print(f"✅ Created {len(result.inserted_ids)} treatments")
-        else:
-            print(f"✅ Treatments collection already contains {treatments_count} treatments")
-            
+        
     except Exception as e:
-        print(f"❌ Error seeding treatments: {e}")
+        print(f"Error seeding treatments: {e}")
 
 async def update_treatments():
     """Update treatments collection with new affiliate links"""
@@ -214,10 +209,7 @@ async def update_treatments():
     from datetime import datetime
     
     try:
-        print("🔄 Clearing existing treatments...")
         await treatments_collection.delete_many({})
-        
-        print("🌱 Inserting updated treatments with new affiliate links...")
         
         # Add timestamps to each treatment
         for treatment in TREATMENTS_SEED_DATA:
@@ -226,19 +218,9 @@ async def update_treatments():
         
         # Insert treatments
         result = await treatments_collection.insert_many(TREATMENTS_SEED_DATA)
-        print(f"✅ Updated {len(result.inserted_ids)} treatments with new affiliate links")
-        
-        # Show updated treatments with affiliate links
-        print("\n📋 Updated treatments with affiliate links:")
-        affiliate_count = 0
-        for i, treatment in enumerate(TREATMENTS_SEED_DATA, 1):
-            if treatment["affiliate_url"]:
-                print(f"{i}. {treatment['product_name']} - {treatment['affiliate_url']}")
-                affiliate_count += 1
-        print(f"\n🔗 Total treatments with affiliate links: {affiliate_count}")
             
     except Exception as e:
-        print(f"❌ Error updating treatments: {e}")
+        print(f"Error updating treatments: {e}")
 
 async def import_all_treatments_from_seed_data():
     """Import treatments for all diseases from seed_data.py"""
@@ -247,10 +229,7 @@ async def import_all_treatments_from_seed_data():
     from datetime import datetime
     
     try:
-        print("🔄 Clearing existing treatments...")
         await treatments_collection.delete_many({})
-        
-        print("🌱 Importing treatments from seed_data for all diseases...")
         
         all_treatments = []
         
@@ -270,17 +249,13 @@ async def import_all_treatments_from_seed_data():
                         "updated_at": datetime.utcnow()
                     }
                     all_treatments.append(treatment)
-                    print(f"📋 Added: {disease_name} - {treatment_data['level']} - {treatment_data['product']}")
         
         # Insert all treatments
         if all_treatments:
             result = await treatments_collection.insert_many(all_treatments)
-            print(f"✅ Imported {len(result.inserted_ids)} treatments for all diseases")
-        else:
-            print("❌ No treatments found in seed_data")
             
     except Exception as e:
-        print(f"❌ Error importing treatments: {e}")
+        print(f"Error importing treatments: {e}")
 
 async def update_affiliate_links():
     """Update affiliate links for existing treatments"""
@@ -407,7 +382,6 @@ async def update_affiliate_links():
     }
     
     try:
-        print("🔗 Updating affiliate links...")
         updated_count = 0
         
         async for treatment in treatments_collection.find():
@@ -418,12 +392,9 @@ async def update_affiliate_links():
                     {"$set": {"affiliate_url": affiliate_mapping[product_name]}}
                 )
                 updated_count += 1
-                print(f"✅ Updated affiliate URL for: {product_name}")
-        
-        print(f"🔗 Updated affiliate URLs for {updated_count} products")
         
     except Exception as e:
-        print(f"❌ Error updating affiliate links: {e}")
+        print(f"Error updating affiliate links: {e}")
 
 if __name__ == "__main__":
     import asyncio

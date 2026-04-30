@@ -26,7 +26,6 @@ app.add_middleware(
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     try:
         await manager.connect(websocket, user_id)
-        print(f"✅ WebSocket connected for user: {user_id}")
         
         try:
             while True:
@@ -35,13 +34,12 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                 # Echo back or handle any incoming messages if needed
                 await websocket.send_text(f"Received: {data}")
         except WebSocketDisconnect:
-            print(f"❌ WebSocket disconnected for user: {user_id}")
             manager.disconnect(websocket, user_id)
         except Exception as e:
-            print(f"❌ WebSocket error for user {user_id}: {e}")
+            print(f"WebSocket error for user {user_id}: {e}")
             manager.disconnect(websocket, user_id)
     except Exception as e:
-        print(f"❌ Failed to establish WebSocket connection for user {user_id}: {e}")
+        print(f"Failed to establish WebSocket connection for user {user_id}: {e}")
         await websocket.close(code=1011, reason="Internal server error")
 
 # Routes

@@ -26,14 +26,13 @@ async def connect_to_mongodb():
     try:
         # Test connection
         await client.admin.command('ping')
-        print(f"✅ Connected to MongoDB: {DB_NAME}")
         
         # Create indexes for better performance
         await create_indexes()
         
         return True
     except Exception as e:
-        print(f"❌ Failed to connect to MongoDB: {e}")
+        print(f"Failed to connect to MongoDB: {e}")
         return False
 
 async def create_indexes():
@@ -57,17 +56,15 @@ async def create_indexes():
         await mongodb.routines.create_index("user_id")
         await mongodb.routines.create_index("created_at")
         
-        print("✅ Database indexes created")
     except Exception as e:
-        print(f"⚠️ Index creation warning: {e}")
+        print(f"Index creation warning: {e}")
 
 async def disconnect_from_mongodb():
     """Disconnect from MongoDB"""
     try:
         client.close()
-        print("✅ Disconnected from MongoDB")
     except Exception as e:
-        print(f"❌ Failed to disconnect from MongoDB: {e}")
+        print(f"Failed to disconnect from MongoDB: {e}")
 
 async def seed_db():
     """Seed database with initial data"""
@@ -80,15 +77,9 @@ async def seed_db():
         for col in ["users", "history", "notifications"]:
             if col not in collections:
                 await database.create_collection(col)
-                print(f"✅ Created {col} collection")
-        
-        if users_count > 0:
-            print(f"✅ Database already contains {users_count} users")
-        else:
-            print("🌱 Database is empty, ready for first user")
             
     except Exception as e:
-        print(f"❌ Error seeding database: {e}")
+        print(f"Error seeding database: {e}")
 
 # Database helper functions
 async def get_user_by_email(email: str):
@@ -116,5 +107,5 @@ async def get_treatments_by_disease(disease_id: str):
             treatments.append(document)
         return treatments
     except Exception as e:
-        print(f"❌ Error fetching treatments for disease {disease_id}: {e}")
+        print(f"Error fetching treatments for disease {disease_id}: {e}")
         return []
