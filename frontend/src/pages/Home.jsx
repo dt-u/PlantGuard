@@ -1,20 +1,96 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Leaf, Eye, ArrowRight, Sprout, LogIn, UserPlus, User, History, LogOut, Bell, Calendar, Activity } from 'lucide-react';
+import { Leaf, Eye, ArrowRight, Sprout, LogIn, UserPlus, User, History, LogOut, Bell, Calendar, Activity, AlertTriangle, CloudRain, Sun, Snowflake, Wind, CloudFog, ShieldCheck, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 
 const Home = () => {
     const { user, logout, openLogin, openRegister } = useAuth();
     const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isNotiOpen, setIsNotiOpen] = useState(false);
+    const [weatherAlert, setWeatherAlert] = useState(null);
+    const [isWeatherAlertVisible, setIsWeatherAlertVisible] = useState(true);
     const { t, i18n } = useTranslation();
+
+    useEffect(() => {
+        const fetchWeatherAlert = async () => {
+            try {
+                const apiBase = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+                const response = await axios.get(`${apiBase}/api/weather-alert`);
+                setWeatherAlert(response.data);
+                setIsWeatherAlertVisible(true);
+            } catch (error) {
+                console.error('Error fetching weather alert:', error);
+            }
+        };
+
+        fetchWeatherAlert();
+    }, []);
 
     const changeLanguage = (lng) => {
         i18n.changeLanguage(lng);
+    };
+
+    const getWeatherVisual = (alert) => {
+        const condition = alert?.condition || '';
+        if (condition === 'storm_or_strong_wind') {
+            return {
+                Icon: Wind,
+                containerClass: 'bg-red-800 border-red-300 text-white animate-pulse',
+                iconClass: 'text-amber-200',
+                badge: 'GIÓ MẠNH',
+            };
+        }
+        if (condition === 'high_humidity_with_rain') {
+            return {
+                Icon: CloudRain,
+                containerClass: 'bg-red-700 border-red-300 text-white animate-pulse',
+                iconClass: 'text-yellow-200',
+                badge: 'NẤM BỆNH',
+            };
+        }
+        if (condition === 'heat_stress') {
+            return {
+                Icon: Sun,
+                containerClass: 'bg-orange-600 border-orange-300 text-white',
+                iconClass: 'text-yellow-200',
+                badge: 'NẮNG NÓNG',
+            };
+        }
+        if (condition === 'cold_stress') {
+            return {
+                Icon: Snowflake,
+                containerClass: 'bg-blue-700 border-blue-300 text-white',
+                iconClass: 'text-cyan-100',
+                badge: 'NHIỆT ĐỘ THẤP',
+            };
+        }
+        if (condition === 'fog_high_humidity') {
+            return {
+                Icon: CloudFog,
+                containerClass: 'bg-slate-700 border-slate-300 text-white',
+                iconClass: 'text-slate-100',
+                badge: 'SƯƠNG MÙ',
+            };
+        }
+        if (alert?.status === 'danger') {
+            return {
+                Icon: AlertTriangle,
+                containerClass: 'bg-red-700 border-red-300 text-white animate-pulse',
+                iconClass: 'text-yellow-200',
+                badge: 'CẢNH BÁO',
+            };
+        }
+        return {
+            Icon: ShieldCheck,
+            containerClass: 'bg-emerald-600 border-emerald-300 text-white',
+            iconClass: 'text-green-100',
+            badge: 'AN TOÀN',
+        };
     };
 
     return (
@@ -198,6 +274,56 @@ const Home = () => {
                     )}
                 </div>
             </header>
+
+            {/* Weather Predictive Alert Toast */}
+            <AnimatePresence>
+                {weatherAlert && isWeatherAlertVisible && (() => {
+                    const weatherVisual = getWeatherVisual(weatherAlert);
+                    const WeatherIcon = weatherVisual.Icon;
+                    return (
+                        <motion.div
+                            initial={{ opacity: 0, x: 120, scale: 0.96 }}
+                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                            exit={{ opacity: 0, x: 140, scale: 0.95 }}
+                            transition={{ type: 'spring', stiffness: 250, damping: 24 }}
+                            className={`fixed top-24 right-6 z-[60] w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl px-5 py-4 border-2 shadow-2xl ${
+                                weatherVisual.containerClass
+                            }`}
+                        >
+                            <button
+                                onClick={() => setIsWeatherAlertVisible(false)}
+                                className="absolute top-2 right-2 p-1 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+                                aria-label="Đóng cảnh báo thời tiết"
+                                title="Đóng"
+                            >
+                                <X className="w-4 h-4 text-white" />
+                            </button>
+
+                            <div className="flex items-start gap-3 pr-6">
+                                <WeatherIcon className={`w-6 h-6 mt-0.5 shrink-0 ${weatherVisual.iconClass}`} />
+                                <div className="flex-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className="text-sm md:text-base font-extrabold tracking-wide">
+                                            {weatherAlert.title || 'CẢNH BÁO MÔI TRƯỜNG'}
+                                        </p>
+                                        <span className="text-[10px] md:text-xs px-2 py-1 rounded-full bg-white/20 border border-white/30 font-bold tracking-wide">
+                                            {weatherVisual.badge}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs md:text-sm mt-1 opacity-95 leading-relaxed">
+                                        {weatherAlert.message}
+                                    </p>
+                                    {weatherAlert.recommendation && (
+                                        <p className="text-[11px] md:text-xs mt-2 leading-relaxed bg-white/10 rounded-lg px-3 py-2 border border-white/20">
+                                            <span className="font-extrabold">Khuyến nghị:</span> {weatherAlert.recommendation}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    );
+                })()}
+            </AnimatePresence>
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col items-center justify-center text-center px-4 pb-6">

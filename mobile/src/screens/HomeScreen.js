@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, Animated } from 'react-native';
-import { Leaf, Eye, ArrowRight, Sprout, LogIn, Database, Sparkles } from 'lucide-react-native';
+import { Leaf, Eye, ArrowRight, Sprout, LogIn, Database, Sparkles, AlertTriangle, CloudRain, Sun, Snowflake, Wind, CloudFog, ShieldCheck } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -8,6 +8,7 @@ import HeaderBell from '../components/HeaderBell';
 import ScreenHeader from '../components/ScreenHeader';
 import axios from 'axios';
 import { API_BASE_URL } from '../api/config';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -16,6 +17,7 @@ const HomeScreen = ({ navigation }) => {
     const { t } = useLanguage();
     const insets = useSafeAreaInsets();
     const [pendingCount, setPendingCount] = useState(0);
+    const [weatherAlert, setWeatherAlert] = useState(null);
 
     useEffect(() => {
         if (isAuthenticated()) {
@@ -25,12 +27,41 @@ const HomeScreen = ({ navigation }) => {
         }
     }, [isAuthenticated, user]);
 
+    useEffect(() => {
+        axios.get(`${API_BASE_URL}/api/weather-alert`)
+            .then(res => setWeatherAlert(res.data))
+            .catch(err => console.log("Error fetching weather alert:", err));
+    }, []);
+
     const handleProfilePress = () => {
         if (isAuthenticated()) {
             navigation.navigate('Tài khoản');
         } else {
             navigation.navigate('Login');
         }
+    };
+
+    const getWeatherVisual = (alert) => {
+        const condition = alert?.condition || '';
+        if (condition === 'storm_or_strong_wind') {
+            return { Icon: Wind, style: styles.weatherStorm, badge: 'GIÓ MẠNH', iconColor: '#FDE68A' };
+        }
+        if (condition === 'high_humidity_with_rain') {
+            return { Icon: CloudRain, style: styles.weatherDanger, badge: 'NẤM BỆNH', iconColor: '#FDE68A' };
+        }
+        if (condition === 'heat_stress') {
+            return { Icon: Sun, style: styles.weatherHeat, badge: 'NẮNG NÓNG', iconColor: '#FDE68A' };
+        }
+        if (condition === 'cold_stress') {
+            return { Icon: Snowflake, style: styles.weatherCold, badge: 'NHIỆT ĐỘ THẤP', iconColor: '#CFFAFE' };
+        }
+        if (condition === 'fog_high_humidity') {
+            return { Icon: CloudFog, style: styles.weatherFog, badge: 'SƯƠNG MÙ', iconColor: '#E2E8F0' };
+        }
+        if (alert?.status === 'danger') {
+            return { Icon: AlertTriangle, style: styles.weatherDanger, badge: 'CẢNH BÁO', iconColor: '#FDE68A' };
+        }
+        return { Icon: ShieldCheck, style: styles.weatherSafe, badge: 'AN TOÀN', iconColor: '#BBF7D0' };
     };
 
     return (
@@ -76,6 +107,35 @@ const HomeScreen = ({ navigation }) => {
                         {t('home.desc')}
                     </Text>
                 </View>
+
+                {weatherAlert && (
+                    (() => {
+                        const weatherVisual = getWeatherVisual(weatherAlert);
+                        const WeatherIcon = weatherVisual.Icon;
+                        return (
+                    <View style={[
+                        styles.weatherCard,
+                        weatherVisual.style
+                    ]}>
+                        <View style={styles.weatherHeader}>
+                            <WeatherIcon color={weatherVisual.iconColor} size={22} />
+                            <Text style={styles.weatherTitle}>
+                                {weatherAlert.title || 'CẢNH BÁO MÔI TRƯỜNG'}
+                            </Text>
+                            <View style={styles.weatherBadge}>
+                                <Text style={styles.weatherBadgeText}>{weatherVisual.badge}</Text>
+                            </View>
+                        </View>
+                        <Text style={styles.weatherMessage}>{weatherAlert.message}</Text>
+                        {weatherAlert.recommendation ? (
+                            <Text style={styles.weatherRecommendation}>
+                                Khuyến nghị: {weatherAlert.recommendation}
+                            </Text>
+                        ) : null}
+                    </View>
+                        );
+                    })()
+                )}
 
                 {/* Active Learning Banner */}
                 {pendingCount > 0 && (
@@ -359,7 +419,95 @@ const styles = StyleSheet.create({
         fontFamily: 'Vietnam-Medium',
         color: 'rgba(255, 255, 255, 0.8)',
         marginTop: 2,
-    }
+    },
+    weatherCard: {
+        marginHorizontal: 24,
+        marginTop: 18,
+        borderRadius: 18,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderWidth: 2,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+        elevation: 6,
+    },
+    weatherDanger: {
+        backgroundColor: '#B91C1C',
+        borderColor: '#FCA5A5',
+        shadowColor: '#B91C1C',
+    },
+    weatherSafe: {
+        backgroundColor: '#047857',
+        borderColor: '#6EE7B7',
+        shadowColor: '#047857',
+    },
+    weatherStorm: {
+        backgroundColor: '#7F1D1D',
+        borderColor: '#FCA5A5',
+        shadowColor: '#7F1D1D',
+    },
+    weatherHeat: {
+        backgroundColor: '#C2410C',
+        borderColor: '#FDBA74',
+        shadowColor: '#C2410C',
+    },
+    weatherCold: {
+        backgroundColor: '#1D4ED8',
+        borderColor: '#93C5FD',
+        shadowColor: '#1D4ED8',
+    },
+    weatherFog: {
+        backgroundColor: '#475569',
+        borderColor: '#CBD5E1',
+        shadowColor: '#475569',
+    },
+    weatherHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    weatherTitle: {
+        flex: 1,
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontFamily: 'Vietnam-Bold',
+    },
+    weatherMessage: {
+        marginTop: 8,
+        color: '#FFFFFF',
+        opacity: 0.95,
+        fontSize: 12,
+        lineHeight: 18,
+        fontFamily: 'Vietnam-Medium',
+    },
+    weatherRecommendation: {
+        marginTop: 8,
+        color: '#FFFFFF',
+        fontSize: 11,
+        lineHeight: 17,
+        fontFamily: 'Vietnam-SemiBold',
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.25)',
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+    },
+    weatherBadge: {
+        marginLeft: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.35)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+    },
+    weatherBadgeText: {
+        color: '#FFFFFF',
+        fontSize: 10,
+        fontFamily: 'Vietnam-Bold',
+    },
 });
 
 export default HomeScreen;

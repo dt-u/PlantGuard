@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from .database import seed_db, connect_to_mongodb, disconnect_from_mongodb
 from .seed_treatments import seed_treatments
-from .routes import monitor, doctor, admin, auth, history, admin_affiliate, treatments, notification, routine
+from .routes import monitor, doctor, admin, auth, history, admin_affiliate, treatments, notification, routine, weather
 from .websocket import manager
 from .jobs.scheduler import setup_scheduler
 import os
@@ -52,6 +52,7 @@ app.include_router(treatments.router, prefix="/api/treatments", tags=["Treatment
 app.include_router(admin_affiliate.router, prefix="/api/admin", tags=["Admin Affiliate"])
 app.include_router(notification.router, prefix="/api/notifications", tags=["Notifications"])
 app.include_router(routine.router, prefix="/api/routine", tags=["Routine"])
+app.include_router(weather.router, prefix="/api", tags=["Weather"])
 
 # Static Mounts
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "..", "results")
