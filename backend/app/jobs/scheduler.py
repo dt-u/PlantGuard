@@ -26,8 +26,11 @@ async def passive_data_collection_job(ai_engine):
         user_id = str(user["_id"])
         camera_url = user["preferred_camera_url"]
         
-        # Check scheduling in user preferences
-        prefs = user.get("preferences", {})
+        # Robust extraction: handle missing or null preferences
+        prefs = user.get("preferences")
+        if prefs is None:
+            prefs = {}
+            
         next_capture = prefs.get("next_passive_capture_time")
         
         # If no next_capture is set, initialize it

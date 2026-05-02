@@ -366,7 +366,7 @@ class AIEngine:
                         cv2.rectangle(frame, (x1, y1), (x1+w, y1+h), (0, 255, 0), 2)
                         cv2.putText(frame, "Mock Object", (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                         
-                        mock_label = "Vật thể Mô phỏng"
+                        mock_label = "Simulated Risk"
                         if current_time - last_logged_time.get(mock_label, 0) > 3.0:
                             detections_to_send.append({
                                 "label": mock_label, 
@@ -439,7 +439,7 @@ class AIEngine:
 
     async def scan_single_frame(self, camera_url: str):
         """
-        Connects to the camera stream, grabs a single frame, runs YOLO26,
+        Connects to the camera stream, grabs a single frame, runs YOLOv8,
         and returns the frame and detected boxes.
         Used by the background auto-scan task.
         """
@@ -479,7 +479,7 @@ class AIEngine:
                     cls = int(box.cls[0].item())
                     boxes_data.append((x1, y1, x2, y2, conf, cls))
             except Exception as e:
-                print("YOLO26 Scan Error:", e)
+                print("YOLOv8 Scan Error:", e)
         else:
             # Simulation Mode for Wide Monitoring (Unhealthy Zone)
             if random.random() > 0.5: # 50% chance to detect something for demo
@@ -492,3 +492,6 @@ class AIEngine:
                 boxes_data.append((x1, y1, x2, y2, random.uniform(0.7, 0.99), -2)) # -2 implies Unhealthy Zone pseudo-class
 
         return frame, boxes_data
+
+# Singleton instance for the entire application
+ai_engine = AIEngine()

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from ..ai_engine import AIEngine
+from ..ai_engine import ai_engine
 from ..database import diseases_collection
 from ..database.mongodb import get_treatments_by_disease
 from ..models import DiagnosisResponse, DiseaseInfo
@@ -9,7 +9,6 @@ import uuid
 import time
 
 router = APIRouter()
-ai_engine = AIEngine()
 
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
 if not os.path.exists(UPLOAD_DIR):

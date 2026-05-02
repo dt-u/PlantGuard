@@ -6,15 +6,12 @@ from .seed_treatments import seed_treatments
 from .routes import monitor, doctor, admin, auth, history, admin_affiliate, treatments, notification, routine, weather
 from .websocket import manager
 from .jobs.scheduler import setup_scheduler
-from .ai_engine import AIEngine
+from .ai_engine import ai_engine
 import os
 
 app = FastAPI(title="PlantGuard API")
 
-# AI Engine
-ai_engine = AIEngine()
-
-# Scheduler
+# Scheduler (uses singleton ai_engine)
 scheduler = setup_scheduler(ai_engine)
 
 # CORS

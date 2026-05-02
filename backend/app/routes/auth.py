@@ -44,7 +44,8 @@ async def register(user_data: UserCreate):
             "email": user_data.email,
             "name": user_data.name,
             "password": hashed_password,
-            "created_at": datetime.utcnow()
+            "created_at": datetime.utcnow(),
+            "preferences": {}
         }
         
         # Insert user

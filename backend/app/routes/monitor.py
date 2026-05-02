@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks
 from typing import Optional
 from fastapi.responses import FileResponse
-from ..ai_engine import AIEngine
+from ..ai_engine import ai_engine
 from ..models import AnalysisResponse
 import shutil
 import os
@@ -18,7 +18,6 @@ from ..database.mongodb import mongodb, captures_collection
 from ..seed_data import DISEASES_SEED_DATA
 
 router = APIRouter()
-ai_engine = AIEngine()
 
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")
 if not os.path.exists(UPLOAD_DIR):
