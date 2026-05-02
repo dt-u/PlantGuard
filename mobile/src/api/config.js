@@ -1,11 +1,19 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
+import ipConfig from './ip-config.json';
+
 /**
  * AUTO-DETECTION CONFIGURATION
  */
+const MANUAL_IP = ""; // <-- Leave empty to use auto-discovery from script
 
 const getHostUri = () => {
+    if (MANUAL_IP) return MANUAL_IP;
+    
+    // Use the IP detected by the update-ip.js script
+    if (ipConfig && ipConfig.ip) return ipConfig.ip;
+
     // 1. Tổng hợp tất cả các nguồn có thể chứa IP từ Expo
     const hostUri = Constants.expoConfig?.hostUri || 
                     Constants.manifest2?.extra?.expoGo?.debuggerHost || 
@@ -35,6 +43,8 @@ const getHostUri = () => {
 };
 
 export const LOCAL_IP = getHostUri();
+console.log('[Config] Detected Local IP:', LOCAL_IP);
+console.log('[Config] API_BASE_URL:', `http://${LOCAL_IP}:8000`);
 
 export const API_BASE_URL = `http://${LOCAL_IP}:8000`;
 export const WS_BASE_URL = `ws://${LOCAL_IP}:8000`;

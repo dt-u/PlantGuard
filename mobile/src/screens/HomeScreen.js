@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, Animated } from 'react-native';
-import { Leaf, Eye, ArrowRight, Sprout, LogIn, Database, Sparkles, AlertTriangle, CloudRain, Sun, Snowflake, Wind, CloudFog, ShieldCheck } from 'lucide-react-native';
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, Animated, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { Leaf, Eye, ArrowRight, Sprout, LogIn, Database, Sparkles, AlertTriangle, CloudRain, Sun, Snowflake, Wind, CloudFog, ShieldCheck, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -18,6 +18,7 @@ const HomeScreen = ({ navigation }) => {
     const insets = useSafeAreaInsets();
     const [pendingCount, setPendingCount] = useState(0);
     const [weatherAlert, setWeatherAlert] = useState(null);
+    const [isWeatherMinimized, setIsWeatherMinimized] = useState(false);
 
     useEffect(() => {
         if (isAuthenticated()) {
@@ -39,6 +40,14 @@ const HomeScreen = ({ navigation }) => {
         } else {
             navigation.navigate('Login');
         }
+    };
+
+    const toggleWeather = () => {
+        if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+            UIManager.setLayoutAnimationEnabledExperimental(true);
+        }
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setIsWeatherMinimized(!isWeatherMinimized);
     };
 
     const getWeatherVisual = (alert) => {
@@ -119,19 +128,34 @@ const HomeScreen = ({ navigation }) => {
                     ]}>
                         <View style={styles.weatherHeader}>
                             <WeatherIcon color={weatherVisual.iconColor} size={22} />
-                            <Text style={styles.weatherTitle}>
+                            <Text style={styles.weatherTitle} numberOfLines={1}>
                                 {weatherAlert.title || 'CẢNH BÁO MÔI TRƯỜNG'}
                             </Text>
                             <View style={styles.weatherBadge}>
                                 <Text style={styles.weatherBadgeText}>{weatherVisual.badge}</Text>
                             </View>
+                            <TouchableOpacity 
+                                onPress={toggleWeather}
+                                style={styles.minimizeBtn}
+                            >
+                                {isWeatherMinimized ? (
+                                    <ChevronDown color={weatherVisual.iconColor} size={20} />
+                                ) : (
+                                    <ChevronUp color={weatherVisual.iconColor} size={20} />
+                                )}
+                            </TouchableOpacity>
                         </View>
-                        <Text style={styles.weatherMessage}>{weatherAlert.message}</Text>
-                        {weatherAlert.recommendation ? (
-                            <Text style={styles.weatherRecommendation}>
-                                Khuyến nghị: {weatherAlert.recommendation}
-                            </Text>
-                        ) : null}
+                        
+                        {!isWeatherMinimized && (
+                            <View>
+                                <Text style={styles.weatherMessage}>{weatherAlert.message}</Text>
+                                {weatherAlert.recommendation ? (
+                                    <Text style={styles.weatherRecommendation}>
+                                        Khuyến nghị: {weatherAlert.recommendation}
+                                    </Text>
+                                ) : null}
+                            </View>
+                        )}
                     </View>
                         );
                     })()
@@ -508,6 +532,12 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontFamily: 'Vietnam-Bold',
     },
+    minimizeBtn: {
+        marginLeft: 4,
+        padding: 4,
+        borderRadius: 8,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+    }
 });
 
 export default HomeScreen;

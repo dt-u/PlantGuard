@@ -13,10 +13,6 @@
             "bundleIdentifier": "com.plantguard.app"
         },
         "android": {
-            "adaptiveIcon": {
-                "foregroundImage": "./assets/adaptive-icon.png",
-                "backgroundColor": "#ffffff"
-            },
             "package": "com.plantguard.app"
         },
         "web": {
