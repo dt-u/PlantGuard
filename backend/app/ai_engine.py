@@ -17,14 +17,24 @@ class AIEngine:
     def __init__(self):
         # ... existing code ...
         self.shared_frames = {} # {camera_url: latest_frame}
-        # Load the trained YOLO26 model
+        # Load the trained YOLO Doctor model (best.pt)
         model_path = os.path.join(os.path.dirname(__file__), "models", "best.pt")
         if os.path.exists(model_path):
             self.model = YOLO(model_path)
-            print(f"Model loaded successfully from {model_path}")
+            print(f"Doctor Model (best.pt) loaded successfully from {model_path}")
         else:
             self.model = None
-            print(f"WARNING: Model file not found at {model_path}. Running in mock mode.")
+            print(f"WARNING: Doctor Model file not found at {model_path}. Running in mock mode.")
+
+        # Load the trained YOLO Monitor model (monitor.pt)
+        monitor_path = os.path.join(os.path.dirname(__file__), "models", "monitor.pt")
+        if os.path.exists(monitor_path):
+            self.monitor_model = YOLO(monitor_path)
+            print(f"Monitor Model (monitor.pt) loaded successfully from {monitor_path}")
+        else:
+            self.monitor_model = None
+            print(f"WARNING: Monitor Model file not found at {monitor_path}. Monitor using Doctor model as fallback.")
+            self.monitor_model = self.model
 
     async def detect_image(self, image_path: str):
         """
@@ -127,11 +137,11 @@ class AIEngine:
                     current_time_sec = frame_idx / fps
                     
                     if frame_idx % frame_skip == 0:
-                        if self.model:
+                        if self.monitor_model:
                             # Optimization: resize once to standard YOLO size (640) 
                             # to avoid internal scaling overhead per frame
                             frame_resized = cv2.resize(frame, (640, 640))
-                            res = self.model(frame_resized, verbose=False)
+                            res = self.monitor_model(frame_resized, verbose=False)
                             boxes_data = []
                             # Scale boxes back to original resolution
                             h_ratio = height / 640.0
@@ -298,10 +308,10 @@ class AIEngine:
                 frame_to_process = latest_frame.copy()
                 frame_resized = cv2.resize(frame_to_process, (640, 480))
                 
-                if self.model:
+                if self.monitor_model:
                     try:
                         # Run YOLO inference
-                        res = self.model(frame_resized, verbose=False)
+                        res = self.monitor_model(frame_resized, verbose=False)
                         
                         # Extract boxes to be drawn by the fast main loop
                         boxes = []
@@ -456,9 +466,9 @@ class AIEngine:
         frame_resized = cv2.resize(frame, (640, 640))
         boxes_data = []
 
-        if self.model:
+        if self.monitor_model:
             try:
-                res = self.model(frame_resized, verbose=False)
+                res = self.monitor_model(frame_resized, verbose=False)
                 h_ratio = height / 640.0
                 w_ratio = width / 640.0
                 for box in res[0].boxes:
