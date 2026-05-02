@@ -13,6 +13,7 @@
 - **Drone Video Analysis**: Upload drone footage for automated scanning and detection of stressed plants or disease hotspots.
 - **Live Camera**: Connect directly to field cameras (supporting RTSP/DroidCam) for 24/7 remote monitoring.
 - **Auto-scan & Dataset Collector**: Automatically captures suspicious zones, allowing users to verify them to enrich the AI training dataset.
+- **Passive Data Collection**: Automatically captures random frames from user-connected CCTV cameras every 3 days to expand the training dataset with diverse environmental conditions.
 - **Daily Reports**: Summarizes daily alerts and sends automated reports to users.
 
 ### 🩺 Doctor Mode

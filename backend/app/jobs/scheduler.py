@@ -1,12 +1,93 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 import logging
-from ..database.mongodb import routines_collection, users_collection, captures_collection
+import random
+import os
+import cv2
+from ..database.mongodb import routines_collection, users_collection, captures_collection, mongodb
 from ..services.notification import send_push_notification
 from ..services.email import send_care_reminder_email
-from datetime import datetime, time, timedelta
 
 logger = logging.getLogger(__name__)
+
+async def passive_data_collection_job(ai_engine):
+    """
+    Passive Data Collection:
+    Every 3 days, at a random time, capture a frame from the user's camera
+    to enrich the dataset for future labeling.
+    """
+    logger.info("Checking for passive data collection tasks...")
+    now = datetime.now()
+    
+    # Find users who have a camera and have opted in (or for demo, all with cameras)
+    cursor = users_collection.find({"preferred_camera_url": {"$exists": True, "$ne": ""}})
+    
+    async for user in cursor:
+        user_id = str(user["_id"])
+        camera_url = user["preferred_camera_url"]
+        
+        # Check scheduling in user preferences
+        prefs = user.get("preferences", {})
+        next_capture = prefs.get("next_passive_capture_time")
+        
+        # If no next_capture is set, initialize it
+        if not next_capture:
+            # First time: set to capture soon (random within next 1 hour for demo)
+            next_capture = now + timedelta(minutes=random.randint(1, 60))
+            await users_collection.update_one(
+                {"_id": user["_id"]},
+                {"$set": {"preferences.next_passive_capture_time": next_capture}}
+            )
+            continue
+
+        # Convert string to datetime if stored as string
+        if isinstance(next_capture, str):
+            next_capture = datetime.fromisoformat(next_capture)
+            
+        if now >= next_capture:
+            logger.info(f"📸 Running passive capture for user {user_id}...")
+            try:
+                # 1. Capture frame
+                frame, _ = await ai_engine.scan_single_frame(camera_url)
+                
+                if frame is not None:
+                    # 2. Save to pending dataset
+                    # We use the existing dataset structure
+                    RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "results")
+                    PENDING_DIR = os.path.join(RESULTS_DIR, "user_dataset", "pending")
+                    
+                    filename = f"passive_{now.strftime('%Y%m%d_%H%M%S')}_{user_id}.jpg"
+                    filepath = os.path.join(PENDING_DIR, filename)
+                    
+                    # Ensure directory exists
+                    if not os.path.exists(PENDING_DIR):
+                        os.makedirs(PENDING_DIR)
+                        
+                    cv2.imwrite(filepath, frame)
+                    
+                    # 3. Update database
+                    # Calculate next capture: 3 days + random offset (0-12 hours)
+                    new_next_capture = now + timedelta(days=3, hours=random.randint(0, 12))
+                    
+                    await users_collection.update_one(
+                        {"_id": user["_id"]},
+                        {
+                            "$set": {
+                                "preferences.last_passive_capture": now,
+                                "preferences.next_passive_capture_time": new_next_capture
+                            }
+                        }
+                    )
+                    logger.info(f"✅ Passive capture saved: {filename}. Next: {new_next_capture}")
+                else:
+                    logger.warning(f"❌ Failed to capture frame for user {user_id} (Camera offline?)")
+                    # Try again in 1 hour if failed
+                    await users_collection.update_one(
+                        {"_id": user["_id"]},
+                        {"$set": {"preferences.next_passive_capture_time": now + timedelta(hours=1)}}
+                    )
+            except Exception as e:
+                logger.error(f"Error in passive capture for {user_id}: {e}")
 
 async def daily_summary_job():
     """
@@ -177,7 +258,7 @@ async def end_of_day_cleanup_job():
         array_filters=[{"elem.date": {"$lt": today_end}, "elem.status": "pending"}]
     )
 
-def setup_scheduler():
+def setup_scheduler(ai_engine):
     scheduler = AsyncIOScheduler()
     
     # Schedule jobs
@@ -192,5 +273,8 @@ def setup_scheduler():
     
     # 11:59 PM
     scheduler.add_job(end_of_day_cleanup_job, 'cron', hour=23, minute=59)
+    
+    # Passive Data Collection: Check every hour
+    scheduler.add_job(passive_data_collection_job, 'interval', hours=1, args=[ai_engine])
     
     return scheduler
