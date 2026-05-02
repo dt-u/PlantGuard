@@ -36,6 +36,16 @@ class AIEngine:
             print(f"WARNING: Monitor Model file not found at {monitor_path}. Monitor using Doctor model as fallback.")
             self.monitor_model = self.model
 
+    def get_class_name(self, cls, is_monitor=True):
+        model = self.monitor_model if is_monitor else self.model
+        if model and hasattr(model, 'names') and cls in model.names:
+            return model.names[cls]
+        if 0 <= cls < len(DISEASES_SEED_DATA):
+            return DISEASES_SEED_DATA[cls]["name"]
+        if cls == -1: return "Vật thể Mô phỏng"
+        if cls == -2: return "Unhealthy Zone"
+        return f"Class {cls}"
+
     async def detect_image(self, image_path: str):
         """
         Runs real detection on an image using the loaded YOLO model.
@@ -62,11 +72,8 @@ class AIEngine:
                 class_id = int(top_box.cls[0].item())
                 confidence = float(top_box.conf[0].item())
                 
-                # Directly map class_id to seed_data index (confirmed matching)
-                if 0 <= class_id < len(DISEASES_SEED_DATA):
-                    disease_name = DISEASES_SEED_DATA[class_id]["name"]
-                else:
-                    disease_name = "Healthy" # Fallback
+                # Prefer model's internal names, fallback to seed_data
+                disease_name = self.get_class_name(class_id, is_monitor=False)
             else:
                 disease_name = "Healthy"
                 confidence = 1.0
@@ -170,7 +177,7 @@ class AIEngine:
                         if cls == -1:
                             label = "Vật thể Mô phỏng"
                         else:
-                            label = DISEASES_SEED_DATA[cls]["name"] if 0 <= cls < len(DISEASES_SEED_DATA) else f"Class {cls}"
+                            label = self.get_class_name(cls, is_monitor=True)
                             
                         if conf > 0.5:
                             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
@@ -393,9 +400,7 @@ class AIEngine:
                     for box in current_boxes:
                         x1, y1, x2, y2, conf, cls = box
                         
-                        label = f"Class {cls}"
-                        if 0 <= cls < len(DISEASES_SEED_DATA):
-                            label = DISEASES_SEED_DATA[cls]["name"]
+                        label = self.get_class_name(cls, is_monitor=True)
                             
                         # Draw bounding box and label
                         cv2.rectangle(frame_to_send, (x1, y1), (x2, y2), (0, 0, 255), 2)

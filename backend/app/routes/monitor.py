@@ -132,11 +132,7 @@ async def bg_auto_scan(user_id: str, camera_url: str):
                         save_cls = cls if cls >= 0 else 0
                         
                         # Get disease name
-                        disease_name = "Unknown"
-                        if 0 <= save_cls < len(DISEASES_SEED_DATA):
-                            disease_name = DISEASES_SEED_DATA[save_cls]["name"]
-                        elif save_cls == -2:
-                            disease_name = "Unhealthy Zone"
+                        disease_name = ai_engine.get_class_name(cls, is_monitor=True)
 
                         label_line = f"{save_cls} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}"
                         with open(txt_path, "w") as f:
