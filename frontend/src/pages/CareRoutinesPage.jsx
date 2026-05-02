@@ -12,6 +12,10 @@ const CareRoutinesPage = () => {
     const [selectedRoutine, setSelectedRoutine] = useState(null);
     const [loading, setLoading] = useState(true);
     const [updatingStatus, setUpdatingStatus] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [routineToDelete, setRoutineToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState(null);
 
     const fetchRoutines = useCallback(async () => {
         if (!user) return;
@@ -49,17 +53,30 @@ const CareRoutinesPage = () => {
         }
     };
 
-    const handleDeleteRoutine = async (id) => {
-        if (!window.confirm('Bạn có chắc chắn muốn xóa lộ trình này không?')) return;
+    const confirmDelete = (routine) => {
+        setRoutineToDelete(routine);
+        setDeleteError(null);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteRoutine = async () => {
+        if (!routineToDelete) return;
+        
         try {
-            await axios.delete(`http://127.0.0.1:8000/api/routine/${id}`);
-            setRoutines(prev => prev.filter(r => r._id !== id));
-            if (selectedRoutine?._id === id) {
+            setIsDeleting(true);
+            setDeleteError(null);
+            await axios.delete(`http://127.0.0.1:8000/api/routine/${routineToDelete._id}`);
+            setRoutines(prev => prev.filter(r => r._id !== routineToDelete._id));
+            if (selectedRoutine?._id === routineToDelete._id) {
                 setSelectedRoutine(null);
             }
+            setIsDeleteModalOpen(false);
+            setRoutineToDelete(null);
         } catch (error) {
             console.error('Error deleting routine:', error);
-            alert('Không thể xóa lộ trình lúc này.');
+            setDeleteError('Đã xảy ra lỗi. Vui lòng thử lại sau.');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -159,7 +176,7 @@ const CareRoutinesPage = () => {
                                             <button 
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleDeleteRoutine(routine._id);
+                                                    confirmDelete(routine);
                                                 }}
                                                 className="p-2 hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors rounded-lg"
                                             >
@@ -319,6 +336,65 @@ const CareRoutinesPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Custom Delete Modal */}
+            <AnimatePresence>
+                {isDeleteModalOpen && (
+                    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => !isDeleting && setIsDeleteModalOpen(false)}
+                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl border border-gray-100"
+                        >
+                            <div className="p-8 text-center">
+                                <div className="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-red-500">
+                                    <Trash2 className="w-10 h-10" />
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-900 mb-3">Xác nhận xóa?</h3>
+                                <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                                    Bạn có chắc chắn muốn xóa lộ trình <span className="font-bold text-gray-700">"{routineToDelete?.plant_name}"</span>? 
+                                    Hành động này không thể hoàn tác.
+                                </p>
+
+                                {deleteError && (
+                                    <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-medium">
+                                        {deleteError}
+                                    </div>
+                                )}
+                                <div className="flex flex-col gap-3">
+                                    <button
+                                        onClick={handleDeleteRoutine}
+                                        disabled={isDeleting}
+                                        className="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-red-500/20 active:scale-[0.98] disabled:opacity-50"
+                                    >
+                                        {isDeleting ? (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                Đang xóa...
+                                            </div>
+                                        ) : 'Vẫn muốn xóa'}
+                                    </button>
+                                    <button
+                                        onClick={() => setIsDeleteModalOpen(false)}
+                                        disabled={isDeleting}
+                                        className="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-50"
+                                    >
+                                        Hủy bỏ
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

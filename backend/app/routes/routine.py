@@ -5,6 +5,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import uuid
 import urllib.parse
+import json
 from ..constants.routines import DISEASE_ROUTINES
 from ..database.mongodb import routines_collection
 from ..models.routine import UserRoutine, RoutineEvent
@@ -104,6 +105,55 @@ async def get_user_routines(user_id: str):
         r["_id"] = str(r["_id"])
     
     return routines
+
+@router.get("/export_ics")
+async def export_ics(disease_name: str, events: str):
+    """
+    Exports a routine to an .ics file via GET (for simple browser downloads).
+    """
+    try:
+        event_data = json.loads(events)
+        
+        # Extract fields from event_data
+        action = event_data.get("action", "N/A")
+        product = event_data.get("product_name") or event_data.get("product") or "N/A"
+        
+        now = datetime.now()
+        dtstamp = now.strftime('%Y%m%dT%H%M%SZ')
+        
+        # Create events for day 1, 3, 7
+        ics_events = []
+        days = [1, 3, 7]
+        for day in days:
+            d = now + timedelta(days=day)
+            start = d.strftime('%Y%m%dT080000')
+            end = d.strftime('%Y%m%dT090000')
+            
+            summary = f"Phác đồ ({day}d): {disease_name}"
+            description = f"Thực hiện: {action}\\nSản phẩm: {product}"
+            
+            ics_events.append(f"""BEGIN:VEVENT
+UID:{uuid.uuid4()}@plantguard.com
+DTSTAMP:{dtstamp}
+DTSTART:{start}
+DTEND:{end}
+SUMMARY:{summary}
+DESCRIPTION:{description}
+END:VEVENT""")
+
+        ics_content = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//PlantGuard//NONSGML v1.0//EN
+{"\n".join(ics_events)}
+END:VCALENDAR"""
+
+        encoded_filename = urllib.parse.quote(f"routine_{disease_name.replace(' ', '_')}.ics")
+        return Response(content=ics_content, media_type="text/calendar", headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate ICS: {str(e)}")
+
 
 @router.get("/{routine_id}")
 async def get_routine_detail(routine_id: str):
