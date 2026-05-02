@@ -16,7 +16,7 @@
 - **Daily Reports**: Summarizes daily alerts and sends automated reports to users.
 
 ### 🩺 Doctor Mode
-- **Precision Diagnosis**: Uses a specialized YOLOv8 model (`best.pt`) to identify 38 different types of diseases and plant states.
+- **Precision Diagnosis**: Uses a specialized YOLO26 model (`best.pt`) to identify 38 different types of diseases and plant states.
 - **Treatment Protocols**: Provides 3-level solutions (Mild, Moderate, Severe) with specific actionable steps.
 - **Affiliate Integration**: Recommends specific treatment products with direct purchase links (Shopee Affiliate).
 
@@ -32,7 +32,7 @@
 ## 🛠 Tech Stack
 
 - **Backend**: Python (FastAPI), Uvicorn, Motor (Async MongoDB), OpenCV, WebSocket, APScheduler.
-- **AI/ML**: YOLOv8 (Ultralytics) with specialized models for Diagnosis (`best.pt`) and Monitoring (`monitor.pt`).
+- **AI/ML**: YOLO26 (Ultralytics) with specialized models for Diagnosis (`best.pt`) and Monitoring (`monitor.pt`).
 - **Frontend (Web)**: ReactJS (Vite), Tailwind CSS, Lucide-React, Framer Motion.
 - **Mobile App**: React Native (Expo), Lucide-React-Native.
 - **Database**: MongoDB.
