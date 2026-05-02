@@ -23,4 +23,5 @@ Thumbs.db
 *.swp
 *.swo
 /backend/app/uploads/
+/backend/uploads/
 /backend/results/
