@@ -439,7 +439,7 @@ class AIEngine:
 
     async def scan_single_frame(self, camera_url: str):
         """
-        Connects to the camera stream, grabs a single frame, runs YOLOv8,
+        Connects to the camera stream, grabs a single frame, runs YOLO26,
         and returns the frame and detected boxes.
         Used by the background auto-scan task.
         """
@@ -479,7 +479,7 @@ class AIEngine:
                     cls = int(box.cls[0].item())
                     boxes_data.append((x1, y1, x2, y2, conf, cls))
             except Exception as e:
-                print("YOLOv8 Scan Error:", e)
+                print("YOLO26 Scan Error:", e)
         else:
             # Simulation Mode for Wide Monitoring (Unhealthy Zone)
             if random.random() > 0.5: # 50% chance to detect something for demo
