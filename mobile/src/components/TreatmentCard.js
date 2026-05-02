@@ -83,7 +83,7 @@ const TreatmentCard = ({ treatments = [], diseaseKey, onBuyPress, imageUrl }) =>
                 `Đã thêm ${routineEvents.length} lời nhắc chăm sóc vào lịch "${targetCalendar.title}" trên điện thoại của bạn.`,
                 [
                     { 
-                        text: 'Kiểm tra 📅', 
+                        text: 'Kiểm tra', 
                         onPress: () => {
                             setRoutineModalVisible(false);
                             const url = Platform.OS === 'ios' ? 'calshow:' : 'content://com.android.calendar/time/';

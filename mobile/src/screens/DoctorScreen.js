@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator, Dimensions, Linking } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { Camera, AlertCircle, RefreshCw, Cross, Hospital, CheckCircle, Info, Bookmark } from 'lucide-react-native';
@@ -155,6 +155,19 @@ const DoctorScreen = ({ navigation }) => {
         }
     };
 
+    const openPurchaseLink = (treatment) => {
+        const targetUrl = treatment.affiliate_url || 
+                         `https://shopee.vn/search?keyword=${encodeURIComponent(treatment.search_fallback_keyword || treatment.product_name || treatment.product || treatment.name)}`;
+        
+        Linking.canOpenURL(targetUrl).then(supported => {
+            if (supported) {
+                Linking.openURL(targetUrl);
+            } else {
+                Alert.alert(t('common.error'), "Không thể mở liên kết mua hàng.");
+            }
+        });
+    };
+
     return (
         <View style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
             <ScreenHeader 
@@ -246,6 +259,8 @@ const DoctorScreen = ({ navigation }) => {
                         <TreatmentCard 
                             treatments={translateTreatments(result.disease.name, result.disease.treatments)}
                             diseaseKey={result.disease.name}
+                            onBuyPress={openPurchaseLink}
+                            imageUrl={`${API_BASE_URL}${result.image_url}`}
                         />
                     </View>
 
