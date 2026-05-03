@@ -66,7 +66,7 @@ PlantGuard/
 1. Navigate to the backend directory: `cd backend`
 2. Install dependencies: `pip install -r requirements.txt`
 3. Configure `.env`: Copy from `.env.example` and fill in details (MongoDB URI, SMTP for Email).
-4. Start the server: `uvicorn app.main:app --reload`
+4. Start the server: `uvicorn app.main:app --reload --host 0.0.0.0`
 
 ### 2. Frontend Setup (Web)
 1. Navigate to the frontend directory: `cd frontend`
@@ -76,7 +76,7 @@ PlantGuard/
 ### 3. Mobile App Setup
 1. Navigate to the mobile directory: `cd mobile`
 2. Install dependencies: `npm install`
-3. Start Expo: `npx expo start`
+3. Start Expo: `npm start`
 
 ## ⚠️ Important Notes
 - **AI Models**: Ensure `best.pt` and `monitor.pt` are placed in the `backend/app/models/` directory.
